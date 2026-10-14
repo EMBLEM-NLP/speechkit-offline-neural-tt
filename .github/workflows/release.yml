@@ -1,0 +1,30 @@
+name: release
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag: {description: 'Release tag', default: 'v1.1.0'}
+permissions:
+  contents: write
+jobs:
+  runtime-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with: {ref: runtime-assets, path: assets}
+      - name: Reassemble and verify the runtime archive
+        run: |
+          cat assets/runtime.zip.part-* > EMBLEM-NLP_Offline_Neural_Runtime_Linux_Py313.zip
+          PIN=$(grep -o "'[a-f0-9]\{64\}'" bootstrap.py | head -1 | tr -d "'")
+          echo "$PIN  EMBLEM-NLP_Offline_Neural_Runtime_Linux_Py313.zip" | sha256sum -c -
+      - name: Publish release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          gh release view "$TAG" >/dev/null 2>&1 && gh release upload "$TAG" EMBLEM-NLP_Offline_Neural_Runtime_Linux_Py313.zip --clobber || \
+          gh release create "$TAG" EMBLEM-NLP_Offline_Neural_Runtime_Linux_Py313.zip \
+            --target "${{ github.sha }}" --title "SpeechKit ${TAG#v}" \
+            --notes "Standalone offline neural TTS, GPL-3.0-or-later. Runtime archive is hash-pinned; install with python3.13 bootstrap.py fetch."
