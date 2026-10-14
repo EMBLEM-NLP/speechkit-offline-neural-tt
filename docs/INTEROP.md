@@ -9,7 +9,7 @@ SpeechKit is a leaf tool: other projects call it, it never imports them. The int
   {"id":"intro","text":"Original text.","spokenText":"Text as it should be pronounced."}]}
 ```
 
-## Output: speech.json (`schemas/speech.schema.json`)
+## Output: speech.json ([`speechkit/schemas/speech.schema.json`](../speechkit/schemas/speech.schema.json))
 
 Status `NEURAL_AUDIO_GENERATED_REVIEW_PENDING`, plus per segment: `id`, original `text`, `spokenText`, WAV filename, `sha256`, `samples`. Audio is mono PCM16 at 22050 Hz. Consumers should verify each WAV's SHA-256 against the manifest and treat `voiceApproval: PENDING` as unapproved.
 

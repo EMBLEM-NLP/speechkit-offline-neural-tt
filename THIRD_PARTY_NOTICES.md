@@ -1,6 +1,6 @@
 # Third-party components
 
-Delivered inside the runtime release asset `EMBLEM-NLP_Offline_Neural_Runtime_Linux_Py313.zip` (full license texts under its `notices/`, corresponding source under its `sources/`).
+Delivered inside the runtime release asset [`EMBLEM-NLP_Offline_Neural_Runtime_Linux_Py313.zip`](https://github.com/EMBLEM-NLP/speechkit-offline-neural-tt/releases/download/v1.1.0/EMBLEM-NLP_Offline_Neural_Runtime_Linux_Py313.zip) (full license texts under its `notices/`, corresponding source under its `sources/`).
 
 | Component | Version | License |
 |---|---|---|
@@ -13,4 +13,4 @@ Delivered inside the runtime release asset `EMBLEM-NLP_Offline_Neural_Runtime_Li
 | packaging | 26.3 | Apache-2.0 OR BSD-2-Clause |
 | Voice `en_US-ljspeech-high` | — | Trained on LJ Speech, stated public domain in the model card |
 
-SpeechKit's own code (`bootstrap.py`, `speechkit/`) is GPL-3.0-or-later, Copyright (C) 2026 EMBLEM-NLP.
+SpeechKit's own code ([`bootstrap.py`](bootstrap.py), [`speechkit/`](speechkit/)) is GPL-3.0-or-later, Copyright (C) 2026 EMBLEM-NLP.
