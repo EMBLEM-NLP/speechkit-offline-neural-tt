@@ -1,4 +1,6 @@
-"""speechkit-offline-neural-tt: verify, fetch and install the hash-pinned offline neural voice runtime."""
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 EMBLEM-NLP
+"""speechkit-offline-neural-tt: standalone offline neural TTS. Commands: fetch, verify, install."""
 from __future__ import annotations  # Keep type annotations independent of declaration order.
 import argparse  # Parse explicit verify/install operations.
 import hashlib  # Identify every immutable input and generated WAV.
@@ -10,20 +12,19 @@ import subprocess  # Invoke the existing verified installer and neural adapter.
 import sys  # Use the selected interpreter and return explicit nonzero failures.
 import urllib.request  # Used only by the explicit fetch command, never implicitly.
 import wave  # Measure actual decoded PCM samples, not estimated speech duration.
-import zipfile  # Read and safely extract the original tools archive.
+import zipfile  # Inspect the runtime archive without extracting it.
 from datetime import datetime, timezone  # Timestamp this run rather than reuse historic results.
 from pathlib import Path, PurePosixPath  # Resolve paths relative to this distribution.
 
 ROOT = Path(__file__).resolve().parent  # Allow execution from any working directory.
-TOOLS = 'EMBLEM-NLP_Study_Automation_Tools_1_0_0.zip'  # Preserve the original tools identity.
 RUNTIME = 'EMBLEM-NLP_Offline_Neural_Runtime_Linux_Py313.zip'  # Include the actual heavy payload.
 REPO = 'EMBLEM-NLP/speechkit-offline-neural-tt'  # GitHub home of this distribution.
-DIST_VERSION = '1.0.2'  # Repository packaging version; inner component versions are unchanged.
+DIST_VERSION = '1.1.0'  # Repository packaging version; inner component versions are unchanged.
 RELEASE_URL = f'https://github.com/{REPO}/releases/download/v{DIST_VERSION}/{RUNTIME}'  # Runtime exceeds git's 100 MB file limit.
-PINS = {  # Independent expected identities prevent accepting an accidental replacement.
-    TOOLS: 'ed28c91022a586d27ec6b7778889c65efe19f6371a507175f55e4a4c4eeef822',
+PINS = {  # Independent expected identity prevents accepting an accidental replacement.
     RUNTIME: '4aa2d0fa989b127c1c1f6c13d10774d6ad5b2b3f828b52d938d864c34ff64662',
 }
+TOOLKIT = ROOT / 'speechkit'  # Standalone narration CLI shipped in this repository.
 SMOKE_TEXT = (  # Use a fresh technical sample, not the historical bundled smoke recording.
     'This is a new neural voice test generated from the bundled model. '
     'The narration plugin and its voice libraries are both present. '
@@ -96,9 +97,9 @@ def inspect_archive(path: Path, expected: str) -> dict:
 
 
 def verify(root: Path = ROOT) -> dict:
-    """Fail when either the tools or the model-bearing archive is absent or altered."""
+    """Fail when the model-bearing runtime archive is absent or altered."""
     records = [inspect_archive(root / 'archives' / name, digest)
-               for name, digest in PINS.items()]  # Both artifacts are mandatory in this bundle.
+               for name, digest in PINS.items()]  # The runtime archive is the only external artifact.
     return {  # Verification does not imply installation or neural inference.
         'status': 'BUNDLE_ARCHIVES_VERIFIED', 'neuralRuntimeIncluded': True,
         'archives': records, 'inferenceExecuted': False,
@@ -138,11 +139,7 @@ def install(destination: Path, root: Path = ROOT) -> dict:
     destination.mkdir(parents=True)  # All dependency mutations remain inside this new directory.
     save(destination / 'BUNDLE_VERIFICATION.json', verification)  # Preserve pre-install evidence.
     try:  # Any failed stage produces a failure report instead of a success claim.
-        with zipfile.ZipFile(root / 'archives' / TOOLS) as archive:
-            archive.extractall(destination)  # Every path was validated in verify().
-        tools = destination / 'EMBLEM-NLP_Study_Automation_Tools_1_0_0'
-        plugins = tools / 'EMBLEM-NLP_Reusable_Video_Plugins_1_0_1'
-        narration = plugins / 'emblem-nlp-neural-narration'
+        narration = root / 'speechkit'  # Source-controlled CLI; no other project is required.
         runtime = destination / 'runtime'  # Keep heavy dependencies separate from plugin sources.
         logs = destination / 'logs'  # Persist each child process transcript.
         profile = narration / 'profiles' / 'ljspeech-high.json'
@@ -180,7 +177,7 @@ def install(destination: Path, root: Path = ROOT) -> dict:
         result = {  # Human acceptance is deliberately not inferred from synthesis.
             'status': 'OFFLINE_INSTALL_AND_NEURAL_SYNTHESIS_PASSED',
             'checkedAt': datetime.now(timezone.utc).isoformat(), 'distributionVersion': DIST_VERSION,
-            'toolsRoot': str(tools), 'voiceRuntime': str(runtime), 'python': str(python),
+            'toolkitRoot': str(narration), 'voiceRuntime': str(runtime), 'python': str(python),
             'inferenceExecuted': True, 'externalModelDownloadRequired': False,
             'smokeAudio': {'path': str(audio), 'sha256': sha(audio), **measured,
                            'durationSeconds': measured['samples'] / measured['sampleRate']},

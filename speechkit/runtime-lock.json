@@ -1,0 +1,8 @@
+{
+  "schemaVersion": "1.0.0",
+  "archiveName": "EMBLEM-NLP_Offline_Neural_Runtime_Linux_Py313.zip",
+  "archiveSha256": "4aa2d0fa989b127c1c1f6c13d10774d6ad5b2b3f828b52d938d864c34ff64662",
+  "platform": "Linux x86_64",
+  "pythonMinor": "3.13",
+  "automaticNetworkInstall": false
+}

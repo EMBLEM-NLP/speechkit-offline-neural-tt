@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "piper-ljspeech-high",
+  "engine": "piper",
+  "engineVersion": "1.8.0",
+  "onnxruntimeVersion": "1.30.0",
+  "model": "voices/en_US-ljspeech-high.onnx",
+  "modelSha256": "5d4f08ba6a2a48c44592eed3ce56bf85e9de3dd4e20df90541ae68a8310c029a",
+  "config": "voices/en_US-ljspeech-high.onnx.json",
+  "configSha256": "7e1f4634af596d83cca997fb7a931ba80b70f8a316a2655ee69c55365e0ace14",
+  "sampleRate": 22050,
+  "lengthScale": 1.24,
+  "sentencePauseSeconds": 0.38,
+  "maxDeliveryWpm": 155,
+  "voiceApproval": "PENDING"
+}

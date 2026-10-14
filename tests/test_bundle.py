@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 EMBLEM-NLP
 """Negative controls for speechkit-offline-neural-tt."""
 import hashlib  # Compute fixture identities, not production pins.
 import importlib.util  # Load the bootstrap without executing its CLI.
@@ -107,13 +109,22 @@ class BundleTests(unittest.TestCase):
         self.assertEqual(BOOT.sha(ROOT / 'archives' / BOOT.RUNTIME), BOOT.PINS[BOOT.RUNTIME])
 
 
-    def test_tools_archive_is_committed_and_pinned(self):
-        self.assertEqual(BOOT.sha(ROOT / 'archives' / BOOT.TOOLS), BOOT.PINS[BOOT.TOOLS])
+    def test_toolkit_is_in_repo_and_standalone(self):
+        self.assertTrue((ROOT / 'speechkit' / 'src' / 'voice.py').is_file())
+        for path in (ROOT / 'speechkit').rglob('*'):
+            if path.suffix in ('.py', '.json', '.md'):
+                text = path.read_text(errors='ignore').lower()
+                for other in ('obc-study', 'video-factory', 'orchestrator'):
+                    self.assertNotIn(other, text, f'{path} references {other}')
+
+    def test_license_is_gpl3(self):
+        self.assertIn('GNU GENERAL PUBLIC LICENSE', (ROOT / 'LICENSE').read_text()[:200])
 
     def test_manifest_matches_bootstrap_pins(self):
         manifest = json.loads((ROOT / 'BUNDLE_MANIFEST.json').read_text())
         self.assertEqual(manifest['distributionVersion'], BOOT.DIST_VERSION)
         self.assertEqual({Path(a['path']).name: a['sha256'] for a in manifest['archives']}, BOOT.PINS)
+        self.assertEqual(manifest['license'], 'GPL-3.0-or-later')
 
     def test_fetch_rejects_plain_http(self):
         with self.assertRaisesRegex(ValueError, 'https'):

@@ -1,0 +1,10 @@
+{
+  "name": "speechkit",
+  "version": "1.1.0",
+  "description": "Standalone local neural speech generation (Piper/ONNX) with explicit voice identity and no robotic waveform fallback.",
+  "author": {
+    "name": "EMBLEM-NLP"
+  },
+  "displayName": "SpeechKit Offline Neural TTS",
+  "license": "GPL-3.0-or-later"
+}

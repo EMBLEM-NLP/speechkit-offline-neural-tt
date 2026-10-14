@@ -1,18 +1,17 @@
 {
   "schemaVersion": "1.0.0",
-  "distributionVersion": "1.0.2",
-  "distributionKind": "TOOLS_PLUS_BUNDLED_NEURAL_RUNTIME",
+  "distributionVersion": "1.1.0",
+  "repository": "EMBLEM-NLP/speechkit-offline-neural-tt",
+  "distributionKind": "STANDALONE_OFFLINE_NEURAL_TTS",
+  "license": "GPL-3.0-or-later",
   "components": {
-    "videoFactory": "1.0.1",
-    "neuralNarration": "1.0.1",
-    "videoRsiAdapter": "1.0.1",
-    "obcStudyOrchestrator": "1.0.0",
+    "speechkit": "1.1.0",
     "piperTts": "1.8.0",
     "onnxruntime": "1.30.0",
     "voice": "en_US-ljspeech-high"
   },
   "neuralRuntimeIncluded": true,
-  "requiredRuntimeArchive": "archives/EMBLEM-NLP_Offline_Neural_Runtime_Linux_Py313.zip",
+  "runtimeDelivery": "GitHub Release asset (exceeds 100 MB git limit); obtain with `python3.13 bootstrap.py fetch`",
   "target": {
     "os": "Linux",
     "architecture": "x86_64",
@@ -25,28 +24,14 @@
       "bytes": 232483719,
       "sha256": "4aa2d0fa989b127c1c1f6c13d10774d6ad5b2b3f828b52d938d864c34ff64662",
       "zipEntries": 34
-    },
-    {
-      "path": "archives/EMBLEM-NLP_Study_Automation_Tools_1_0_0.zip",
-      "bytes": 2726666,
-      "sha256": "ed28c91022a586d27ec6b7778889c65efe19f6371a507175f55e4a4c4eeef822",
-      "zipEntries": 162
     }
   ],
   "separatePrerequisites": [
-    "Compatible host Python with venv/ensurepip",
-    "Node for video/orchestration CLI",
-    "FFmpeg/FFprobe",
-    "Renderer Python/Cairo libraries and locally installed fonts",
-    "Project-specific source assets and input manifests"
+    "Compatible host Python 3.13 with venv/ensurepip"
   ],
   "exclusions": [
     "No font binaries",
-    "No OBC Compendium or SQLite database",
-    "No user learner responses or credentials",
-    "No automatically deployed scheduler or persistent render service",
+    "No credentials or user data",
     "No claim of human-approved naturalness"
-  ],
-  "repository": "EMBLEM-NLP/speechkit-offline-neural-tt",
-  "runtimeDelivery": "GitHub Release asset (exceeds 100 MB git limit); obtain with `python3.13 bootstrap.py fetch`"
+  ]
 }

@@ -1,14 +1,8 @@
 # Changelog
 
-## 1.0.2 — repository packaging (`speechkit-offline-neural-tt`)
-
-- Repackaged as the GitHub repository `EMBLEM-NLP/speechkit-offline-neural-tt`.
-- `bootstrap.py`: new explicit `fetch` command downloads the runtime release asset over HTTPS and accepts it only if its SHA-256 matches the pin; `verify`/`install` now point to `fetch` when the runtime is absent. `distributionVersion` reports 1.0.2.
-- The 232 MB runtime ZIP is a Release asset (git's per-file limit is 100 MB); the 2.7 MB tools ZIP is committed.
-- Tests skip runtime-presence checks in a fresh clone; added manifest/pin consistency and fetch negative controls.
-- `README_FIRST.md` → `README.md`; `NEXT_CHAT_PROMPT.md` → `docs/HANDOFF_PROMPT.md`; 1.0.1 proof/reports moved unchanged to `evidence/dist-1.0.1/`.
-- Both inner archives are byte-identical to 1.0.1 (same SHA-256 pins). No change to voice, model, renderer or scoring.
-
-## 1.0.1 — missing neural payload repaired
-
-See `evidence/dist-1.0.1/reports/EXECUTION_REPORT.md`.
+## 1.1.0 — standalone release
+- Repository is now a standalone tool: the narration CLI lives in `speechkit/`; the Video Factory, RSI adapter and OBC Study Orchestrator are no longer bundled or referenced. Integration is via `docs/INTEROP.md` only.
+- Licensed GPL-3.0-or-later (Piper/espeak-ng are GPL and imported in-process); see `docs/LICENSING.md`. SPDX headers added; plugin metadata updated.
+- `bootstrap.py`: single pinned runtime archive; new `fetch` command (HTTPS, SHA-256 enforced); install no longer extracts a tools archive. End-to-end install and 13.5 s fresh synthesis verified.
+- Voice, model, wheels and runtime archive are byte-identical to prior distributions (same SHA-256 pin).
+- Tests: standalone-independence check, license check, fetch negative controls.
