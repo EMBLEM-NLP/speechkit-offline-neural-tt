@@ -1,0 +1,22 @@
+{
+  "status": "OFFLINE_INSTALL_AND_NEURAL_SYNTHESIS_PASSED",
+  "checkedAt": "2026-10-03T04:21:16.209345+00:00",
+  "distributionVersion": "1.0.1",
+  "toolsRoot": "/mnt/data/voice_bundle_repair_work/fresh installed runtime/EMBLEM-NLP_Study_Automation_Tools_1_0_0",
+  "voiceRuntime": "/mnt/data/voice_bundle_repair_work/fresh installed runtime/runtime",
+  "python": "/mnt/data/voice_bundle_repair_work/fresh installed runtime/runtime/.venv/bin/python",
+  "inferenceExecuted": true,
+  "externalModelDownloadRequired": false,
+  "smokeAudio": {
+    "path": "/mnt/data/voice_bundle_repair_work/fresh installed runtime/smoke/runtime-ready.wav",
+    "sha256": "84a1ea0053b220b7739b3f769b46273d5e8da3623ea22857e1b12576196a3e4b",
+    "channels": 1,
+    "sampleWidthBytes": 2,
+    "sampleRate": 22050,
+    "samples": 294006,
+    "durationSeconds": 13.333605442176871
+  },
+  "naturalnessScore": null,
+  "humanApproval": "PENDING",
+  "fullVideoRenderExecuted": false
+}

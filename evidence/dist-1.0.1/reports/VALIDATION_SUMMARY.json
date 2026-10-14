@@ -1,0 +1,86 @@
+{
+  "status": "PACKAGING_REPAIRED_NEURAL_RUNTIME_INCLUDED_AND_EXECUTED",
+  "componentChanges": "None; original tools and runtime bytes unchanged. Bootstrap and distribution metadata added.",
+  "checkedAt": "2026-10-03T04:21:16.209345+00:00",
+  "environment": {
+    "python": "3.13.5",
+    "system": "Linux",
+    "machine": "x86_64",
+    "libc": [
+      "glibc",
+      "2.41"
+    ]
+  },
+  "bootstrapTests": {
+    "passed": 15,
+    "failures": 0,
+    "scope": "Missing-runtime, archive-integrity and path-safety regression checks."
+  },
+  "archiveChecks": {
+    "status": "BUNDLE_ARCHIVES_VERIFIED",
+    "neuralRuntimeIncluded": true,
+    "archives": [
+      {
+        "name": "EMBLEM-NLP_Study_Automation_Tools_1_0_0.zip",
+        "sha256": "ed28c91022a586d27ec6b7778889c65efe19f6371a507175f55e4a4c4eeef822",
+        "bytes": 2726666,
+        "members": 162,
+        "expandedBytes": 3275379,
+        "internalChecksumRecordsPassed": 403,
+        "crc": "PASS"
+      },
+      {
+        "name": "EMBLEM-NLP_Offline_Neural_Runtime_Linux_Py313.zip",
+        "sha256": "4aa2d0fa989b127c1c1f6c13d10774d6ad5b2b3f828b52d938d864c34ff64662",
+        "bytes": 232483719,
+        "members": 34,
+        "expandedBytes": 232476139,
+        "internalChecksumRecordsPassed": 33,
+        "crc": "PASS"
+      }
+    ],
+    "inferenceExecuted": false
+  },
+  "relocationInstallation": {
+    "executed": true,
+    "workingDirectory": "/tmp",
+    "bundleDirectoryContainedSpaces": true,
+    "installDirectoryContainedSpaces": true,
+    "networkModelDownloads": false,
+    "installationMode": "pip --no-index --find-links --require-hashes",
+    "freshVenv": true
+  },
+  "neural": {
+    "status": "OFFLINE_INSTALL_AND_NEURAL_SYNTHESIS_PASSED",
+    "checkedAt": "2026-10-03T04:21:16.209345+00:00",
+    "distributionVersion": "1.0.1",
+    "toolsRoot": "/mnt/data/voice_bundle_repair_work/fresh installed runtime/EMBLEM-NLP_Study_Automation_Tools_1_0_0",
+    "voiceRuntime": "/mnt/data/voice_bundle_repair_work/fresh installed runtime/runtime",
+    "python": "/mnt/data/voice_bundle_repair_work/fresh installed runtime/runtime/.venv/bin/python",
+    "inferenceExecuted": true,
+    "externalModelDownloadRequired": false,
+    "smokeAudio": {
+      "path": "/mnt/data/voice_bundle_repair_work/fresh installed runtime/smoke/runtime-ready.wav",
+      "sha256": "84a1ea0053b220b7739b3f769b46273d5e8da3623ea22857e1b12576196a3e4b",
+      "channels": 1,
+      "sampleWidthBytes": 2,
+      "sampleRate": 22050,
+      "samples": 294006,
+      "durationSeconds": 13.333605442176871
+    },
+    "naturalnessScore": null,
+    "humanApproval": "PENDING",
+    "fullVideoRenderExecuted": false
+  },
+  "distributedFreshSmoke": "proof/runtime-ready.wav",
+  "fontBinaryScan": {
+    "hits": [],
+    "nestedArchivesInspected": 12
+  },
+  "limitations": [
+    "No new full-course render or scoring changes",
+    "No human naturalness or pronunciation approval",
+    "Not an operating-system image; external video/graphics dependencies still required",
+    "No source PDFs, database, private learner data or persistent scheduler deployment included"
+  ]
+}

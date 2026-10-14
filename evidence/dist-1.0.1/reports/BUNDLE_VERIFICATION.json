@@ -1,0 +1,25 @@
+{
+  "status": "BUNDLE_ARCHIVES_VERIFIED",
+  "neuralRuntimeIncluded": true,
+  "archives": [
+    {
+      "name": "EMBLEM-NLP_Study_Automation_Tools_1_0_0.zip",
+      "sha256": "ed28c91022a586d27ec6b7778889c65efe19f6371a507175f55e4a4c4eeef822",
+      "bytes": 2726666,
+      "members": 162,
+      "expandedBytes": 3275379,
+      "internalChecksumRecordsPassed": 403,
+      "crc": "PASS"
+    },
+    {
+      "name": "EMBLEM-NLP_Offline_Neural_Runtime_Linux_Py313.zip",
+      "sha256": "4aa2d0fa989b127c1c1f6c13d10774d6ad5b2b3f828b52d938d864c34ff64662",
+      "bytes": 232483719,
+      "members": 34,
+      "expandedBytes": 232476139,
+      "internalChecksumRecordsPassed": 33,
+      "crc": "PASS"
+    }
+  ],
+  "inferenceExecuted": false
+}

@@ -1,0 +1,6 @@
+# Runtime is a GitHub Release asset (>100 MB); fetch with: python3.13 bootstrap.py fetch
+archives/EMBLEM-NLP_Offline_Neural_Runtime_Linux_Py313.zip
+archives/*.part
+installed/
+__pycache__/
+*.pyc

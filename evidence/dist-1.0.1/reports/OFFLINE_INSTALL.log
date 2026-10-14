@@ -1,0 +1,20 @@
+WARNING: The directory '/home/oai/.cache/pip' or its parent directory is not owned or is not writable by the current user. The cache has been disabled. Check the permissions and owner of that directory. If executing pip with sudo, you should use sudo's -H flag.
+Looking in links: /mnt/data/voice_bundle_repair_work/fresh installed runtime/runtime/wheels
+Processing /mnt/data/voice_bundle_repair_work/fresh installed runtime/runtime/wheels/flatbuffers-25.12.19-py2.py3-none-any.whl (from -r /mnt/data/voice_bundle_repair_work/fresh installed runtime/runtime/requirements.hashed.txt (line 1))
+Processing /mnt/data/voice_bundle_repair_work/fresh installed runtime/runtime/wheels/numpy-2.3.5-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (from -r /mnt/data/voice_bundle_repair_work/fresh installed runtime/runtime/requirements.hashed.txt (line 2))
+Processing /mnt/data/voice_bundle_repair_work/fresh installed runtime/runtime/wheels/onnxruntime-1.30.0-cp313-cp313-manylinux_2_28_x86_64.whl (from -r /mnt/data/voice_bundle_repair_work/fresh installed runtime/runtime/requirements.hashed.txt (line 3))
+Processing /mnt/data/voice_bundle_repair_work/fresh installed runtime/runtime/wheels/packaging-26.3-py3-none-any.whl (from -r /mnt/data/voice_bundle_repair_work/fresh installed runtime/runtime/requirements.hashed.txt (line 4))
+Processing /mnt/data/voice_bundle_repair_work/fresh installed runtime/runtime/wheels/pathvalidate-3.3.1-py3-none-any.whl (from -r /mnt/data/voice_bundle_repair_work/fresh installed runtime/runtime/requirements.hashed.txt (line 5))
+Processing /mnt/data/voice_bundle_repair_work/fresh installed runtime/runtime/wheels/piper_tts-1.8.0-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.manylinux_2_28_x86_64.whl (from -r /mnt/data/voice_bundle_repair_work/fresh installed runtime/runtime/requirements.hashed.txt (line 6))
+Processing /mnt/data/voice_bundle_repair_work/fresh installed runtime/runtime/wheels/protobuf-7.36.2-cp310-abi3-manylinux2014_x86_64.whl (from -r /mnt/data/voice_bundle_repair_work/fresh installed runtime/runtime/requirements.hashed.txt (line 7))
+Installing collected packages: flatbuffers, protobuf, pathvalidate, packaging, numpy, onnxruntime, piper-tts
+
+Successfully installed flatbuffers-25.12.19 numpy-2.3.5 onnxruntime-1.30.0 packaging-26.3 pathvalidate-3.3.1 piper-tts-1.8.0 protobuf-7.36.2
+{
+  "status": "OFFLINE_RUNTIME_INSTALLED",
+  "archiveSha256": "4aa2d0fa989b127c1c1f6c13d10774d6ad5b2b3f828b52d938d864c34ff64662",
+  "wheelCount": 7,
+  "python": "/mnt/data/voice_bundle_repair_work/fresh installed runtime/runtime/.venv/bin/python",
+  "inferenceExecuted": false,
+  "networkUsed": false
+}
