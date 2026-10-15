@@ -2,7 +2,7 @@
 # Copyright (C) 2026 EMBLEM-NLP
 """Project-independent local neural speech adapter. No formant-waveform fallback."""
 from __future__ import annotations
-import argparse, hashlib, importlib.metadata, json, math, re, sys, time, wave
+import argparse, hashlib, importlib.metadata, json, math, re, sys, wave
 from pathlib import Path
 from datetime import datetime, timezone
 
@@ -42,11 +42,6 @@ def doctor(runtime,profile):
     if not math.isfinite(scale) or not .9<=scale<=1.4 or not math.isfinite(pause) or not 0<=pause<=.65:raise ValueError('Unsafe performance parameters')
     return {'status':'PREFLIGHT_PASS','engine':'Piper','engineVersion':profile['engineVersion'],'modelSha256':profile['modelSha256'],'sampleRate':profile['sampleRate'],'networkUsed':False,'waveformFallback':'DISABLED','naturalnessScore':None}
 
-def pcm(file):
-    import numpy as np
-    with wave.open(str(file),'rb') as w:
-        if w.getnchannels()!=1 or w.getsampwidth()!=2:raise ValueError('Expected mono PCM16')
-        return np.frombuffer(w.readframes(w.getnframes()),dtype='<i2'),w.getframerate()
 
 def synthesize(runtime,profile_path,script_path,out):
     import numpy as np # Loaded only in the explicit neural runtime.

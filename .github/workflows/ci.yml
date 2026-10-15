@@ -8,6 +8,9 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.13'}
       - run: python -m unittest discover -s tests -v
-      - name: Fetch pinned runtime and verify (skipped until the v1.1.0 release asset exists)
-        run: python bootstrap.py fetch && python bootstrap.py verify
-        continue-on-error: true
+      - run: python -m unittest discover -s speechkit/tests -v
+      - name: Fetch, verify and install the pinned runtime, then synthesize
+        run: |
+          python bootstrap.py fetch
+          python bootstrap.py verify
+          python bootstrap.py install --out "$RUNNER_TEMP/installed"
