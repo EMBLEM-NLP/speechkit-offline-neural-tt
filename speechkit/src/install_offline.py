@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 EMBLEM-NLP
 """Verify a supplied archive and install its local wheels without contacting a package index."""
-import argparse,hashlib,json,os,platform,subprocess,sys,zipfile
+import argparse,hashlib,json,platform,subprocess,sys,zipfile
 from pathlib import Path
 
 def sha(p):

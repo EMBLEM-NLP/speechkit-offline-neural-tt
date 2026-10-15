@@ -24,7 +24,6 @@ RELEASE_URL = f'https://github.com/{REPO}/releases/download/v{DIST_VERSION}/{RUN
 PINS = {  # Independent expected identity prevents accepting an accidental replacement.
     RUNTIME: '4aa2d0fa989b127c1c1f6c13d10774d6ad5b2b3f828b52d938d864c34ff64662',
 }
-TOOLKIT = ROOT / 'speechkit'  # Standalone narration CLI shipped in this repository.
 SMOKE_TEXT = (  # Use a fresh technical sample, not the historical bundled smoke recording.
     'This is a new neural voice test generated from the bundled model. '
     'The narration plugin and its voice libraries are both present. '
