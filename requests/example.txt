@@ -1,0 +1,3 @@
+This is a short example narration for the SpeechKit workflow.
+
+Each blank-line separated paragraph becomes one audio segment.

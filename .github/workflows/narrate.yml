@@ -1,0 +1,42 @@
+name: narrate
+on:
+  workflow_dispatch:
+    inputs:
+      request_path:
+        description: 'Script in this repo: requests/*.txt (paragraphs) or requests/*.json'
+        default: requests/example.txt
+        required: true
+permissions:
+  contents: read
+jobs:
+  narrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13'}
+      - name: Install runtime (fetch, verify, offline install, smoke synthesis)
+        run: |
+          python bootstrap.py fetch
+          python bootstrap.py verify
+          python bootstrap.py install --out "$RUNNER_TEMP/installed"
+      - name: Synthesize
+        env:
+          REQUEST: ${{ inputs.request_path }}
+        run: |
+          set -euo pipefail
+          case "$REQUEST" in requests/*) ;; *) echo "request_path must be under requests/"; exit 2;; esac
+          case "$REQUEST" in *..*) echo "invalid path"; exit 2;; esac
+          if [[ "$REQUEST" == *.txt ]]; then
+            python speechkit/src/text_to_request.py "$REQUEST" --out "$RUNNER_TEMP/request.json"
+          else
+            cp "$REQUEST" "$RUNNER_TEMP/request.json"
+          fi
+          "$RUNNER_TEMP/installed/runtime/.venv/bin/python" speechkit/src/voice.py synthesize \
+            --runtime "$RUNNER_TEMP/installed/runtime" \
+            --profile speechkit/profiles/ljspeech-high.json \
+            --script "$RUNNER_TEMP/request.json" --out speech-out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: narration-${{ github.run_id }}
+          path: speech-out/

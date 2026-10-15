@@ -29,6 +29,10 @@ Output: `speech-out/speech.json` (text, hashes, sample counts) and one WAV per s
 
 Synthesis success is not a naturalness or pronunciation approval; `voiceApproval` stays `PENDING` until a human reviews it.
 
+## Run without installing anything
+
+Add a script under [`requests/`](requests/README.md), then in GitHub open **Actions → narrate → Run workflow** and enter its path. The WAVs and `speech.json` appear as a downloadable run artifact.
+
 ## Layout
 
 | Path | Purpose |
@@ -38,6 +42,7 @@ Synthesis success is not a naturalness or pronunciation approval; `voiceApproval
 | [`docs/INTEROP.md`](docs/INTEROP.md) | The [`speech.json`](speechkit/schemas/speech.schema.json) contract for integrating other projects |
 | [`docs/LICENSING.md`](docs/LICENSING.md) | License rationale and commercial model |
 | [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) | Bundled component licenses |
+| [`requests/`](requests/README.md) | Narration scripts for the [`narrate`](.github/workflows/narrate.yml) workflow |
 | [`archives/`](archives/) | Runtime ZIP lands here (Release asset, git-ignored) |
 
 ## Boundaries
