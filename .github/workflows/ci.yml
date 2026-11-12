@@ -102,9 +102,42 @@ jobs:
         with:
           ref: df886b91301c171c6e44ae4ac12bc20e5c63c34e
           path: compatibility/legacy
-      - name: Generate previous-version pilot and verify unchanged WAV reuse after upgrade
+      - name: Generate the pilot from the actual previous-version checkout
+        working-directory: compatibility/legacy
         run: |
-          python compatibility/legacy/scripts/explainer_narration.py --input-package examples/explainer_chapter02/pilot.json --output-root artifacts/rename_resume --profile ljspeech-high --workers 1
+          python - <<'PY'
+          import json, os, subprocess, tomllib
+          from pathlib import Path
+          import speechkit_narrate
+          root = Path.cwd().resolve()
+          workspace = Path(os.environ['GITHUB_WORKSPACE']).resolve()
+          assert root == workspace / 'compatibility' / 'legacy'
+          package = Path(speechkit_narrate.__file__).resolve()
+          assert package == root / 'speechkit_narrate' / '__init__.py', package
+          commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+          assert commit == 'df886b91301c171c6e44ae4ac12bc20e5c63c34e', commit
+          receipt = {'working_directory': str(root), 'package_file': str(package), 'commit': commit,
+                     'version': tomllib.loads((root / 'pyproject.toml').read_text())['project']['version']}
+          (workspace / 'artifacts/environment/rename-legacy-source.json').write_text(json.dumps(receipt, indent=2) + '\n')
+          print(json.dumps(receipt))
+          PY
+          python scripts/explainer_narration.py --input-package "$GITHUB_WORKSPACE/examples/explainer_chapter02/pilot.json" --output-root "$GITHUB_WORKSPACE/artifacts/rename_resume" --profile ljspeech-high --workers 1
+      - name: Verify unchanged legacy WAV reuse from the current checkout
+        run: |
+          python - <<'PY'
+          import json, os, subprocess, tomllib
+          from pathlib import Path
+          import speechkit_narrate
+          root = Path.cwd().resolve()
+          assert root == Path(os.environ['GITHUB_WORKSPACE']).resolve()
+          package = Path(speechkit_narrate.__file__).resolve()
+          assert package == root / 'speechkit_narrate' / '__init__.py', package
+          receipt = {'working_directory': str(root), 'package_file': str(package),
+                     'commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
+                     'version': tomllib.loads((root / 'pyproject.toml').read_text())['project']['version']}
+          (root / 'artifacts/environment/rename-current-source.json').write_text(json.dumps(receipt, indent=2) + '\n')
+          print(json.dumps(receipt))
+          PY
           python scripts/check_rename_resume.py artifacts/rename_resume artifacts/environment/rename-resume-before.json --snapshot
           python scripts/explainer_narration.py --input-package examples/explainer_chapter02/pilot.json --output-root artifacts/rename_resume --profile ljspeech-high --workers 1
           python scripts/check_rename_resume.py artifacts/rename_resume artifacts/environment/rename-resume-before.json > artifacts/environment/rename-resume-result.json

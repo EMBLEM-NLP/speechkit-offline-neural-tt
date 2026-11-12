@@ -1,6 +1,6 @@
 {
   "name": "speechkit-voice-tts-offline-pipeline",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "Standalone local neural speech generation (Piper/ONNX) with explicit voice identity and no robotic waveform fallback.",
   "author": {
     "name": "EMBLEM-NLP"

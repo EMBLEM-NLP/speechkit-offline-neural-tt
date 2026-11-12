@@ -4,7 +4,7 @@ on:
     tags: ['v*']
   workflow_dispatch:
     inputs:
-      tag: {description: 'Release tag matching the narration package version', default: 'v1.3.0'}
+      tag: {description: 'Release tag matching the narration package version', default: 'v1.3.1'}
 permissions:
   contents: write
 jobs:

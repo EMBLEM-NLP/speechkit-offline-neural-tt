@@ -10,7 +10,7 @@ build-backend = "setuptools.build_meta"
 # package: the pipeline finds it through the checkout this package sits in, or SPEECHKIT_CHECKOUT.
 [project]
 name = "speechkit-voice-tts-offline-pipeline"
-version = "1.3.0"  # follows SpeechKit 1.1.0: the narration pipeline is new in 1.2.0
+version = "1.3.1"  # the separately delivered voice runtime remains 1.1.0
 description = "Offline neural text-to-speech and narration pipeline with pronunciation auditing, resumable synthesis, word timings and chapter exports"
 readme = "docs/NARRATION.md"
 license = {text = "GPL-3.0-or-later"}

@@ -2,7 +2,7 @@
 
 **SpeechKit Voice TTS Offline Pipeline by EMBLEM-NLP.** Offline neural text-to-speech and narration pipeline with pronunciation auditing, resumable synthesis, word timings and chapter exports. Combines a hash-pinned Piper/ONNX voice runtime with CLI, MCP and PowerShell interfaces. The runtime and optional recognizers are provisioned during setup; inference uses local models.
 
-Version **1.3.0** (voice runtime unchanged since 1.1.0) · License **GPL-3.0-or-later** (see [docs/LICENSING.md](docs/LICENSING.md)) · Linux x86_64, CPython 3.13, glibc ≥ 2.28, ≥ 1.5 GB free.
+Version **1.3.1** (voice runtime unchanged since 1.1.0) · License **GPL-3.0-or-later** (see [docs/LICENSING.md](docs/LICENSING.md)) · Linux x86_64, CPython 3.13, glibc ≥ 2.28, ≥ 1.5 GB free.
 
 The canonical Python package and command are `speechkit-voice-tts-offline-pipeline`; the existing `speechkit-narrate` command and `speechkit_narrate` imports remain supported. See [migration and compatibility](docs/RENAMING.md).
 

@@ -1,7 +1,7 @@
 # SpeechKit Voice TTS Offline Pipeline migration
 
 The canonical repository, Python distribution, command, plugin and MCP server name is
-`speechkit-voice-tts-offline-pipeline`. The pipeline release is 1.3.0. The separately
+`speechkit-voice-tts-offline-pipeline`. The pipeline release is 1.3.1. The separately
 delivered voice runtime remains component version 1.1.0 with its existing archive name and SHA-256.
 
 ## Existing projects and scripts
@@ -21,7 +21,7 @@ Use a fresh virtual environment for the canonical wheel or source package:
 
 ```sh
 python -m venv .venv
-.venv/bin/python -m pip install /path/to/speechkit_voice_tts_offline_pipeline-1.3.0-py3-none-any.whl
+.venv/bin/python -m pip install /path/to/speechkit_voice_tts_offline_pipeline-1.3.1-py3-none-any.whl
 .venv/bin/speechkit-voice-tts-offline-pipeline --json stages
 .venv/bin/speechkit-narrate --json stages
 ```
