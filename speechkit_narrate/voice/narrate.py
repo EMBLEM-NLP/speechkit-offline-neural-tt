@@ -21,7 +21,7 @@ from concurrent.futures import ThreadPoolExecutor  # one reader per worker, so n
 from pathlib import Path  # Path objects for this module's folder, the request file and the speech folder
 
 from .. import env  # locations of the speechkit checkout, the runtime venv and the aligned voice model
-from .identity import synthesis_identity, validate_record, seal_record, sha256, runtime_metadata
+from .identity import synthesis_identity, validate_record, seal_record, sha256, runtime_metadata, espeak_voice_override
 from ..locking import locked_project
 
 HERE = Path(__file__).resolve().parent  # folder of this module, where karaoke_voice.py lives
@@ -42,7 +42,8 @@ def cache_inputs(project) -> dict:
         profile = json.loads(profile_path.read_text(encoding="utf-8"))
         for name in ("model", "config"):
             files[name] = env.RUNTIME / profile[name]
-    return {"runtime": str(env.RUNTIME), "runtimeMetadata": runtime_metadata(env.RUNTIME), "files": {k: sha256(p) if p.is_file() else "missing"
+    return {"runtime": str(env.RUNTIME), "runtimeMetadata": runtime_metadata(env.RUNTIME),
+            "espeakVoiceOverride": espeak_voice_override(), "files": {k: sha256(p) if p.is_file() else "missing"
                                                   for k, p in files.items()}}
 
 

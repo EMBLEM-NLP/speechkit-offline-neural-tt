@@ -8,6 +8,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import os
 import wave
 from pathlib import Path
 
@@ -25,6 +26,11 @@ def sha256(path) -> str:
 def digest(value) -> str:
     return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":"),
                                      ensure_ascii=False, allow_nan=False).encode()).hexdigest()
+
+
+def espeak_voice_override() -> str | None:
+    """Match the worker: an empty override uses the voice from the config."""
+    return os.environ.get("KARAOKE_ESPEAK_VOICE") or None
 
 
 def runtime_metadata(runtime) -> dict:
@@ -53,6 +59,7 @@ def synthesis_identity(runtime, profile_path, aligned_model, speechkit_src, rend
         "validatorSha256": sha256(__file__),
         "speechkitSourceSha256": sha256(speechkit_src / "voice.py"),
         "runtimeMetadata": runtime_metadata(runtime),
+        "espeakVoiceOverride": espeak_voice_override(),
         "engine": profile.get("engine"), "engineVersion": profile.get("engineVersion"),
         "sampleRate": profile.get("sampleRate"),
     }

@@ -39,6 +39,11 @@ def _export_outputs(project):
     return manifest_issues(project)
 
 
+def _export_inputs(project):
+    from .audio import audit_provenance
+    return audit_provenance(project)
+
+
 # Stage 1, extract: reads the source .txt, .md or SpeechKit request .json into work/draft.md and a review report.
 # The decorator declares what the planner needs: the files it reads and writes, the settings it depends on, its options.
 # The function receives the Project and the run Ctx; it returns the summary dict from extract.run, which the run log
@@ -141,7 +146,7 @@ def _prevoice_off(project):
 # get a per-token fix before narration (lowest priority: work/pronunciations.json always wins), so the pronunciation
 # loop only verifies them. It rebuilds the script, so the fixes reach narrate through request.json, the input narrate
 # already fingerprints. Returns a summary (occurrences, fixes, warnings); writes work/prevoice/*.json.
-@stage("prevoice", dependencies=["audit/prevoice.py", "text"], needs=["script"], inputs=["book", "pronunciations"],  # what the fixes are computed from
+@stage("prevoice", dependencies=["audit/prevoice.py", "audit/autofix.py", "text", "env.py", "../emblem_rsi/pron"], needs=["script"], inputs=["book", "pronunciations"],  # what the fixes are computed from
        # the fixes the script applies, and every occurrence with its decision
        outputs=["work/prevoice/fixes.json", "work/prevoice/decisions.json"],
        # its own settings, everything that changes the script's words, and the voice (its phoneme set)
@@ -162,7 +167,7 @@ def prevoice(project, ctx):  # prevoice(project, ctx) -> dict summary; off, it o
 # outputs=["speech"] is the work/speech folder; it must exist and be non-empty. It needs prevoice (skipped while off) so
 # `run narrate` applies the prevoice fixes first; needs are not fingerprinted, so this re-runs nothing.
 @stage("narrate", needs=["script", "prevoice"], inputs=["request"], outputs=["speech"], settings=["voice.profile"],
-       dependencies=["voice", "env.py"], fingerprint_extra=_voice_inputs, validate=_voice_outputs,
+       dependencies=["voice", "env.py", "../emblem_rsi/pron/_espeak_helper.py"], fingerprint_extra=_voice_inputs, validate=_voice_outputs,
        operational_options=["workers"],
        platforms=["linux"],  # Linux-only, delegated to WSL on Windows
        # workers: how many voice processes to run in parallel; no default, so project.json voice.workers applies
@@ -187,7 +192,8 @@ def narrate(project, ctx):
 # Returns one summary per loop plus the number of word fixes kept and single-token fixes tried; side effects: pronunciations.json,
 # speech files and work/rsi/pron.
 # its output is the loop log, one JSON line per measured loop
-@stage("autofix", dependencies=["audit", "voice"], needs=["narrate"], inputs=["request", "speech"], outputs=["work/rsi/pron/log.jsonl"],
+@stage("autofix", dependencies=["audit", "voice", "text", "env.py", "../emblem_rsi/pron",
+                               "../emblem_rsi/loop.py", "../emblem_rsi/rubrics/pronunciation.json"], needs=["narrate"], inputs=["request", "speech"], outputs=["work/rsi/pron/log.jsonl"],
        # Linux-only and long-running, like narrate
        settings=["voice.profile", "audit"], platforms=["linux"], heavy=True, refreshes=["script", "narrate"],
        # each candidate spelling is voiced 3 times so one lucky take does not decide
@@ -217,7 +223,8 @@ def autofix(project, ctx):  # autofix(project, ctx) -> dict summary of the loops
 # default=False keeps it out of a plain `run`/`all`; it is run by name after manual edits to see whether they helped.
 # Returns the loop number, the promote/veto decision, the score and the pass/value of each rubric row.
 # Linux-only and heavy because measuring re-transcribes the narration
-@stage("audit", dependencies=["audit"], settings=["voice.profile", "audit"], needs=["narrate"], inputs=["request", "speech"], platforms=["linux"], default=False, heavy=True,
+@stage("audit", dependencies=["audit", "env.py", "../emblem_rsi/pron", "../emblem_rsi/loop.py",
+                             "../emblem_rsi/rubrics/pronunciation.json"], settings=["voice.profile", "audit"], needs=["narrate"], inputs=["request", "speech"], platforms=["linux"], default=False, heavy=True,
        # note: free text recorded in the loop log as the change being judged
        options={"note": {"type": "string", "description": "what changed since the last measurement"}},
        # the summary printed by `speechkit-narrate stages`
@@ -242,7 +249,8 @@ def audit(project, ctx):
 # skipped, not failed.
 # Returns the page path, or {"skipped": reason}.
 # runs after autofix so the page shows the final state
-@stage("report", dependencies=["audit/report.py"], needs=["autofix"], inputs=["work/rsi/pron", "pronunciations"],
+@stage("report", dependencies=["audit/report.py", "audit/__init__.py", "audit/template/report.html",
+                              "../emblem_rsi/pron", "../emblem_rsi/loop.py"], needs=["autofix"], inputs=["work/rsi/pron", "pronunciations"],
        # the trailing "?" marks an optional output, so a skipped report does not count as missing
        outputs=["work/rsi/pron/report/Pronunciation_Audit.html?"],
        description="the mispronounced-words page")  # short description in listings
@@ -261,7 +269,8 @@ def report(project, ctx):  # report(project, ctx) -> dict
 # ffmpeg), the word timings of each chapter, the full script, and a manifest with every file's SHA-256.
 # Returns the manifest's summary (chapters, minutes, files); side effects: files in out/narration (stale ones removed).
 @stage("export", needs=["narrate"], inputs=["docmodel", "request", "speech", "book", "work/rsi/pron/autofix-last.json"],
-       dependencies=["audio.py", "chapters.py", "voice/identity.py"], validate=_export_outputs,
+       dependencies=["audio.py", "chapters.py", "voice/identity.py", "../emblem_rsi/pron", "../emblem_rsi/loop.py"],
+       fingerprint_extra=_export_inputs, validate=_export_outputs,
        outputs=["out/narration/manifest.json"], settings=["export", "chapters", "title", "subtitle", "author", "voice.profile"],
        options={"format": {"type": "string", "enum": ["wav", "mp3", "m4a"],
                            "description": "audio format (default: project.json export.format)"}},

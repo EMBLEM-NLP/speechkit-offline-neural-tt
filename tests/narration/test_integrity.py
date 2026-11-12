@@ -96,6 +96,26 @@ class Segments(_Scratch):
             self.assertNotEqual(previous, changed, name)
             previous = changed
 
+    def test_voice_override_changes_signature_and_empty_matches_unset(self):
+        root = self.tmp / "runtime"
+        root.mkdir()
+        profile = root / "profile.json"
+        profile.write_text(json.dumps({"model": "model.onnx", "config": "config.json"}), encoding="utf-8")
+        for name in ("model.onnx", "config.json", "aligned.onnx", "voice.py", "renderer.py"):
+            (root / name).write_text("fixture", encoding="utf-8")
+        def identity():
+            return synthesis_identity(root, profile, root / "aligned.onnx", root, root / "renderer.py")
+        with mock.patch.dict(os.environ):
+            os.environ.pop("KARAOKE_ESPEAK_VOICE", None)
+            baseline = identity()
+            os.environ["KARAOKE_ESPEAK_VOICE"] = ""
+            self.assertEqual(baseline, identity())
+            os.environ["KARAOKE_ESPEAK_VOICE"] = "en-us"
+            overridden = identity()
+            self.assertNotEqual(baseline, overridden)
+            os.environ["KARAOKE_ESPEAK_VOICE"] = "en-gb"
+            self.assertNotEqual(overridden, identity())
+
 
 class ExportIntegrity(_Scratch):
     def setUp(self):
@@ -153,6 +173,97 @@ class ExportIntegrity(_Scratch):
             audio.export(self.p, log=quiet)
         self.assertEqual((self.out / "manifest.json").read_bytes(), before)
 
+    def measurement(self, number=1):
+        from emblem_rsi.pron import measure, trial
+        request = json.loads(self.p.p("request").read_text(encoding="utf-8"))
+        dm = json.loads(self.p.p("docmodel").read_text(encoding="utf-8"))
+        folder = self.p.p("rsi") / "pron" / f"measure-{number:03d}"
+        (folder / "asr").mkdir(parents=True)
+        reference = folder / "request.ref.json"
+        reference.write_text(json.dumps({**request, **trial.reference_request(request, dm)}), encoding="utf-8")
+        asr = folder / "asr" / "asr_measure.json"
+        asr.write_text(json.dumps({"inputs": {"request_sha256": sha256(reference)},
+                                  "segments": {s["id"]: {} for s in request["segments"]}}), encoding="utf-8")
+        path = folder.with_suffix(".json")
+        path.write_text(json.dumps({"page_sha256": measure.page_sha256(self.p.p("request"), self.p.p("pronunciations")),
+                                    "signature_sha256": measure.signature_sha256(self.p.p("speech"),
+                                                                                [s["id"] for s in request["segments"]]),
+                                    "metrics": {"asr_segments_coverage": 1.0}}), encoding="utf-8")
+        return path, asr, reference
+
+    def test_measure_only_audit_is_bound_and_changed_evidence_invalidates(self):
+        stage = R.load(self.p).stages["export"]
+        before = R.fingerprint(self.p, stage)["all"]
+        measurement, asr, reference = self.measurement()
+        self.assertNotEqual(before, R.fingerprint(self.p, stage)["all"])
+        self.assertIn("export input identity changed", audio.manifest_issues(self.p))
+        audio.export(self.p, log=quiet)
+        manifest = json.loads((self.out / "manifest.json").read_text(encoding="utf-8"))
+        audit = manifest["pronunciationAudit"]
+        self.assertEqual(audit["mode"], "measurement")
+        self.assertEqual(audit["approval"], "PENDING")
+        self.assertEqual(audit["measurement"]["sha256"], sha256(measurement))
+        self.assertEqual(audit["measurement"]["asr"]["sha256"], sha256(asr))
+        self.assertEqual(audit["measurement"]["reference"]["sha256"], sha256(reference))
+        self.assertIsNone(audit["autofixSummary"])
+        for path in (measurement, asr):
+            with self.subTest(path=path.name):
+                original = path.read_bytes()
+                value = json.loads(original)
+                value["note"] = "new measurement evidence"
+                path.write_text(json.dumps(value), encoding="utf-8")
+                self.assertIn("export input identity changed", audio.manifest_issues(self.p))
+                path.write_bytes(original)
+        self.assertEqual(audio.manifest_issues(self.p), [])
+
+    def test_stale_newer_measurement_cannot_replace_current_evidence(self):
+        current, _, _ = self.measurement()
+        newer, _, _ = self.measurement(2)
+        value = json.loads(newer.read_text(encoding="utf-8"))
+        valid_measurement = dict(value)
+        valid_page = value["page_sha256"]
+        value["page_sha256"] = "different page"
+        newer.write_text(json.dumps(value), encoding="utf-8")
+        audio.export(self.p, log=quiet)
+        def selected():
+            return json.loads((self.out / "manifest.json").read_text(encoding="utf-8"))["pronunciationAudit"]["measurement"]
+        self.assertEqual(selected()["sha256"], sha256(current))
+        stage = R.load(self.p).stages["export"]
+        before = R.fingerprint(self.p, stage)["all"]
+        value["page_sha256"] = valid_page
+        value["signature_sha256"] = "different audio"
+        newer.write_text(json.dumps(value), encoding="utf-8")
+        self.assertEqual(audio.manifest_issues(self.p), [])
+        self.assertEqual(before, R.fingerprint(self.p, stage)["all"])
+        newer.write_text(json.dumps(valid_measurement), encoding="utf-8")
+        self.assertIn("export input identity changed", audio.manifest_issues(self.p))
+        audio.export(self.p, log=quiet)
+        self.assertEqual(selected()["sha256"], sha256(newer))
+
+    def test_missing_or_mismatched_audit_reference_invalidates(self):
+        _, asr, reference = self.measurement()
+        audio.export(self.p, log=quiet)
+        original = reference.read_bytes()
+        reference.write_text('{"segments":[]}', encoding="utf-8")
+        evidence = json.loads(asr.read_text(encoding="utf-8"))
+        evidence["inputs"]["request_sha256"] = sha256(reference)
+        asr.write_text(json.dumps(evidence), encoding="utf-8")
+        self.assertIn("export input identity changed", audio.manifest_issues(self.p))
+        reference.write_bytes(original)
+        asr.unlink()
+        self.assertIn("export input identity changed", audio.manifest_issues(self.p))
+
+    def test_autofix_summary_is_labelled_without_current_measurement_claim(self):
+        summary = self.p.p("rsi") / "pron" / "autofix-last.json"
+        summary.parent.mkdir(parents=True)
+        summary.write_text('{"chosen":{}}', encoding="utf-8")
+        audio.export(self.p, log=quiet)
+        audit = json.loads((self.out / "manifest.json").read_text(encoding="utf-8"))["pronunciationAudit"]
+        self.assertEqual(audit["mode"], "autofix_summary")
+        self.assertIsNone(audit["measurement"])
+        self.assertEqual(audit["autofixSummary"]["currentMeasurementVerified"], False)
+        self.assertEqual(audit["approval"], "PENDING")
+
 
 class PlannerIntegrity(_Scratch):
     def test_output_options_invalidate_but_workers_do_not(self):
@@ -170,6 +281,46 @@ class PlannerIntegrity(_Scratch):
         first = st.impl
         helper.write_text("value=2\n", encoding="utf-8")
         self.assertNotEqual(first, st.impl)
+
+    def test_voice_override_invalidates_narration_but_workers_do_not(self):
+        p = self.project("Hello.")
+        stage = R.load(p).stages["narrate"]
+        with mock.patch.dict(os.environ):
+            os.environ.pop("KARAOKE_ESPEAK_VOICE", None)
+            baseline = R.fingerprint(p, stage)["all"]
+            os.environ["KARAOKE_ESPEAK_VOICE"] = ""
+            self.assertEqual(baseline, R.fingerprint(p, stage)["all"])
+            os.environ["KARAOKE_ESPEAK_VOICE"] = "en-gb"
+            changed = R.fingerprint(p, stage)["all"]
+            self.assertNotEqual(baseline, changed)
+            self.assertEqual(changed, R.fingerprint(p, stage, {"narrate": {"workers": 4}})["all"])
+
+    def changed_source(self, relative):
+        target = (Path(R.__file__).parent / relative).resolve()
+        read_bytes = Path.read_bytes
+        def changed(path):
+            original = read_bytes(path)
+            return original + b"\nchanged source fixture\n" if path.resolve() == target else original
+        return mock.patch.object(Path, "read_bytes", changed)
+
+    def test_pronunciation_helper_changes_invalidate_affected_stages(self):
+        p = self.project("Hello.")
+        stages = R.load(p).stages
+        for helper, names in (("../emblem_rsi/pron/lexicon.py", ("prevoice", "autofix", "audit", "report")),
+                              ("../emblem_rsi/pron/_espeak_helper.py", ("narrate",))):
+            for name in names:
+                with self.subTest(helper=helper, stage=name):
+                    before = R.fingerprint(p, stages[name])["all"]
+                    with self.changed_source(helper):
+                        self.assertNotEqual(before, R.fingerprint(p, stages[name])["all"])
+
+    def test_report_template_changes_only_report_implementation(self):
+        p = self.project("Hello.")
+        stages = R.load(p).stages
+        before = {name: st.impl for name, st in stages.items()}
+        with self.changed_source("audit/template/report.html"):
+            changed = {name for name, st in stages.items() if st.impl != before[name]}
+        self.assertEqual(changed, {"report"})
 
     def test_missing_postcondition_is_failure_not_success(self):
         p = self.project("Hello.")

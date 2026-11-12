@@ -224,7 +224,6 @@ def _export_to(project, out: Path, fmt: str | None = None, log=print) -> dict:
     shutil.copyfile(project.p("book"), script)
     written.append(script)
     pace = sum(1 for r in recs.values() if r.get("paceReview") == "REQUIRED")
-    audit = project.p("rsi") / "pron" / "autofix-last.json"  # summary of the last pronunciation loop, if any
     manifest = {
         "schemaVersion": "1.1.0", "kind": "speechkit-narration", "title": project.title,
         "subtitle": project.subtitle, "author": project.cfg.get("author", ""), "id": project.slug,
@@ -239,7 +238,7 @@ def _export_to(project, out: Path, fmt: str | None = None, log=print) -> dict:
         "status": "NEURAL_AUDIO_GENERATED_REVIEW_PENDING", "voiceApproval": "PENDING",
         "paceReviewSegments": pace,
         "alignmentReviewSegments": sum(bool(r.get("alignmentQuality", {}).get("reviewRequired")) for r in recs.values()),
-        "pronunciationAudit": json.loads(audit.read_text(encoding="utf-8")) if audit.exists() else None,
+        "pronunciationAudit": audit_provenance(project),
     }
     (out / "manifest.json").write_text(json.dumps(manifest, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
     log(f"export: {len(chapters_out)} chapter(s), {manifest['seconds'] / 60:.1f} min, {fmt} -> {out}")
@@ -247,8 +246,62 @@ def _export_to(project, out: Path, fmt: str | None = None, log=print) -> dict:
             "format": fmt, "words": manifest["words"], "pace_review": pace}
 
 
+def audit_provenance(project) -> dict | None:
+    """Bind current measurement evidence without treating it as listening approval.
+
+    An autofix summary has no reliable page/audio identity of its own. Preserve it
+    as labelled history; select a measurement only when all current inputs match.
+    """
+    folder = project.p("rsi") / "pron"
+    summary_path = folder / "autofix-last.json"
+    def artifact(path):
+        return {"path": str(path.relative_to(project.root)), "sha256": _sha(path)}
+    summary = None
+    if summary_path.is_file():
+        summary = {**artifact(summary_path), "currentMeasurementVerified": False,
+                   "data": json.loads(summary_path.read_text(encoding="utf-8"))}
+    candidates = [p for p in folder.glob("measure-*.json") if p.stem[8:].isdigit()]
+    selected = None
+    if candidates:
+        from emblem_rsi.pron import measure, trial
+        try:
+            request = json.loads(project.p("request").read_text(encoding="utf-8"))
+            dm = json.loads(project.p("docmodel").read_text(encoding="utf-8"))
+            ids = [s["id"] for s in request["segments"]]
+            page_hash = measure.page_sha256(project.p("request"), project.p("pronunciations"))
+            audio_hash = measure.signature_sha256(project.p("speech"), ids)
+            expected_reference = {**request, **trial.reference_request(request, dm)}
+        except (OSError, ValueError, KeyError, TypeError):
+            candidates = []
+        for path in sorted(candidates, key=lambda p: int(p.stem[8:]), reverse=True):
+            try:
+                measured = json.loads(path.read_text(encoding="utf-8"))
+                if measured.get("page_sha256") != page_hash or measured.get("signature_sha256") != audio_hash:
+                    continue
+                reference_path = path.with_suffix("") / "request.ref.json"
+                asr_path = path.with_suffix("") / "asr" / "asr_measure.json"
+                reference = json.loads(reference_path.read_text(encoding="utf-8"))
+                asr = json.loads(asr_path.read_text(encoding="utf-8"))
+                if (reference != expected_reference or asr["inputs"].get("request_sha256") != _sha(reference_path)
+                        or asr["inputs"].get("missing_wavs") or set(asr["segments"]) != set(ids)):
+                    continue
+                selected = {**artifact(path), "pageSha256": page_hash, "audioSignatureSha256": audio_hash,
+                            "reference": artifact(reference_path), "asr": artifact(asr_path),
+                            "metrics": measured.get("metrics", {}), "recognizers": asr.get("models", {})}
+                break
+            except (OSError, ValueError, KeyError, TypeError, AttributeError):
+                continue
+    if selected is None and summary is None:
+        return None
+    return {"schemaVersion": "speechkit-pronunciation-provenance-v1", "approval": "PENDING",
+            "mode": "measurement_and_autofix_summary" if selected and summary else
+                    "measurement" if selected else "autofix_summary",
+            "measurement": selected, "autofixSummary": summary,
+            "note": "Measurement identity is verified against current inputs; recognition metrics are not human approval."}
+
+
 def input_identity(project) -> str:
-    """Content identity of the narration, script, settings and final audit."""
+    """Content identity of the narration, script, settings and current audit evidence."""
     paths = {name: project.p(name) for name in ("book", "request", "docmodel")}
     paths["audit"] = project.p("rsi") / "pron" / "autofix-last.json"
     from . import env
@@ -258,7 +311,7 @@ def input_identity(project) -> str:
         for suffix in (".wav", ".wav.json"):
             name = segment["id"] + suffix
             paths["speech/" + name] = project.p("speech") / name
-    return digest({"schemaVersion": 2,
+    return digest({"schemaVersion": 3, "audit": audit_provenance(project),
                    "files": {name: _sha(path) if path.is_file() else "missing" for name, path in paths.items()},
                    "settings": {key: project.cfg.get(key) for key in
                                 ("title", "subtitle", "author", "slug", "voice", "export", "chapters")}})
