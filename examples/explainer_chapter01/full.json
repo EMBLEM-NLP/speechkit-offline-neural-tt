@@ -1,0 +1,393 @@
+{
+  "schema_version": 1,
+  "title": "From the first request to a usable Blender file",
+  "chapter": "01",
+  "scope": "full",
+  "cue_count": 57,
+  "voice_approval": "PENDING",
+  "scenes": [
+    {
+      "id": "C01-S01",
+      "title": "A model request becomes an execution trail",
+      "target": 29,
+      "cues": [
+        {
+          "id": "C01-S01-N01",
+          "scene_id": "C01-S01",
+          "text": "The request was to find a three dimensional model of the grandMA3 full-size lighting console."
+        },
+        {
+          "id": "C01-S01-N02",
+          "scene_id": "C01-S01",
+          "text": "Before a Blender script could run, the work needed a source, a usable download, and a compatible importer."
+        },
+        {
+          "id": "C01-S01-N03",
+          "scene_id": "C01-S01",
+          "text": "This chapter follows those dependencies into one small Python file and the first saved Blender scene."
+        },
+        {
+          "id": "C01-S01-N04",
+          "scene_id": "C01-S01",
+          "text": "We will keep the conversation, the executed code, and the evidence for success connected throughout."
+        }
+      ]
+    },
+    {
+      "id": "C01-S02",
+      "title": "Input 1: choose a candidate",
+      "target": 29,
+      "cues": [
+        {
+          "id": "C01-S02-N01",
+          "scene_id": "C01-S02",
+          "text": "The agent selected a GrandMA3 listing by Marco E. on 3D Warehouse as the promising starting point."
+        },
+        {
+          "id": "C01-S02-N02",
+          "scene_id": "C01-S02",
+          "text": "Its preview showed the three-screen full-size layout, but the model file had not yet been inspected."
+        },
+        {
+          "id": "C01-S02-N03",
+          "scene_id": "C01-S02",
+          "text": "An official MA Lighting CAD package was another lead; this history had not established its usable three dimensional content or accepted its license."
+        },
+        {
+          "id": "C01-S02-N04",
+          "scene_id": "C01-S02",
+          "text": "A selected candidate is a sourcing conclusion. It is not yet an imported or dimensionally verified model."
+        }
+      ]
+    },
+    {
+      "id": "C01-S03",
+      "title": "Inputs 2 and 3: remove the dependency",
+      "target": 29,
+      "cues": [
+        {
+          "id": "C01-S03-N01",
+          "scene_id": "C01-S03",
+          "text": "The next instruction authorized downloading the model into headless Blender."
+        },
+        {
+          "id": "C01-S03-N02",
+          "scene_id": "C01-S03",
+          "text": "The download required Trimble sign-in, and the environment check found that Blender was not installed on the Mac."
+        },
+        {
+          "id": "C01-S03-N03",
+          "scene_id": "C01-S03",
+          "text": "The user then reported being signed in. That answer supplied the missing authentication state for the existing task."
+        },
+        {
+          "id": "C01-S03-N04",
+          "scene_id": "C01-S03",
+          "text": "There is no separate Blender script execution to attach to each of these short inputs."
+        }
+      ]
+    },
+    {
+      "id": "C01-S04",
+      "title": "Input 4: resume the actual operation",
+      "target": 29,
+      "cues": [
+        {
+          "id": "C01-S04-N01",
+          "scene_id": "C01-S04",
+          "text": "The fourth input said proceed, and the agent resumed the selected-model download and import."
+        },
+        {
+          "id": "C01-S04-N02",
+          "scene_id": "C01-S04",
+          "text": "The first three inputs explain why this operation could happen; the two recorded importer invocations belong under input four."
+        },
+        {
+          "id": "C01-S04-N03",
+          "scene_id": "C01-S04",
+          "text": "This is why a report needs both the conclusion after each message and the exact execution record."
+        },
+        {
+          "id": "C01-S04-N04",
+          "scene_id": "C01-S04",
+          "text": "Moving a later script backward under every earlier prompt would invent activity that the ledger does not record."
+        }
+      ]
+    },
+    {
+      "id": "C01-S05",
+      "title": "Inspect the contents, not the suffix",
+      "target": 30,
+      "cues": [
+        {
+          "id": "C01-S05-N01",
+          "scene_id": "C01-S05",
+          "text": "The downloaded file had a zip name, but inspection identified COLLADA XML rather than an ordinary zip archive."
+        },
+        {
+          "id": "C01-S05-N02",
+          "scene_id": "C01-S05",
+          "text": "The retained geometry file begins with a COLLADA root element and a SketchUp authoring-tool record."
+        },
+        {
+          "id": "C01-S05-N03",
+          "scene_id": "C01-S05",
+          "text": "Its asset section declares an inch unit with a metre factor of zero point zero two five four."
+        },
+        {
+          "id": "C01-S05-N04",
+          "scene_id": "C01-S05",
+          "text": "That file-level evidence guides importer selection and later helps explain the reported dimensions."
+        }
+      ]
+    },
+    {
+      "id": "C01-S06",
+      "title": "Select the compatible ingest runtime",
+      "target": 30,
+      "cues": [
+        {
+          "id": "C01-S06-N01",
+          "scene_id": "C01-S06",
+          "text": "For this import, the agent chose Blender four point five and its native COLLADA operator."
+        },
+        {
+          "id": "C01-S06-N02",
+          "scene_id": "C01-S06",
+          "text": "The later tool setup used Blender five point two point three. Those are separate runtime contexts in this history."
+        },
+        {
+          "id": "C01-S06-N03",
+          "scene_id": "C01-S06",
+          "text": "A later schema audit could not resolve the COLLADA import operator in the installed five point two point three runtime."
+        },
+        {
+          "id": "C01-S06-N04",
+          "scene_id": "C01-S06",
+          "text": "The lesson is to record the ingest runtime explicitly, rather than assume that the newest installed Blender supports the same importer."
+        }
+      ]
+    },
+    {
+      "id": "C01-S07",
+      "title": "Read the script’s mutation boundary",
+      "target": 30,
+      "cues": [
+        {
+          "id": "C01-S07-N01",
+          "scene_id": "C01-S07",
+          "text": "The script starts with explicit source and target paths: a COLLADA file in, and a Blender file out."
+        },
+        {
+          "id": "C01-S07-N02",
+          "scene_id": "C01-S07",
+          "text": "It selects every object in the current scene and deletes the selection before calling the importer."
+        },
+        {
+          "id": "C01-S07-N03",
+          "scene_id": "C01-S07",
+          "text": "Those operations change scene state. They are not a harmless file-format inspection."
+        },
+        {
+          "id": "C01-S07-N04",
+          "scene_id": "C01-S07",
+          "text": "The later audit therefore proposes checking the source, runtime and operator before scene deletion. That correction remains a proposal in this explanation."
+        }
+      ]
+    },
+    {
+      "id": "C01-S08",
+      "title": "Import, then require a mesh result",
+      "target": 30,
+      "cues": [
+        {
+          "id": "C01-S08-N01",
+          "scene_id": "C01-S08",
+          "text": "The import call supplies the file path and enables the importer’s unit handling."
+        },
+        {
+          "id": "C01-S08-N02",
+          "scene_id": "C01-S08",
+          "text": "The script then collects objects whose type is mesh from Blender’s data collection."
+        },
+        {
+          "id": "C01-S08-N03",
+          "scene_id": "C01-S08",
+          "text": "If that list is empty, it raises an error instead of proceeding to bounds and save."
+        },
+        {
+          "id": "C01-S08-N04",
+          "scene_id": "C01-S08",
+          "text": "A nonempty mesh list establishes a narrow result. It does not check topology, completeness, console variant or physical accuracy."
+        }
+      ]
+    },
+    {
+      "id": "C01-S09",
+      "title": "Move bounds into a shared coordinate system",
+      "target": 32,
+      "cues": [
+        {
+          "id": "C01-S09-N01",
+          "scene_id": "C01-S09",
+          "text": "Each object exposes bounding-box corners in its own local coordinate system."
+        },
+        {
+          "id": "C01-S09-N02",
+          "scene_id": "C01-S09",
+          "text": "The script converts each corner to a vector and multiplies it by that object’s world matrix."
+        },
+        {
+          "id": "C01-S09-N03",
+          "scene_id": "C01-S09",
+          "text": "Only after that conversion does it take the minimum and maximum coordinate on each axis across all mesh objects."
+        },
+        {
+          "id": "C01-S09-N04",
+          "scene_id": "C01-S09",
+          "text": "This produces an axis-aligned envelope in a shared scene coordinate system, rather than mixing unrelated local coordinates."
+        }
+      ]
+    },
+    {
+      "id": "C01-S10",
+      "title": "A printed label is not a unit conversion",
+      "target": 35,
+      "cues": [
+        {
+          "id": "C01-S10-N01",
+          "scene_id": "C01-S10",
+          "text": "The script subtracts the axis minima from the maxima and prints the result beside a metres label."
+        },
+        {
+          "id": "C01-S10-N02",
+          "scene_id": "C01-S10",
+          "text": "The successful historical run printed raw bounds of about forty-five point six six, twenty-two point five two, and eighteen point zero five."
+        },
+        {
+          "id": "C01-S10-N03",
+          "scene_id": "C01-S10",
+          "text": "That same run reported an imported unit scale of zero point zero two five four."
+        },
+        {
+          "id": "C01-S10-N04",
+          "scene_id": "C01-S10",
+          "text": "Applying the recorded scale gives approximately one point one six by zero point five seven by zero point four six metres."
+        },
+        {
+          "id": "C01-S10-N05",
+          "scene_id": "C01-S10",
+          "text": "Setting the scene display system to metric does not itself rewrite every stored coordinate into metres."
+        }
+      ]
+    },
+    {
+      "id": "C01-S11",
+      "title": "Separate a crash from an importer result",
+      "target": 33,
+      "cues": [
+        {
+          "id": "C01-S11-N01",
+          "scene_id": "C01-S11",
+          "text": "The first recorded headless import process exited with code one hundred thirty-nine and wrote a crash report."
+        },
+        {
+          "id": "C01-S11-N02",
+          "scene_id": "C01-S11",
+          "text": "That attempt did not report a successful import or a saved model."
+        },
+        {
+          "id": "C01-S11-N03",
+          "scene_id": "C01-S11",
+          "text": "The archived failure analysis notes GPU-backend initialization in the crash stack, but does not establish a durable runtime repair."
+        },
+        {
+          "id": "C01-S11-N04",
+          "scene_id": "C01-S11",
+          "text": "A warning line by itself is not a proven root cause, and a later successful retry does not retroactively make the failed attempt successful."
+        }
+      ]
+    },
+    {
+      "id": "C01-S12",
+      "title": "The retry reaches the saved artifact",
+      "target": 31,
+      "cues": [
+        {
+          "id": "C01-S12-N01",
+          "scene_id": "C01-S12",
+          "text": "The retry reported a successful COLLADA import, counted twenty-four thousand, three hundred and fifty mesh objects, and saved the Blender file."
+        },
+        {
+          "id": "C01-S12-N02",
+          "scene_id": "C01-S12",
+          "text": "The final script operation is the save-as-main-file operator with the explicit target path."
+        },
+        {
+          "id": "C01-S12-N03",
+          "scene_id": "C01-S12",
+          "text": "Those logs support an imported scene and a saved artifact for that attempt."
+        },
+        {
+          "id": "C01-S12-N04",
+          "scene_id": "C01-S12",
+          "text": "Keep the executable, script path, source file, output file and process result together so that a saved artifact remains traceable to its run."
+        }
+      ]
+    },
+    {
+      "id": "C01-S13",
+      "title": "What the audit asks us to add",
+      "target": 32,
+      "cues": [
+        {
+          "id": "C01-S13-N01",
+          "scene_id": "C01-S13",
+          "text": "The later audit turns these observations into two concrete review requirements."
+        },
+        {
+          "id": "C01-S13-N02",
+          "scene_id": "C01-S13",
+          "text": "First, verify the source and supported ingest operator before deleting scene data."
+        },
+        {
+          "id": "C01-S13-N03",
+          "scene_id": "C01-S13",
+          "text": "Second, make the expected unit scale and transform assumptions explicit before interpreting measurements."
+        },
+        {
+          "id": "C01-S13-N04",
+          "scene_id": "C01-S13",
+          "text": "The proposal is to reject incompatible inputs or convert consistently. This chapter explains that plan without applying changes to the original Blender tools."
+        }
+      ]
+    },
+    {
+      "id": "C01-S14",
+      "title": "Carry the usable file into the next chapter",
+      "target": 29,
+      "cues": [
+        {
+          "id": "C01-S14-N01",
+          "scene_id": "C01-S14",
+          "text": "The result is a usable starting Blender scene with a documented acquisition and import trail."
+        },
+        {
+          "id": "C01-S14-N02",
+          "scene_id": "C01-S14",
+          "text": "Usable here means that the retry imported geometry and saved a file; the scale and hardware-fidelity questions remain separate."
+        },
+        {
+          "id": "C01-S14-N03",
+          "scene_id": "C01-S14",
+          "text": "The four prompts form one dependency chain, while the importer’s two attempts keep their individual results."
+        },
+        {
+          "id": "C01-S14-N04",
+          "scene_id": "C01-S14",
+          "text": "Chapter two follows the next boundary: how tool requests reach a live Blender scene or a new background process."
+        }
+      ]
+    }
+  ]
+}

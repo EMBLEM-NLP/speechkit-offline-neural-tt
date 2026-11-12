@@ -80,85 +80,63 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
-          cache: pip
-      - run: python -m pip install -r requirements-voice.txt -c constraints-voice.txt --report install-report.json
-      - name: Fetch and verify the pinned neural runtime
+        with: {python-version: '3.13', cache: pip}
+      - name: Install the published SpeechKit 1.3.1 wheel and voice dependencies
+        run: |
+          python -m venv "$RUNNER_TEMP/coordinator"
+          "$RUNNER_TEMP/coordinator/bin/python" -m pip install -r requirements-voice.txt -c constraints-voice.txt --report install-report.json
+          curl --fail --location --output "$RUNNER_TEMP/pipeline.whl.download" https://github.com/EMBLEM-NLP/speechkit-voice-tts-offline-pipeline/releases/download/v1.3.1/speechkit_voice_tts_offline_pipeline-1.3.1-py3-none-any.whl
+          echo "c981f08fb106722e32cc3eb8e13d45f24c3d502d458f6b1214cc0058a2a6a823  $RUNNER_TEMP/pipeline.whl.download" | sha256sum -c -
+          mv "$RUNNER_TEMP/pipeline.whl.download" "$RUNNER_TEMP/speechkit_voice_tts_offline_pipeline-1.3.1-py3-none-any.whl"
+          "$RUNNER_TEMP/coordinator/bin/python" -m pip install --no-deps "$RUNNER_TEMP/speechkit_voice_tts_offline_pipeline-1.3.1-py3-none-any.whl"
+      - name: Provision the unchanged pinned voice runtime
         run: |
           python bootstrap.py fetch
           python bootstrap.py verify
           python bootstrap.py install --out installed
           python -m unittest tests.test_bundle -v
-      - name: Record the execution environment
+      - name: Bind execution to the installed release outside the checkout
         run: |
-          mkdir -p artifacts/environment
+          mkdir -p artifacts/environment "$RUNNER_TEMP/isolated_adapter"
+          cp scripts/explainer_narration.py "$RUNNER_TEMP/isolated_adapter/"
           cp install-report.json artifacts/environment/
-          python -m pip freeze --all > artifacts/environment/coordinator-packages.txt
+          "$RUNNER_TEMP/coordinator/bin/python" scripts/record_runtime.py artifacts/environment/runtime.json
+          "$RUNNER_TEMP/coordinator/bin/python" -m pip freeze --all > artifacts/environment/coordinator-packages.txt
           installed/runtime/.venv/bin/python -m pip freeze --all > artifacts/environment/voice-packages.txt
-          python scripts/record_runtime.py artifacts/environment/runtime.json
-      - name: Check out the previous narration implementation for upgrade verification
-        uses: actions/checkout@v4
-        with:
-          ref: df886b91301c171c6e44ae4ac12bc20e5c63c34e
-          path: compatibility/legacy
-      - name: Generate the pilot from the actual previous-version checkout
-        working-directory: compatibility/legacy
-        run: |
-          python - <<'PY'
-          import json, os, subprocess, tomllib
+          cd "$RUNNER_TEMP"
+          unset PYTHONPATH
+          "$RUNNER_TEMP/coordinator/bin/python" - <<'PY'
+          import hashlib, importlib.metadata, json, os
           from pathlib import Path
           import speechkit_narrate
-          root = Path.cwd().resolve()
-          workspace = Path(os.environ['GITHUB_WORKSPACE']).resolve()
-          assert root == workspace / 'compatibility' / 'legacy'
           package = Path(speechkit_narrate.__file__).resolve()
-          assert package == root / 'speechkit_narrate' / '__init__.py', package
-          commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
-          assert commit == 'df886b91301c171c6e44ae4ac12bc20e5c63c34e', commit
-          receipt = {'working_directory': str(root), 'package_file': str(package), 'commit': commit,
-                     'version': tomllib.loads((root / 'pyproject.toml').read_text())['project']['version']}
-          (workspace / 'artifacts/environment/rename-legacy-source.json').write_text(json.dumps(receipt, indent=2) + '\n')
+          assert package.is_relative_to(Path(os.environ['RUNNER_TEMP']) / 'coordinator'), package
+          version = importlib.metadata.version('speechkit-voice-tts-offline-pipeline')
+          assert version == '1.3.1', version
+          wheel = Path(os.environ['RUNNER_TEMP']) / 'speechkit_voice_tts_offline_pipeline-1.3.1-py3-none-any.whl'
+          receipt = {'distribution': 'speechkit-voice-tts-offline-pipeline', 'version': version,
+                     'package_file': str(package), 'working_directory': str(Path.cwd()),
+                     'wheel_sha256': hashlib.sha256(wheel.read_bytes()).hexdigest(),
+                     'adapter_sha256': hashlib.sha256((Path(os.environ['RUNNER_TEMP']) / 'isolated_adapter/explainer_narration.py').read_bytes()).hexdigest()}
+          (Path(os.environ['GITHUB_WORKSPACE']) / 'artifacts/environment/installed-release.json').write_text(json.dumps(receipt, indent=2) + '\n')
           print(json.dumps(receipt))
           PY
-          python scripts/explainer_narration.py --input-package "$GITHUB_WORKSPACE/examples/explainer_chapter02/pilot.json" --output-root "$GITHUB_WORKSPACE/artifacts/rename_resume" --profile ljspeech-high --workers 1
-      - name: Verify unchanged legacy WAV reuse from the current checkout
+          "$RUNNER_TEMP/coordinator/bin/python" -m speechkit_narrate setup
+          "$RUNNER_TEMP/coordinator/bin/python" -m speechkit_narrate --json doctor > "$GITHUB_WORKSPACE/artifacts/environment/doctor.json"
+      - name: Produce the Chapter 1 pilot, audition and full narration with audit evidence
         run: |
-          python - <<'PY'
-          import json, os, subprocess, tomllib
-          from pathlib import Path
-          import speechkit_narrate
-          root = Path.cwd().resolve()
-          assert root == Path(os.environ['GITHUB_WORKSPACE']).resolve()
-          package = Path(speechkit_narrate.__file__).resolve()
-          assert package == root / 'speechkit_narrate' / '__init__.py', package
-          receipt = {'working_directory': str(root), 'package_file': str(package),
-                     'commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
-                     'version': tomllib.loads((root / 'pyproject.toml').read_text())['project']['version']}
-          (root / 'artifacts/environment/rename-current-source.json').write_text(json.dumps(receipt, indent=2) + '\n')
-          print(json.dumps(receipt))
-          PY
-          python scripts/check_rename_resume.py artifacts/rename_resume artifacts/environment/rename-resume-before.json --snapshot
-          python scripts/explainer_narration.py --input-package examples/explainer_chapter02/pilot.json --output-root artifacts/rename_resume --profile ljspeech-high --workers 1
-          python scripts/check_rename_resume.py artifacts/rename_resume artifacts/environment/rename-resume-before.json > artifacts/environment/rename-resume-result.json
-      - name: Synthesize and validate the 15 cue pilot
-        run: python scripts/explainer_narration.py --input-package examples/explainer_chapter02/pilot.json --output-root artifacts/explainer_pilot --profile ljspeech-high --workers 1
-      - name: Check the unchanged pilot resume
-        run: python scripts/explainer_narration.py --input-package examples/explainer_chapter02/pilot.json --output-root artifacts/explainer_pilot --profile ljspeech-high --workers 1
-      - name: Install and verify the pronunciation recognizers
-        run: |
-          python -m speechkit_narrate setup
-          python -m speechkit_narrate --json doctor > artifacts/environment/doctor.json
-      - name: Measure pilot pronunciation and watched technical terms
-        run: python scripts/explainer_narration.py --input-package examples/explainer_chapter02/pilot.json --output-root artifacts/explainer_pilot --profile ljspeech-high --workers 1 --audit
-      - name: Generate the separate technical glossary audition
-        run: python scripts/explainer_narration.py --input-package examples/explainer_chapter02/glossary.json --output-root artifacts/explainer_glossary --profile ljspeech-high --workers 1 --audit
-      - name: Generate the full chapter review voice after the pilot passes
-        run: python scripts/explainer_narration.py --input-package examples/explainer_chapter02/full.json --output-root artifacts/explainer_full --profile ljspeech-high --workers 1 --audit
+          cd "$RUNNER_TEMP"
+          unset PYTHONPATH
+          for scope in pilot glossary full; do
+            "$RUNNER_TEMP/coordinator/bin/python" "$RUNNER_TEMP/isolated_adapter/explainer_narration.py" --input-package "$GITHUB_WORKSPACE/examples/explainer_chapter01/$scope.json" --output-root "$GITHUB_WORKSPACE/artifacts/explainer_$scope" --profile ljspeech-high --workers 1 --audit
+          done
+          "$RUNNER_TEMP/coordinator/bin/python" "$GITHUB_WORKSPACE/scripts/check_rename_resume.py" "$GITHUB_WORKSPACE/artifacts/explainer_full" "$GITHUB_WORKSPACE/artifacts/environment/chapter01-resume-before.json" --snapshot
+          "$RUNNER_TEMP/coordinator/bin/python" "$RUNNER_TEMP/isolated_adapter/explainer_narration.py" --input-package "$GITHUB_WORKSPACE/examples/explainer_chapter01/full.json" --output-root "$GITHUB_WORKSPACE/artifacts/explainer_full" --profile ljspeech-high --workers 1 --audit
+          "$RUNNER_TEMP/coordinator/bin/python" "$GITHUB_WORKSPACE/scripts/check_rename_resume.py" "$GITHUB_WORKSPACE/artifacts/explainer_full" "$GITHUB_WORKSPACE/artifacts/environment/chapter01-resume-before.json" > "$GITHUB_WORKSPACE/artifacts/environment/chapter01-resume-result.json"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: speechkit-narration-${{ github.run_id }}
+          name: speechkit-chapter01-v131-${{ github.run_id }}
           path: |
             artifacts/
             !artifacts/**/writer.json

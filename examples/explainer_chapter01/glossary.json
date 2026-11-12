@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "title": "Chapter 1 technical pronunciation audition",
+  "chapter": "01",
+  "scope": "glossary",
+  "cue_count": 5,
+  "voice_approval": "PENDING",
+  "authored_chapter_content": false,
+  "scenes": [
+    {
+      "id": "C01-G01",
+      "title": "Technical pronunciation audition",
+      "target": 45,
+      "cues": [
+        {
+          "id": "C01-G01-N01",
+          "scene_id": "C01-G01",
+          "text": "This audition names grandMA3, MA Lighting, Trimble, SketchUp and Blender."
+        },
+        {
+          "id": "C01-G01-N02",
+          "scene_id": "C01-G01",
+          "text": "COLLADA XML declares an inch unit and a metre scale of zero point zero two five four."
+        },
+        {
+          "id": "C01-G01-N03",
+          "scene_id": "C01-G01",
+          "text": "Python converts mesh bounding boxes through an object world matrix."
+        },
+        {
+          "id": "C01-G01-N04",
+          "scene_id": "C01-G01",
+          "text": "Blender four point five imported the file; the later tool setup used five point two point three."
+        },
+        {
+          "id": "C01-G01-N05",
+          "scene_id": "C01-G01",
+          "text": "SpeechKit Voice TTS Offline Pipeline one point three point one generates this narration for listening review."
+        }
+      ]
+    }
+  ]
+}

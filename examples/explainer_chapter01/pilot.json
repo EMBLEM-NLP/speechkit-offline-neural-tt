@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "title": "From the first request to a usable Blender file",
+  "chapter": "01",
+  "scope": "pilot",
+  "cue_count": 13,
+  "voice_approval": "PENDING",
+  "scenes": [
+    {
+      "id": "C01-S05",
+      "title": "Inspect the contents, not the suffix",
+      "target": 30,
+      "cues": [
+        {
+          "id": "C01-S05-N01",
+          "scene_id": "C01-S05",
+          "text": "The downloaded file had a zip name, but inspection identified COLLADA XML rather than an ordinary zip archive."
+        },
+        {
+          "id": "C01-S05-N02",
+          "scene_id": "C01-S05",
+          "text": "The retained geometry file begins with a COLLADA root element and a SketchUp authoring-tool record."
+        },
+        {
+          "id": "C01-S05-N03",
+          "scene_id": "C01-S05",
+          "text": "Its asset section declares an inch unit with a metre factor of zero point zero two five four."
+        },
+        {
+          "id": "C01-S05-N04",
+          "scene_id": "C01-S05",
+          "text": "That file-level evidence guides importer selection and later helps explain the reported dimensions."
+        }
+      ]
+    },
+    {
+      "id": "C01-S09",
+      "title": "Move bounds into a shared coordinate system",
+      "target": 32,
+      "cues": [
+        {
+          "id": "C01-S09-N01",
+          "scene_id": "C01-S09",
+          "text": "Each object exposes bounding-box corners in its own local coordinate system."
+        },
+        {
+          "id": "C01-S09-N02",
+          "scene_id": "C01-S09",
+          "text": "The script converts each corner to a vector and multiplies it by that object’s world matrix."
+        },
+        {
+          "id": "C01-S09-N03",
+          "scene_id": "C01-S09",
+          "text": "Only after that conversion does it take the minimum and maximum coordinate on each axis across all mesh objects."
+        },
+        {
+          "id": "C01-S09-N04",
+          "scene_id": "C01-S09",
+          "text": "This produces an axis-aligned envelope in a shared scene coordinate system, rather than mixing unrelated local coordinates."
+        }
+      ]
+    },
+    {
+      "id": "C01-S10",
+      "title": "A printed label is not a unit conversion",
+      "target": 35,
+      "cues": [
+        {
+          "id": "C01-S10-N01",
+          "scene_id": "C01-S10",
+          "text": "The script subtracts the axis minima from the maxima and prints the result beside a metres label."
+        },
+        {
+          "id": "C01-S10-N02",
+          "scene_id": "C01-S10",
+          "text": "The successful historical run printed raw bounds of about forty-five point six six, twenty-two point five two, and eighteen point zero five."
+        },
+        {
+          "id": "C01-S10-N03",
+          "scene_id": "C01-S10",
+          "text": "That same run reported an imported unit scale of zero point zero two five four."
+        },
+        {
+          "id": "C01-S10-N04",
+          "scene_id": "C01-S10",
+          "text": "Applying the recorded scale gives approximately one point one six by zero point five seven by zero point four six metres."
+        },
+        {
+          "id": "C01-S10-N05",
+          "scene_id": "C01-S10",
+          "text": "Setting the scene display system to metric does not itself rewrite every stored coordinate into metres."
+        }
+      ]
+    }
+  ]
+}
