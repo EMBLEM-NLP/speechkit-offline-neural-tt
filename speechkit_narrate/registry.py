@@ -870,7 +870,7 @@ def _delegate_cmd() -> tuple[list[str], str, str]:
     # a remote path, or nothing at all for an installed copy
     root = os.environ.get("SPEECHKIT_DELEGATE_ROOT") or ("" if env.installed() else remote_path(cmd, env.REPO))
     # SPEECHKIT_DELEGATE_PYTHON, e.g. a venv inside WSL; default python3
-    return cmd, root, os.environ.get("SPEECHKIT_DELEGATE_PYTHON", "python3")
+    return cmd, root, os.environ.get("SPEECHKIT_DELEGATE_PYTHON") or "python3"
 
 
 # The words that start a delegated run, placed after the delegate prefix: the Linux `env` command, PYTHONPATH when
@@ -952,7 +952,8 @@ def delegate_tool(t: Tool, params: dict, log=print) -> dict:
     code, res, text = _stream(args, keep)  # run it and stream the log
     if code != 0 or not res.get("ok", False):  # non-zero exit or {"ok": false}
         # prefer the toolkit's own error, else the tail of the output; advice is added when the package is missing
-        raise RuntimeError(f"delegated tool {t.name} failed (exit {code}): {res.get('error') or text[-1500:]}"
+        detail = res.get("error") or text[-1500:] or "\n".join(tail)[-1500:]
+        raise RuntimeError(f"delegated tool {t.name} failed (exit {code}): {detail}"
                            # the install advice, when the package is the thing that is missing
                            f"{_missing_package_hint(root, tail)}")
     res.pop("ok", None)  # remove the envelope fields the local caller adds itself
@@ -989,7 +990,8 @@ def delegate(project, st: Stage, ctx: Ctx, accept_draft: bool) -> dict:
     code, res, text = _stream(args, keep)  # run and stream the remote log
     if code != 0 or not res.get("ok", False):  # the remote run failed or said ok: false
         # prefer the toolkit's own error text; advice is added when the package is missing
-        raise RuntimeError(f"delegated {st.name} failed (exit {code}): {res.get('error') or text[-1500:]}"
+        detail = res.get("error") or text[-1500:] or "\n".join(tail)[-1500:]
+        raise RuntimeError(f"delegated {st.name} failed (exit {code}): {detail}"
                            # the install advice, when the package is the thing that is missing
                            f"{_missing_package_hint(root, tail)}")
     # the step of this stage in the remote run's report

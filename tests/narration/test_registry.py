@@ -343,7 +343,8 @@ class Delegation(unittest.TestCase):
         out, r = cli("run", self.p.root, "penguin", env=env, check=False)
         self.assertFalse(out["ok"])
         self.assertIn("SPEECHKIT_DELEGATE", out["error"])
-        env.update(SPEECHKIT_DELEGATE=f'"{sys.executable}" "{FAKE_WSL}"', FAKE_WSL_LOG=str(self.log))
+        env.update(SPEECHKIT_DELEGATE=f'"{sys.executable}" "{FAKE_WSL}"', FAKE_WSL_LOG=str(self.log),
+                   SPEECHKIT_DELEGATE_PYTHON="")
         out, r = cli("penguin", self.p.root, "--word", "hello", env=env)
         self.assertEqual(out["result"], {"platform": "linux"})
         self.assertEqual((self.p.root / "out" / "penguin.txt").read_text(encoding="utf-8"), "hello from linux")
@@ -375,12 +376,22 @@ class Delegation(unittest.TestCase):
         out, _ = cli("tool", "shout", "--file", src, "--out", SCRATCH / "loud.txt", env=env, check=False)
         self.assertFalse(out["ok"])
         self.assertIn("SPEECHKIT_DELEGATE", out["error"])
-        env.update(SPEECHKIT_DELEGATE=f'"{sys.executable}" "{FAKE_WSL}"', FAKE_WSL_LOG=str(self.log))
+        env.update(SPEECHKIT_DELEGATE=f'"{sys.executable}" "{FAKE_WSL}"', FAKE_WSL_LOG=str(self.log),
+                   SPEECHKIT_DELEGATE_PYTHON="")
         out, r = cli("tool", "shout", "--file", src, "--out", SCRATCH / "loud.txt", env=env)
         self.assertEqual((SCRATCH / "loud.txt").read_text(encoding="utf-8"), "HELLO linux")
         self.assertEqual(out["files"], [str(SCRATCH / "loud.txt")])
         self.assertIn("shouted", r.stderr)
         self.assertIn("tool shout --params", self.log.read_text(encoding="utf-8"))
+
+    def test_missing_delegate_executable_preserves_stderr_in_error(self):
+        missing = "/speechkit-test/no-such-python"
+        env = {"SPEECHKIT_PLATFORM": "windows", "SPEECHKIT_DELEGATE": f'"{sys.executable}" "{FAKE_WSL}"',
+               "SPEECHKIT_DELEGATE_PYTHON": missing}
+        out, result = cli("run", self.p.root, "penguin", env=env, check=False)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("exit 127", out["error"])
+        self.assertIn(missing, out["error"])
 
     # Proves registry.remote_path: a SPEECHKIT_DELEGATE_PATHMAP rule maps a Windows path prefix to its WSL form, and
     # without a map only a command named wsl or wsl.exe is asked to translate paths.

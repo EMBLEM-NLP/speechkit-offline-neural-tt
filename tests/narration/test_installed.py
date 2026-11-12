@@ -122,6 +122,11 @@ class Delegation(_Layout):
         self.install()  # an installed copy
         self.assertEqual(R._delegate_cmd()[2], "/opt/speechkit_narrate/venv/bin/python")  # and the command uses that Python
 
+    def test_empty_delegate_python_uses_the_default(self):
+        # PowerShell/.NET callers can leave an inherited variable present but empty.
+        os.environ["SPEECHKIT_DELEGATE_PYTHON"] = ""
+        self.assertEqual(R._delegate_cmd()[2], "python3")
+
     # The words before the Python command: PYTHONPATH only when there is a folder.
     def test_remote_env_words(self):
         # a folder gives PYTHONPATH, and the platform variable is blanked

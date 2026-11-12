@@ -26,7 +26,7 @@ Describe 'SpeechKitNarrate module' {
         $script:SavedEnv = @{}  # name -> original value, restored in AfterAll
         foreach ($k in $EnvNames) {  # for each variable that steers the module or the toolkit
             $SavedEnv[$k] = [Environment]::GetEnvironmentVariable($k)  # remember the current value (null when unset)
-            [Environment]::SetEnvironmentVariable($k, $null)  # remove it for the duration of the tests
+            Remove-Item -LiteralPath "Env:$k" -ErrorAction SilentlyContinue  # remove it for the duration of the tests
         }
         # Import the module freshly (-Force) and keep only warnings and errors: 3>&1 and 2>&1 merge those streams into
         # the pipeline, and the filter drops the PSModuleInfo that -PassThru emits. The module warns when it cannot
@@ -165,7 +165,10 @@ Describe 'SpeechKitNarrate module' {
     # Runs once, after the last Context: restores the saved variables, unloads the module (its OnRemove handler
     # also removes the generated Invoke-Narration* tool commands) and deletes the shared work folder.
     AfterAll {
-        foreach ($k in $EnvNames) { [Environment]::SetEnvironmentVariable($k, $SavedEnv[$k]) }
+        foreach ($k in $EnvNames) {
+            if ($null -eq $SavedEnv[$k]) { Remove-Item -LiteralPath "Env:$k" -ErrorAction SilentlyContinue }
+            else { Set-Item -LiteralPath "Env:$k" -Value $SavedEnv[$k] }
+        }
         Remove-Module SpeechKitNarrate -Force -ErrorAction SilentlyContinue
         if ($WorkBase -and (Test-Path -LiteralPath $WorkBase)) { Remove-Item -LiteralPath $WorkBase -Recurse -Force }
     }
@@ -760,7 +763,7 @@ Describe 'SpeechKitNarrate module' {
             $script:WslRoot = '/proc/self/root'
         }
         AfterAll {
-            foreach ($k in @('SPEECHKIT_WSL', 'FAKE_WSL_LOG', 'FAKE_WSL_PREFIX', 'SPEECHKIT_PLUGINS')) { [Environment]::SetEnvironmentVariable($k, $null) }
+            foreach ($k in @('SPEECHKIT_WSL', 'FAKE_WSL_LOG', 'FAKE_WSL_PREFIX', 'SPEECHKIT_PLUGINS')) { Remove-Item -LiteralPath "Env:$k" -ErrorAction SilentlyContinue }
             Set-NarrationBackend -Backend Auto -WslPython '' -Distribution ''
         }
 
@@ -836,6 +839,8 @@ Describe 'SpeechKitNarrate module' {
             $env:FAKE_WSL_LOG = Join-Path $TestDrive 'fake_wsl_auto.log'
             $env:SPEECHKIT_PYTHON = $Py  # on "Windows" discovery would look for py -3.13; use the real Python
             $env:SPEECHKIT_PLATFORM = 'windows'  # the Python side treats this host as Windows
+            # PowerShell 7.5 can retain an empty environment value; Python must still choose its default.
+            $env:SPEECHKIT_DELEGATE_PYTHON = ''
             Set-NarrationBackend -Backend Auto -WslPython python3
             $script:Delegated = Join-Path $Work 'delegated'
             New-NarrationProject -Path $Delegated -InputFile $BookTxt | Out-Null
@@ -856,7 +861,7 @@ Describe 'SpeechKitNarrate module' {
         }
         AfterAll {
             InModuleScope SpeechKitNarrate -Parameters @{ Value = $RealOnWindows } { param($Value) $script:OnWindows = $Value }
-            foreach ($k in @('SPEECHKIT_WSL', 'FAKE_WSL_LOG', 'SPEECHKIT_PYTHON', 'SPEECHKIT_PLATFORM')) { [Environment]::SetEnvironmentVariable($k, $null) }
+            foreach ($k in @('SPEECHKIT_WSL', 'FAKE_WSL_LOG', 'SPEECHKIT_PYTHON', 'SPEECHKIT_PLATFORM', 'SPEECHKIT_DELEGATE_PYTHON')) { Remove-Item -LiteralPath "Env:$k" -ErrorAction SilentlyContinue }
             Set-NarrationBackend -Backend Auto -WslPython ''
         }
 
