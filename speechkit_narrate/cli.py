@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 EMBLEM-NLP
-"""speechkit-narrate command line.  python -m speechkit_narrate [--json] <command> ...
+"""speechkit-voice-tts-offline-pipeline command line.  python -m speechkit_narrate [--json] <command> ...
 
 Projects
   new       DIR --input FILE [--title ...]    make a project folder from a .txt, .md or request .json file
@@ -151,7 +151,7 @@ def collect(ns, props: dict) -> dict:
 
 
 # --------------------------------------------------------------------------------------- commands
-# `speechkit-narrate stages [DIR]`: list every stage (needs, description, where it runs, plug-in source) and the tools.
+# `speechkit-voice-tts-offline-pipeline stages [DIR]`: list every stage (needs, description, where it runs, plug-in source) and the tools.
 # a: parsed arguments (dir, plugin). With a project folder its own plug-ins are included. Prints or emits JSON.
 def cmd_stages(a):
     p = Project(a.dir) if a.dir else None  # the project, if one was named
@@ -170,7 +170,7 @@ def cmd_stages(a):
     print("\ntools: " + ", ".join(t["name"] for t in d["tools"]))  # one line naming the standalone tools
 
 
-# `speechkit-narrate tools`: the standalone tools with their parameters. a: parsed arguments (plugin). Prints the
+# `speechkit-voice-tts-offline-pipeline tools`: the standalone tools with their parameters. a: parsed arguments (plugin). Prints the
 # listing, or emits {"tools": [...]} under --json.
 def cmd_tools(a):
     reg = R.load(None, a.plugin or ())  # built-ins plus --plugin plug-ins; no project here
@@ -186,7 +186,7 @@ def cmd_tools(a):
             print(f"    --{k.replace('_', '-'):<14} {'(required) ' if k in req else ''}{v.get('description', v.get('type'))}")
 
 
-# `speechkit-narrate tool NAME [--param value ...]` or `--params JSON`: run one standalone tool on plain files.
+# `speechkit-voice-tts-offline-pipeline tool NAME [--param value ...]` or `--params JSON`: run one standalone tool on plain files.
 # a: parsed arguments; extra: the arguments argparse did not recognise (the tool's own options).
 # Delegates the tool when this platform cannot run it. Emits {"tool": name, ...result}.
 def cmd_tool(a, extra):
@@ -199,9 +199,9 @@ def cmd_tool(a, extra):
         # --params JSON is taken as the whole parameter set, with no per-flag parsing or type conversion
         params = json.loads(a.params)
     else:  # otherwise parse --name value options with a parser built from the schema
-        # The `tool` sub-command was created with add_help=False, so `speechkit-narrate tool impose --help` reaches this
+        # The `tool` sub-command was created with add_help=False, so `speechkit-voice-tts-offline-pipeline tool impose --help` reaches this
         # parser and shows the tool's own options.
-        tp = Parser(prog=f"speechkit-narrate tool {a.name}", description=t.description)
+        tp = Parser(prog=f"speechkit-voice-tts-offline-pipeline tool {a.name}", description=t.description)
         add_schema_options(tp, props)  # one option per parameter
         params = collect(tp.parse_args(extra), props)  # parse the leftover arguments and keep only those given
     miss = [k for k in t.required if k not in params]  # required parameters that were not supplied
@@ -231,7 +231,7 @@ def _run_args(a):
                 from_stage=a.from_stage, options=opts)  # --from and the options dict
 
 
-# `speechkit-narrate plan DIR [STAGE ...]`: show what `run` would do and why, without running anything. a: parsed
+# `speechkit-voice-tts-offline-pipeline plan DIR [STAGE ...]`: show what `run` would do and why, without running anything. a: parsed
 # arguments. Prints one line per step, or emits {"project", "steps"} under --json.
 def cmd_plan(a):
     p = Project(a.dir)  # open the project (raises ProjectError if project.json is missing)
@@ -248,7 +248,7 @@ def cmd_plan(a):
         print(f"{s['action']:<8} {s['stage']:<10}{where} {'; '.join(s['reasons'])}")
 
 
-# `speechkit-narrate run DIR [STAGE ...]`: bring stages up to date (only what is missing or changed runs). a: parsed
+# `speechkit-voice-tts-offline-pipeline run DIR [STAGE ...]`: bring stages up to date (only what is missing or changed runs). a: parsed
 # arguments. Interactive mode logs what ran; --json emits the full report from R.run.
 def cmd_run(a):
     p = Project(a.dir)  # open the project named on the command line
@@ -272,7 +272,7 @@ def cmd_run(a):
     emit({"project": str(p.root), **r})  # machine mode: project folder plus the run report
 
 
-# `speechkit-narrate all DIR`: the whole default pipeline, the same as `run` without targets. a: parsed arguments
+# `speechkit-voice-tts-offline-pipeline all DIR`: the whole default pipeline, the same as `run` without targets. a: parsed arguments
 # (dir, from_stage, skip_audit, accept_draft, plugin). Fills in the fields `run` expects, then calls cmd_run.
 def cmd_all(a):
     a.targets, a.only, a.force = None, None, []  # no targets, no --only, nothing forced
@@ -281,7 +281,7 @@ def cmd_all(a):
     cmd_run(a)  # the shared run path
 
 
-# `speechkit-narrate <stage> DIR [options]`: run one stage now, like make: stale prerequisites first, then the stage
+# `speechkit-voice-tts-offline-pipeline <stage> DIR [options]`: run one stage now, like make: stale prerequisites first, then the stage
 # itself (forced). a: parsed arguments including the stage's own options; name: the stage. Emits its result.
 def cmd_stage(a, name):
     p = Project(a.dir)  # load the project folder
@@ -302,7 +302,7 @@ def cmd_stage(a, name):
           "stopped": r.get("stopped")}, human="")
 
 
-# `speechkit-narrate status DIR`: what is done per stage, the narration progress and the exported files. a: parsed
+# `speechkit-voice-tts-offline-pipeline status DIR`: what is done per stage, the narration progress and the exported files. a: parsed
 # arguments. Prints a table and the extras, or emits everything as JSON.
 def cmd_status(a):
     p = Project(a.dir)  # open it (fails clearly without project.json)
@@ -333,7 +333,7 @@ def cmd_status(a):
     print(json.dumps(extra, indent=1, ensure_ascii=False))  # extras as indented JSON
 
 
-# `speechkit-narrate settings DIR [--set JSON] [--effective]`: show project.json or deep-merge changes into it.
+# `speechkit-voice-tts-offline-pipeline settings DIR [--set JSON] [--effective]`: show project.json or deep-merge changes into it.
 # a: parsed arguments. Writes project.json when --set is given. Emits the settings.
 def cmd_settings(a):
     p = Project(a.dir)  # current settings are read from project.json
@@ -345,7 +345,7 @@ def cmd_settings(a):
         emit({"project": str(p.root), "settings": p.raw})  # only what the project itself sets
 
 
-# `speechkit-narrate pron DIR <cmd> ...`: pass a command to the pronunciation audit loop (emblem_rsi). a: parsed
+# `speechkit-voice-tts-offline-pipeline pron DIR <cmd> ...`: pass a command to the pronunciation audit loop (emblem_rsi). a: parsed
 # arguments (dir, pron_cmd, rest). Exits the process with that tool's exit code.
 def cmd_pron(a):
     from . import audit  # imported only for this command
@@ -372,7 +372,7 @@ class Parser(argparse.ArgumentParser):
     # under --json; otherwise prints usage and exits with code 2 as argparse normally does.
     def error(self, message):
         if JSON:  # only when --json is active
-            raise UsageError(f"{self.prog}: {message}")  # prefixed with the program name, e.g. "speechkit-narrate run: ..."
+            raise UsageError(f"{self.prog}: {message}")  # prefixed with the program name, e.g. "speechkit-voice-tts-offline-pipeline run: ..."
         # interactive mode: argparse prints the usage line and message to stderr, then exits with code 2
         super().error(message)
 
@@ -381,7 +381,7 @@ class Parser(argparse.ArgumentParser):
 # gets its own sub-command with its declared options, so plug-in stages become commands too. Returns the parser.
 def build_parser(reg) -> argparse.ArgumentParser:
     # the module docstring is the help text; RawDescription keeps its column layout
-    ap = Parser(prog="speechkit-narrate", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = Parser(prog="speechkit-voice-tts-offline-pipeline", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     # also removed from argv by main() before parsing; declared here for --help
     ap.add_argument("--json", action="store_true", help="one JSON object on stdout, logs on stderr")
     sub = ap.add_subparsers(dest="cmd", required=True)  # one sub-parser per command; a command is mandatory
@@ -461,7 +461,7 @@ def build_parser(reg) -> argparse.ArgumentParser:
     return ap  # the finished parser: fixed commands plus one sub-command for each remaining stage
 
 
-# Entry point of `python -m speechkit_narrate` and the `speechkit-narrate` script. argv: the arguments (default sys.argv[1:]).
+# Entry point of `python -m speechkit_narrate` and the `speechkit-voice-tts-offline-pipeline` script. argv: the arguments (default sys.argv[1:]).
 # Returns the exit code: 0 success, 1 failure (doctor misses or an unexpected error under --json), 2 usage or
 # project error. Under --json exactly one JSON object is written to stdout whatever happens.
 def main(argv=None) -> int:
@@ -488,7 +488,7 @@ def main(argv=None) -> int:
         if JSON:  # report the failure as JSON
             result({"ok": False, "error": str(e), "type": type(e).__name__})  # one JSON error object
         else:  # no --json, so the error is meant for the person at the terminal
-            print(f"speechkit-narrate: {e}", file=sys.stderr)  # a short message on stderr
+            print(f"speechkit-voice-tts-offline-pipeline: {e}", file=sys.stderr)  # a short message on stderr
         return 2  # exit code 2, the same code argparse uses for a usage mistake
     ap = build_parser(reg0)  # the parser now knows every stage
     extra = []  # unrecognised arguments for `tool`
@@ -498,13 +498,13 @@ def main(argv=None) -> int:
             a, extra = ap.parse_known_args(argv)
         else:  # all other commands: their options are fully known to this parser
             a = ap.parse_args(argv)  # strict parsing: unknown options are errors
-        if a.cmd == "new":  # `speechkit-narrate new DIR --input FILE`: create a project folder from a book file
+        if a.cmd == "new":  # `speechkit-voice-tts-offline-pipeline new DIR --input FILE`: create a project folder from a book file
             # make the folder and copy the input in
             p = create(a.dir, a.input, a.title, a.subtitle, a.author, settings=json.loads(a.set) if a.set else None)
             # suggest the next command
             log(f"new project {p.root} ({p.input_kind()} input). Next: python -m speechkit_narrate run \"{p.root}\"")
             emit({"project": str(p.root), "settings": p.raw}, human="")  # the new project's settings
-        # `speechkit-narrate doctor`: check the machine for the packages, runtime and models the narration needs
+        # `speechkit-voice-tts-offline-pipeline doctor`: check the machine for the packages, runtime and models the narration needs
         elif a.cmd == "doctor":
             rows = env.checks()  # (name, ok, detail) for every dependency
             bad = sum(1 for _, ok, _ in rows if not ok)  # how many are missing
@@ -515,7 +515,7 @@ def main(argv=None) -> int:
                 for name, ok, detail in rows:  # one row per check
                     print(f"{'ok  ' if ok else 'MISS'} {name:<45} {detail}")  # ok or MISS, name, detail in columns
             return 1 if bad else 0  # exit code 1 when anything is missing
-        elif a.cmd == "setup":  # `speechkit-narrate setup`: install whatever the doctor checks would report missing
+        elif a.cmd == "setup":  # `speechkit-voice-tts-offline-pipeline setup`: install whatever the doctor checks would report missing
             env.setup(log)  # install what is missing, logging each step
             # under --json this sends {"ok": true, "setup": "done"}; interactively it prints just an empty line
             emit({"setup": "done"}, human="")
@@ -523,23 +523,23 @@ def main(argv=None) -> int:
             from . import mcp_server  # imported late because it requires the MCP SDK, which no other command needs
             # answer MCP requests over stdin and stdout until the client hangs up; its exit code becomes ours
             return mcp_server.main()
-        elif a.cmd == "stages":  # `speechkit-narrate stages [DIR]`: list the pipeline stages
+        elif a.cmd == "stages":  # `speechkit-voice-tts-offline-pipeline stages [DIR]`: list the pipeline stages
             cmd_stages(a)  # prints the stage table, or emits the registry description as JSON
-        elif a.cmd == "tools":  # `speechkit-narrate tools`: list every standalone tool with its parameters
+        elif a.cmd == "tools":  # `speechkit-voice-tts-offline-pipeline tools`: list every standalone tool with its parameters
             cmd_tools(a)  # prints each tool with its options, or the whole list as JSON
-        elif a.cmd == "tool":  # `speechkit-narrate tool NAME ...`: run one standalone tool on plain files
+        elif a.cmd == "tool":  # `speechkit-voice-tts-offline-pipeline tool NAME ...`: run one standalone tool on plain files
             cmd_tool(a, extra)  # run a standalone tool
-        elif a.cmd == "plan":  # `speechkit-narrate plan DIR`: preview what `run` would do
+        elif a.cmd == "plan":  # `speechkit-voice-tts-offline-pipeline plan DIR`: preview what `run` would do
             cmd_plan(a)  # lists each step and its reasons without running any stage
-        elif a.cmd == "run":  # `speechkit-narrate run DIR [STAGE ...]`: bring the chosen stages up to date
+        elif a.cmd == "run":  # `speechkit-voice-tts-offline-pipeline run DIR [STAGE ...]`: bring the chosen stages up to date
             cmd_run(a)  # runs only what is missing or changed, then logs or emits the report
-        elif a.cmd == "all":  # `speechkit-narrate all DIR`: run the full default pipeline
+        elif a.cmd == "all":  # `speechkit-voice-tts-offline-pipeline all DIR`: run the full default pipeline
             cmd_all(a)  # fills in the defaults that `run` expects and goes through cmd_run
-        elif a.cmd == "status":  # `speechkit-narrate status DIR`: report the project's progress
+        elif a.cmd == "status":  # `speechkit-voice-tts-offline-pipeline status DIR`: report the project's progress
             cmd_status(a)  # prints stage status, narration counts and exported files
-        elif a.cmd == "settings":  # `speechkit-narrate settings DIR`: view or change project.json
+        elif a.cmd == "settings":  # `speechkit-voice-tts-offline-pipeline settings DIR`: view or change project.json
             cmd_settings(a)  # show or change settings
-        elif a.cmd == "pron":  # `speechkit-narrate pron DIR CMD`: hand a command to the pronunciation audit tool
+        elif a.cmd == "pron":  # `speechkit-voice-tts-offline-pipeline pron DIR CMD`: hand a command to the pronunciation audit tool
             cmd_pron(a)  # never returns here: it ends the process with sys.exit and the audit tool's exit code
         else:  # any other command is a stage name
             cmd_stage(a, a.cmd)  # run that stage now
@@ -550,7 +550,7 @@ def main(argv=None) -> int:
             # one JSON failure object with the message and the exception class name, e.g. ProjectError
             result({"ok": False, "error": str(e), "type": type(e).__name__})
         else:  # no --json: a short note for the person at the terminal
-            print(f"speechkit-narrate: {e}", file=sys.stderr)  # short message without a traceback
+            print(f"speechkit-voice-tts-offline-pipeline: {e}", file=sys.stderr)  # short message without a traceback
         return 2  # exit code 2 marks an expected error the user can fix, unlike 1 for a crash
     # Anything else is a bug or an environment problem.
     except Exception as e:  # noqa: BLE001

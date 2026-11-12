@@ -22,7 +22,7 @@ State: work/.speechkit_narrate/state.json.
 
 Plug-ins add or replace stages and standalone tools without editing the toolkit. A plug-in is a module or a
 .py file with functions decorated by @stage(...) / @tool(...), or a register(registry) function. Loaded from:
-    - entry points, group "speechkit_narrate.plugins"
+    - entry points, group "speechkit_voice_tts_offline_pipeline.plugins"
     - SPEECHKIT_PLUGINS: module names or .py files, separated by os.pathsep
     - project.json "plugins": [...] (module names, or paths relative to the project)
     - every .py file in the project's plugins/ folder
@@ -135,7 +135,7 @@ class Stage:  # one stage of the narration pipeline (extract, narrate, export ..
         # source, module, name, version and code hash together identify the plug-in implementation
         return f"{self.source}:{mod}.{qual}@{self.version}#{code}"
 
-    # The stage as a plain JSON-able dict, used by Registry.describe() for `speechkit-narrate stages`, the MCP catalog and the
+    # The stage as a plain JSON-able dict, used by Registry.describe() for `speechkit-voice-tts-offline-pipeline stages`, the MCP catalog and the
     # PowerShell module. Tuples become lists for JSON; runs_here tells the caller whether this machine can run it
     # directly or must delegate it (e.g. to WSL). No side effects.
     def info(self) -> dict:
@@ -154,7 +154,7 @@ class Stage:  # one stage of the narration pipeline (extract, narrate, export ..
 @dataclass
 class Tool:  # a standalone tool (speak, quick)
     """A standalone tool: works on plain files, no project folder."""
-    name: str  # tool name, used as `speechkit-narrate tool <name>` and MCP tool_<name>
+    name: str  # tool name, used as `speechkit-voice-tts-offline-pipeline tool <name>` and MCP tool_<name>
     run: Callable  # function called with the parameters as keyword arguments plus log=
     params: dict = field(default_factory=dict)     # JSON-schema properties
     required: tuple = ()  # parameter names the caller must always give
@@ -171,7 +171,7 @@ class Tool:  # a standalone tool (speak, quick)
                 "additionalProperties": False}  # no extra keys allowed beyond the declared parameters
 
     # The tool as a JSON-able dict for listings: name, description, full parameter schema, platforms, the heavy
-    # flag, origin and whether it can run on this machine. Used by `speechkit-narrate tools` and the MCP catalog.
+    # flag, origin and whether it can run on this machine. Used by `speechkit-voice-tts-offline-pipeline tools` and the MCP catalog.
     def info(self) -> dict:
         # identity, text, and the complete argument schema
         return {"name": self.name, "description": self.description, "params": self.schema(),
@@ -267,7 +267,7 @@ class Registry:
                 if getattr(st, f) == getattr(dflt, f):  # still at its default, so the plug-in did not declare it
                     # dataclasses.replace() makes a copy with the original's value for that field
                     st = replace(st, **{f: getattr(old, f)})
-            # remember which source was replaced, for describe() and `speechkit-narrate stages`
+            # remember which source was replaced, for describe() and `speechkit-voice-tts-offline-pipeline stages`
             self.replaced[st.name] = old.source
         if not old and replaces:  # replaces=True with nothing to replace is almost certainly a typo in the name
             # fail instead of silently adding a new stage
@@ -360,7 +360,7 @@ class Registry:
                 mod = importlib.import_module(spec)
                 src = spec  # the label is the dotted name
             n = self.scan_module(mod, src)  # register its stages and tools
-            self.plugins.append({"plugin": src, "items": n})  # remember it for describe() and `speechkit-narrate stages`
+            self.plugins.append({"plugin": src, "items": n})  # remember it for describe() and `speechkit-voice-tts-offline-pipeline stages`
         except RegistryError:  # errors from add_stage/add_tool already say what is wrong
             raise  # pass them on unchanged
         # Anything else (syntax error, failed import, an exception in the plug-in body) is wrapped so callers only
@@ -412,7 +412,7 @@ class Registry:
         return out  # unordered; plan() applies the run order
 
     # The whole registry as one JSON-able dict: stages in run order, tools, plug-ins loaded, stages replaced, this
-    # platform and the delegate command (None when unset). This is what `speechkit-narrate --json stages` prints and what the
+    # platform and the delegate command (None when unset). This is what `speechkit-voice-tts-offline-pipeline --json stages` prints and what the
     # MCP server turns into tools.
     def describe(self) -> dict:
         # stages sorted by topo(), tools in registration order
@@ -436,9 +436,13 @@ def load(project=None, extra_plugins=()) -> Registry:
     reg.scan_module(builtin_tools, "speechkit-narrate")  # built-in tools, labelled "speechkit-narrate"
     try:  # installed packages may advertise plug-ins through entry points
         from importlib.metadata import entry_points  # standard-library lookup of installed package metadata
-        for ep in entry_points(group="speechkit_narrate.plugins"):  # each entry point in the "speechkit_narrate.plugins" group
-            # "module:attr" form; only the module part is used, its tags are scanned
-            reg.load_plugin(ep.value.split(":")[0])
+        loaded_modules = set()
+        for group in ("speechkit_voice_tts_offline_pipeline.plugins", "speechkit_narrate.plugins"):
+            for ep in entry_points(group=group):
+                module = ep.value.split(":", 1)[0]
+                if module not in loaded_modules:
+                    reg.load_plugin(module)
+                    loaded_modules.add(module)
     # Problems in the entry-point machinery itself are ignored (an installed package with broken metadata must not
     # stop the toolkit), but a plug-in that loads and is wrong still fails loudly.
     except Exception as e:  # noqa: BLE001
@@ -858,9 +862,9 @@ def delegate_prefix(raw: str | None = None) -> list[str]:
 
 
 # Everything a delegated call needs: the command prefix, the toolkit folder as the delegate sees it, and the
-# Python interpreter to run there. Returns (cmd, root, python). root is "" for a pip-installed copy of speechkit-narrate: its
+# Python interpreter to run there. Returns (cmd, root, python). root is "" for a pip-installed copy of speechkit-voice-tts-offline-pipeline: its
 # folder is site-packages, which holds this machine's other packages too and must not reach the delegate's PYTHONPATH,
-# so the delegate's own Python has to have speechkit-narrate installed (the PowerShell module installs it there).
+# so the delegate's own Python has to have speechkit-voice-tts-offline-pipeline installed (the PowerShell module installs it there).
 def _delegate_cmd() -> tuple[list[str], str, str]:
     if os.environ.get("SPEECHKIT_DELEGATION_DEPTH"):
         raise RegistryError("delegate still cannot run this stage on its platform; refusing recursive delegation")
@@ -877,7 +881,7 @@ def _delegate_cmd() -> tuple[list[str], str, str]:
 # there is a toolkit folder to point at, and an empty SPEECHKIT_PLATFORM so the remote side detects its own platform.
 # root: the remote toolkit folder, or "" for none. Returns a list of strings.
 def _remote_env(root: str) -> list[str]:
-    # PYTHONPATH finds the toolkit folder; it is left out when the remote Python has speechkit-narrate installed
+    # PYTHONPATH finds the toolkit folder; it is left out when the remote Python has speechkit-voice-tts-offline-pipeline installed
     return ["env", *([f"PYTHONPATH={root}"] if root else []), "SPEECHKIT_PLATFORM=", "SPEECHKIT_DELEGATION_DEPTH=1"]
 
 
@@ -943,7 +947,7 @@ def delegate_tool(t: Tool, params: dict, log=print) -> dict:
         if k in sent and sch.get("format") == "path" and sent[k]:  # given, declared as a path, and not empty
             sent[k] = remote_path(cmd, Path(sent[k]).resolve())  # resolve locally first, then translate
     # The Linux `env` command sets variables for the remote process: PYTHONPATH finds the toolkit (left out when the
-    # remote Python has speechkit-narrate installed), and an empty SPEECHKIT_PLATFORM clears any override that reaches the
+    # remote Python has speechkit-voice-tts-offline-pipeline installed), and an empty SPEECHKIT_PLATFORM clears any override that reaches the
     # remote side, so it detects its own platform and runs the tool.
     args = cmd + _remote_env(root) + [py, "-m", "speechkit_narrate", "--json", "tool", t.name,
                                       "--params", json.dumps(sent)]  # the tool's arguments as one JSON string
@@ -1136,7 +1140,7 @@ def _jsonable(x, depth=0):
     return str(x)  # anything else as text
 
 
-# What is done in a project, for `speechkit-narrate status` and MCP project_status. project: a Project; reg: the
+# What is done in a project, for `speechkit-voice-tts-offline-pipeline status` and MCP project_status. project: a Project; reg: the
 # Registry. Returns {"project", "title", "stages": [...]} with, per stage, done, partial, finish time, adopted,
 # missing outputs and the last error.
 def status(project, reg: Registry) -> dict:

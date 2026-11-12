@@ -289,7 +289,7 @@ def score(word: str, candidates: list, row: dict | None = None, allow_stress_fix
 # Finds the single best fix for each flagged lexicon row. flagged_rows are rows from lexicon_measure.json
 # (flagged, review or display mismatches); max_words limits how many rows are tried (None means all);
 # allow_stress_fix is passed to score(). Returns {word: summary of the top candidate plus up to five
-# alternatives}. Words with no surviving candidate are left out. Used by main() and speechkit-narrate's autofix.
+# alternatives}. Words with no surviving candidate are left out. Used by main() and speechkit-voice-tts-offline-pipeline's autofix.
 def best_fixes(flagged_rows: list, max_words=None, allow_stress_fix: bool = False) -> dict:
     """{word: {"respell", "distance_before", "distance_after", ...}} for flagged words that have a better candidate."""
     rows = flagged_rows[:max_words] if max_words else flagged_rows  # optionally only the first max_words rows

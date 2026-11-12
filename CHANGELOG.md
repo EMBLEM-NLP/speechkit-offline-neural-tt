@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.3.0 — SpeechKit Voice TTS Offline Pipeline
+- Canonical repository, distribution, command, plugin and MCP identity: `speechkit-voice-tts-offline-pipeline`.
+- `speechkit-narrate` and `speechkit_narrate` remain supported; existing state paths, environment variables,
+  schema IDs and built-in stage source IDs remain compatible.
+- PowerShell module `SpeechKitVoiceTtsOfflinePipeline` 1.1.0 includes a `SpeechKitNarrate` forwarding module
+  and legacy object type aliases. Default MCP registration migrates an identified legacy entry with a backup.
+- Canonical and legacy plugin entry-point groups load without duplicate module registrations.
+- Runtime component, archive bytes and SHA-256 remain unchanged at 1.1.0. New packages use the canonical
+  distribution identity; the migration guide explains transitioning an existing pip environment.
+
 ## 1.2.0 — narration pipeline
 - New [`speechkit_narrate`](speechkit_narrate/) package ([docs/NARRATION.md](docs/NARRATION.md)): the narration part of
   EMBLEM-NLP's Bookcast toolkit 2.3.0, refactored to stand on SpeechKit alone (no PDF, video, web reader, print or

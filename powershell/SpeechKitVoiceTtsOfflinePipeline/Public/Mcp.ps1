@@ -20,14 +20,14 @@ function Get-NarrationDefaultMcpConfigPath {
     Join-Path (Join-Path $cfg 'Claude') 'claude_desktop_config.json'
 }
 
-# Public command: runs the speechkit-narrate MCP server (`python -m speechkit_narrate --json mcp`) attached to this console's stdin and
+# Public command: runs the speechkit-voice-tts-offline-pipeline MCP server (`python -m speechkit_narrate --json mcp`) attached to this console's stdin and
 # stdout, which carry the Model Context Protocol messages, until its input closes. Takes no parameters of its own
 # (-WhatIf shows the command line instead of starting the server) and returns nothing; a non-zero exit writes an
 # error. For MCP clients that start PowerShell themselves.
 function Start-NarrationMcpServer {
     <#
     .SYNOPSIS
-    Runs the speechkit-narrate MCP server (python -m speechkit_narrate mcp) on this console's stdin/stdout.
+    Runs the speechkit-voice-tts-offline-pipeline MCP server (python -m speechkit_narrate mcp) on this console's stdin/stdout.
 
     .DESCRIPTION
     The server speaks the Model Context Protocol over stdio: its tools are generated from the stage and tool
@@ -35,7 +35,7 @@ function Start-NarrationMcpServer {
     Claude Desktop start the server directly, use Register-NarrationMcpServer instead.
 
     .EXAMPLE
-    pwsh -NoProfile -Command "Import-Module C:\src\speechkit-offline-neural-tt\powershell\SpeechKitNarrate; Start-NarrationMcpServer"
+    pwsh -NoProfile -Command "Import-Module C:\src\speechkit-voice-tts-offline-pipeline\powershell\SpeechKitVoiceTtsOfflinePipeline; Start-NarrationMcpServer"
 
     The command line an MCP client can use to start the server through PowerShell.
 
@@ -55,27 +55,27 @@ function Start-NarrationMcpServer {
         $spec = Get-NarrationLaunchSpec -Arguments @('mcp')  # how to start the server for the current backend
         $line = "$($spec.FilePath) $(ConvertTo-NarrationArgumentString $spec.ArgumentList)"  # the exact command line
         # with -Verbose, show the exact command (note that the host may print this on the same stdout the client reads)
-        Write-Verbose "speechkit-narrate: $line"
+        Write-Verbose "speechkit-voice-tts-offline-pipeline: $line"
         # -WhatIf prints the command line and stops here; a declined -Confirm stops here too
-        if (-not $PSCmdlet.ShouldProcess('the speechkit-narrate MCP server', $line)) { return }
+        if (-not $PSCmdlet.ShouldProcess('the speechkit-voice-tts-offline-pipeline MCP server', $line)) { return }
         # runs in the foreground, sharing this console's streams, and returns the exit code when the client disconnects
         $code = Invoke-NarrationNative -FilePath $spec.FilePath -ArgumentList $spec.ArgumentList -Environment $spec.Environment
         if ($code -ne 0) {  # a non-zero exit means the server failed
             # non-terminating error with the code
-            Write-Error -Message "speechkit-narrate mcp exited with code $code" -Category InvalidResult
+            Write-Error -Message "speechkit-voice-tts-offline-pipeline mcp exited with code $code" -Category InvalidResult
         }
     }
     catch { $PSCmdlet.ThrowTerminatingError($_) }  # rethrow as this command's own error
 }
 
-# Public command: adds (or replaces) the speechkit-narrate entry in an MCP client's JSON config, Claude Desktop's by default,
+# Public command: adds (or replaces) the speechkit-voice-tts-offline-pipeline entry in an MCP client's JSON config, Claude Desktop's by default,
 # so the client starts the server itself. -ConfigPath picks the file, -Name the server's key in mcpServers, -Delegate
 # overrides SPEECHKIT_DELEGATE ('' removes it), -NoBackup skips the timestamped copy. Every other setting in the file
-# is kept. Supports -WhatIf. Writes the config (and a .bak copy); returns a SpeechKitNarrate.McpRegistration object.
+# is kept. Supports -WhatIf. Writes the config (and a .bak copy); returns a SpeechKitVoiceTtsOfflinePipeline.McpRegistration object.
 function Register-NarrationMcpServer {
     <#
     .SYNOPSIS
-    Adds the speechkit-narrate MCP server to an MCP client's config file (Claude Desktop by default).
+    Adds the speechkit-voice-tts-offline-pipeline MCP server to an MCP client's config file (Claude Desktop by default).
 
     .DESCRIPTION
     Reads the config file (if it exists), backs it up next to itself, and merges an "mcpServers" entry:
@@ -93,7 +93,7 @@ function Register-NarrationMcpServer {
     (~/Library/Application Support/Claude/... on macOS, ~/.config/Claude/... on Linux).
 
     .PARAMETER Name
-    The server's name in mcpServers (default speechkit-narrate).
+    The server's name in mcpServers (default speechkit-voice-tts-offline-pipeline).
 
     .PARAMETER Delegate
     SPEECHKIT_DELEGATE to write (default: what the Auto backend uses on Windows, e.g. "wsl.exe -d Ubuntu-24.04 --exec").
@@ -104,7 +104,7 @@ function Register-NarrationMcpServer {
     .EXAMPLE
     Register-NarrationMcpServer
 
-    Adds speechkit-narrate to Claude Desktop's servers; restart Claude Desktop afterwards.
+    Adds speechkit-voice-tts-offline-pipeline to Claude Desktop's servers; restart Claude Desktop afterwards.
 
     .EXAMPLE
     Register-NarrationMcpServer -ConfigPath .\mcp.json -Name narrate-dev -WhatIf
@@ -112,16 +112,16 @@ function Register-NarrationMcpServer {
     Shows the entry it would write.
 
     .OUTPUTS
-    SpeechKitNarrate.McpRegistration
+    SpeechKitVoiceTtsOfflinePipeline.McpRegistration
     #>
     # SupportsShouldProcess adds -WhatIf and -Confirm; Medium impact asks only when -Confirm is given
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
-    [OutputType('SpeechKitNarrate.McpRegistration')]  # declares the result type for Get-Help
+    [OutputType('SpeechKitVoiceTtsOfflinePipeline.McpRegistration')]  # declares the result type for Get-Help
     param(  # four optional parameters: config file, server name, delegate override and the no-backup switch
         [string]$ConfigPath,  # config file; empty means Claude Desktop's default location
 
         [ValidateNotNullOrEmpty()]  # the server name must not be empty
-        [string]$Name = 'speechkit-narrate',  # the key under mcpServers
+        [string]$Name = 'speechkit-voice-tts-offline-pipeline',  # the key under mcpServers
 
         [string]$Delegate,  # explicit SPEECHKIT_DELEGATE value; '' turns delegation off in the entry
 
@@ -182,7 +182,20 @@ function Register-NarrationMcpServer {
         if (-not $config.Contains('mcpServers') -or $config['mcpServers'] -isnot [System.Collections.IDictionary]) {
             $config['mcpServers'] = [ordered]@{}  # start an empty section
         }
-        $config['mcpServers'][$Name] = $entry  # add or replace only this server; other servers stay as they were
+        # A new default should replace our identified old default instead of starting two server processes.
+        # Explicit -Name values remain an intentional choice, including speechkit-narrate.
+        if (-not $PSBoundParameters.ContainsKey('Name') -and $config['mcpServers'].Contains('speechkit-narrate')) {
+            if ($config['mcpServers'].Contains($Name)) {
+                throw 'Both canonical and legacy SpeechKit MCP entries exist. Use -Name to choose the entry to update.'
+            }
+            $legacyEntry = $config['mcpServers']['speechkit-narrate']
+            $legacyArgs = @($legacyEntry.args)
+            if ($legacyArgs -notcontains 'speechkit_narrate' -or $legacyArgs -notcontains 'mcp') {
+                throw 'The speechkit-narrate entry is not an identified SpeechKit MCP launch. Use -Name to choose the entry explicitly.'
+            }
+            $config['mcpServers'].Remove('speechkit-narrate')
+        }
+        $config['mcpServers'][$Name] = $entry
         # readable, indented JSON; depth 32 keeps nested settings intact
         $json = ConvertTo-Json -InputObject $config -Depth 32
         $backup = $null  # path of the backup, if one is made
@@ -194,6 +207,9 @@ function Register-NarrationMcpServer {
         if ($exists -and -not $NoBackup) {  # back up an existing file unless told not to
             # name it <file>.<yyyyMMdd-HHmmss>.bak, e.g. claude_desktop_config.json.20240501-134500.bak
             $backup = "$file.$(Get-Date -Format 'yyyyMMdd-HHmmss').bak"
+            if (Test-Path -LiteralPath $backup) {
+                $backup = "$file.$(Get-Date -Format 'yyyyMMdd-HHmmss').$([guid]::NewGuid().ToString('n')).bak"
+            }
             Copy-Item -LiteralPath $file -Destination $backup -Force  # copy the current file to the backup
         }
         # Write next to the file first, so a failure cannot leave a half-written config behind.
@@ -207,8 +223,8 @@ function Register-NarrationMcpServer {
         finally {  # also after a failed write or copy, so no stray <file>.tmp is left next to the config
             if (Test-Path -LiteralPath $tmp -PathType Leaf) { [System.IO.File]::Delete($tmp) }
         }
-        New-NarrationObject -TypeName 'SpeechKitNarrate.McpRegistration' -Property ([ordered]@{  # describe what was registered
-                Name       = $Name  # Name: the key written under mcpServers, speechkit-narrate unless -Name was given
+        New-NarrationObject -TypeName 'SpeechKitVoiceTtsOfflinePipeline.McpRegistration' -Property ([ordered]@{  # describe what was registered
+                Name       = $Name  # Name: the key written under mcpServers, speechkit-voice-tts-offline-pipeline unless -Name was given
                 ConfigPath = $file  # the file that was changed
                 Backup     = $backup  # backup file, or $null
                 Command    = $entry.command  # program the client will start

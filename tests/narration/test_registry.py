@@ -17,7 +17,7 @@ from pathlib import Path  # object paths for folders and files
 # The repository root: this file is tests/narration/test_registry.py, so parents[2] is the folder holding the
 # speechkit_narrate package and tests/.
 REPO = Path(__file__).resolve().parents[2]  # resolve() first so a relative __file__ still gives an absolute root
-sys.path.insert(0, str(REPO))  # put the checkout first on the import path, ahead of any installed speechkit-narrate
+sys.path.insert(0, str(REPO))  # put the checkout first on the import path, ahead of any installed speechkit-voice-tts-offline-pipeline
 
 # The registry module is imported as R because the tests call many of its functions (load, plan, run, ...).
 from speechkit_narrate import registry as R  # noqa: E402
@@ -115,7 +115,7 @@ def setUpModule():
     parent = os.environ.get("SPEECHKIT_TEST_SCRATCH") or None
     if parent:
         Path(parent).mkdir(parents=True, exist_ok=True)
-    SCRATCH = Path(tempfile.mkdtemp(prefix="speechkit-narrate-test-registry-", dir=parent)).resolve()
+    SCRATCH = Path(tempfile.mkdtemp(prefix="speechkit-voice-tts-offline-pipeline-test-registry-", dir=parent)).resolve()
 
 
 # ... and this once after the last test: the scratch folder goes.
@@ -144,7 +144,7 @@ class Declarations(unittest.TestCase):
         self.assertEqual(reg.stages["narrate"].platforms, ("linux",))
         self.assertEqual(reg.tools["speak"].platforms, ("linux",))
         self.assertFalse(reg.stages["audit"].default)  # audit is not part of a plain `run`; it is only run on request
-        info = reg.describe()  # describe() is what `speechkit-narrate stages` and the MCP server publish
+        info = reg.describe()  # describe() is what `speechkit-voice-tts-offline-pipeline stages` and the MCP server publish
         # every stage entry carries its options and platforms for the generated parameters
         self.assertTrue(all("options" in s and "platforms" in s for s in info["stages"]))
 

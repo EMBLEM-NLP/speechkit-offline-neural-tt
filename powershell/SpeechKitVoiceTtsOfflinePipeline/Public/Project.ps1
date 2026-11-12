@@ -3,7 +3,7 @@
 # Public command: creates a project folder for one text with `python -m speechkit_narrate new`: project.json plus a copy
 # of the input in input\. -Path is the new folder, -InputFile the .txt, .md or SpeechKit request .json, -Title,
 # -Subtitle and -Author fill the settings, -Set adds any other project.json settings (hashtable or JSON text, passed
-# as --set). Supports -WhatIf. Writes files on disk and returns a SpeechKitNarrate.ProjectInfo (Project, Title,
+# as --set). Supports -WhatIf. Writes files on disk and returns a SpeechKitVoiceTtsOfflinePipeline.ProjectInfo (Project, Title,
 # Settings), which can be piped on to Invoke-NarrationPipeline.
 function New-NarrationProject {
     <#
@@ -43,12 +43,12 @@ function New-NarrationProject {
     Makes the project with code names read aloud and mp3 export, and prepares the narration script in one go.
 
     .OUTPUTS
-    SpeechKitNarrate.ProjectInfo
+    SpeechKitVoiceTtsOfflinePipeline.ProjectInfo
     #>
     # -WhatIf and -Confirm; Low impact, so it only asks when -Confirm is given
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Low')]
-    # tells Get-Help and tab completion that this command emits SpeechKitNarrate.ProjectInfo objects
-    [OutputType('SpeechKitNarrate.ProjectInfo')]
+    # tells Get-Help and tab completion that this command emits SpeechKitVoiceTtsOfflinePipeline.ProjectInfo objects
+    [OutputType('SpeechKitVoiceTtsOfflinePipeline.ProjectInfo')]
     param(  # parameters: the folder and the input file are required, everything else is optional
         [Parameter(Mandatory = $true, Position = 0)]  # required, and may be given first without its name
         [string]$Path,  # folder to create (relative paths are fine)
@@ -89,10 +89,10 @@ function New-NarrationProject {
             $cliArgs += "--set=$json"  # merged into project.json by Python
         }
         # -WhatIf ends here; checks above have already run
-        if (-not $PSCmdlet.ShouldProcess($dir, 'Create speechkit-narrate project')) { return }
+        if (-not $PSCmdlet.ShouldProcess($dir, 'Create speechkit-voice-tts-offline-pipeline project')) { return }
         # runs python -m speechkit_narrate new, which writes project.json and copies the input, then returns JSON
         $r = Invoke-NarrationCli -Arguments $cliArgs -Target $dir
-        New-NarrationObject -TypeName 'SpeechKitNarrate.ProjectInfo' -Property ([ordered]@{  # describe the new project
+        New-NarrationObject -TypeName 'SpeechKitVoiceTtsOfflinePipeline.ProjectInfo' -Property ([ordered]@{  # describe the new project
                 Project  = [string]$r.project  # its folder as Python reports it
                 Title    = [string]$r.settings.title  # the title stored in project.json
                 Settings = $r.settings  # the full settings Python wrote
@@ -103,7 +103,7 @@ function New-NarrationProject {
 
 # Public command: shows a project's state with `python -m speechkit_narrate status`: which stages are done, any errors, the
 # narration progress and the exported files. -Path is the project folder; it also binds from piped objects with a
-# Project or FullName property (Get-ChildItem folders, earlier results). Returns one SpeechKitNarrate.Project per folder.
+# Project or FullName property (Get-ChildItem folders, earlier results). Returns one SpeechKitVoiceTtsOfflinePipeline.Project per folder.
 function Get-NarrationProject {
     <#
     .SYNOPSIS
@@ -124,10 +124,10 @@ function Get-NarrationProject {
     Get-ChildItem .\projects -Directory | Get-NarrationProject | Select-Object Title, Done
 
     .OUTPUTS
-    SpeechKitNarrate.Project
+    SpeechKitVoiceTtsOfflinePipeline.Project
     #>
     [CmdletBinding()]
-    [OutputType('SpeechKitNarrate.Project')]  # declares the SpeechKitNarrate.Project type so help and IntelliSense know what comes out
+    [OutputType('SpeechKitVoiceTtsOfflinePipeline.Project')]  # declares the SpeechKitVoiceTtsOfflinePipeline.Project type so help and IntelliSense know what comes out
     param(  # a single parameter: the project folder, which may also arrive through the pipeline
         # required, positional and taken from piped objects by property name
         [Parameter(Mandatory = $true, Position = 0, ValueFromPipelineByPropertyName = $true)]
@@ -142,10 +142,10 @@ function Get-NarrationProject {
             $project = [string]$r.project  # the folder as Python reports it
             # one typed row per stage, skipping null entries
             $stages = @(foreach ($s in @($r.stages)) { if ($null -ne $s) { ConvertTo-NarrationStageStatus -Status $s -Project $project } })
-            # build the typed status object; SpeechKitNarrate.Format.ps1xml supplies its table view
-            New-NarrationObject -TypeName 'SpeechKitNarrate.Project' -Property ([ordered]@{
+            # build the typed status object; SpeechKitVoiceTtsOfflinePipeline.Format.ps1xml supplies its table view
+            New-NarrationObject -TypeName 'SpeechKitVoiceTtsOfflinePipeline.Project' -Property ([ordered]@{
                     Title     = [string]$r.title  # title from project.json
-                    # named Project so the object can be piped straight into other SpeechKitNarrate commands
+                    # named Project so the object can be piped straight into other SpeechKitVoiceTtsOfflinePipeline commands
                     Project   = $project
                     # names of the stages that are done
                     Done      = [string[]]@($stages | Where-Object { $_.Done } | ForEach-Object { $_.Stage })
@@ -163,7 +163,7 @@ function Get-NarrationProject {
 
 # Public command: shows what Invoke-NarrationPipeline would do with `python -m speechkit_narrate plan`: one row per stage with
 # its action (run, skip, adopt or blocked), where it runs and why. -Path is the project, -Target the stages to bring up
-# to date, -Force, -Only, -Skip, -From and -NoAdopt the planner's flags. Returns SpeechKitNarrate.PlanStep objects; it never
+# to date, -Force, -Only, -Skip, -From and -NoAdopt the planner's flags. Returns SpeechKitVoiceTtsOfflinePipeline.PlanStep objects; it never
 # changes the project.
 function Get-NarrationPlan {
     <#
@@ -203,10 +203,10 @@ function Get-NarrationPlan {
     Get-NarrationPlan .\projects\my-book -Target script | Where-Object Action -eq 'run'
 
     .OUTPUTS
-    SpeechKitNarrate.PlanStep
+    SpeechKitVoiceTtsOfflinePipeline.PlanStep
     #>
     [CmdletBinding()]
-    [OutputType('SpeechKitNarrate.PlanStep')]  # declares that one SpeechKitNarrate.PlanStep object is emitted per pipeline stage
+    [OutputType('SpeechKitVoiceTtsOfflinePipeline.PlanStep')]  # declares that one SpeechKitVoiceTtsOfflinePipeline.PlanStep object is emitted per pipeline stage
     param(  # the same stage selection switches as Invoke-NarrationPipeline, minus the run-only ones
         # the folder: mandatory, first, and bindable from the pipeline
         [Parameter(Mandatory = $true, Position = 0, ValueFromPipelineByPropertyName = $true)]
@@ -230,7 +230,7 @@ function Get-NarrationPlan {
                 # --force, --only, --skip, --from and --no-adopt as given
                 @(Get-NarrationRunArgument -Force $Force -Only $Only -Skip $Skip -From $From -NoAdopt:$NoAdopt)
             $r = Invoke-NarrationCli -Arguments $cliArgs -Target $proj  # ask Python for the plan
-            # one SpeechKitNarrate.PlanStep per step, labelled with the project folder
+            # one SpeechKitVoiceTtsOfflinePipeline.PlanStep per step, labelled with the project folder
             foreach ($s in @($r.steps)) { if ($null -ne $s) { ConvertTo-NarrationPlanStep -Step $s -Project ([string]$r.project) } }
         }
         catch { $PSCmdlet.ThrowTerminatingError($_) }  # rethrown so the error names Get-NarrationPlan
@@ -241,7 +241,7 @@ function Get-NarrationPlan {
 # outputs are missing or whose inputs, settings or code changed run. It first asks for the plan so -WhatIf can show
 # every stage and -Confirm can ask per stage (declined stages are passed as --skip). -Target, -Force, -Only, -Skip,
 # -From and -NoAdopt shape the plan, -AcceptDraft skips the review stop, -Option passes stage options. The log streams
-# to -Verbose and stage starts to the progress bar. Returns a SpeechKitNarrate.RunResult. Writes the project's outputs.
+# to -Verbose and stage starts to the progress bar. Returns a SpeechKitVoiceTtsOfflinePipeline.RunResult. Writes the project's outputs.
 function Invoke-NarrationPipeline {
     <#
     .SYNOPSIS
@@ -300,10 +300,10 @@ function Invoke-NarrationPipeline {
     Redoes everything from the script stage on, narrating with four workers, with the log on screen.
 
     .OUTPUTS
-    SpeechKitNarrate.RunResult
+    SpeechKitVoiceTtsOfflinePipeline.RunResult
     #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
-    [OutputType('SpeechKitNarrate.RunResult')]  # declares one SpeechKitNarrate.RunResult summary object per project run
+    [OutputType('SpeechKitVoiceTtsOfflinePipeline.RunResult')]  # declares one SpeechKitVoiceTtsOfflinePipeline.RunResult summary object per project run
     param(  # the plan selection parameters plus -AcceptDraft and -Option for the actual run
         # mandatory folder, first position, bindable by property name from the pipeline
         [Parameter(Mandatory = $true, Position = 0, ValueFromPipelineByPropertyName = $true)]
@@ -365,9 +365,9 @@ function Invoke-NarrationPipeline {
             # stage options as one compact JSON argument
             if ($Option -and $Option.Count) { $runArgs += "--options=$(ConvertTo-NarrationJson $Option)" }
             # run it; the progress bar is titled with the project folder's name and scaled by the stage count
-            $r = Invoke-NarrationCli -Arguments $runArgs -Activity "speechkit-narrate run $(Split-Path -Leaf $proj)" -Total $toRun -Target $proj
+            $r = Invoke-NarrationCli -Arguments $runArgs -Activity "speechkit-voice-tts-offline-pipeline run $(Split-Path -Leaf $proj)" -Total $toRun -Target $proj
             # a stage asked to stop (normally the review stop after check); say so
-            if ($r.stopped) { Write-Warning "speechkit-narrate stopped after $($r.stopped.stage): $($r.stopped.why)" }
+            if ($r.stopped) { Write-Warning "speechkit-voice-tts-offline-pipeline stopped after $($r.stopped.stage): $($r.stopped.why)" }
             ConvertTo-NarrationRunResult -Result $r  # return the typed run result
         }
         catch { $PSCmdlet.ThrowTerminatingError($_) }  # rethrown as an Invoke-NarrationPipeline error
@@ -376,7 +376,7 @@ function Invoke-NarrationPipeline {
 
 # Public command: reads a project's settings with `python -m speechkit_narrate settings`. -Path is the project folder;
 # -Effective returns every setting with its default filled in rather than only what project.json sets.
-# Returns the settings object (nested objects such as spoken, voice and export) tagged as SpeechKitNarrate.Settings.
+# Returns the settings object (nested objects such as spoken, voice and export) tagged as SpeechKitVoiceTtsOfflinePipeline.Settings.
 function Get-NarrationSetting {
     <#
     .SYNOPSIS
@@ -397,10 +397,10 @@ function Get-NarrationSetting {
     The export settings in force (format, bit rate, normalisation, lead and tail silence).
 
     .OUTPUTS
-    SpeechKitNarrate.Settings
+    SpeechKitVoiceTtsOfflinePipeline.Settings
     #>
     [CmdletBinding()]
-    [OutputType('SpeechKitNarrate.Settings')]  # the declared output type
+    [OutputType('SpeechKitVoiceTtsOfflinePipeline.Settings')]  # the declared output type
     param(  # inputs: the folder and the -Effective switch
         # the folder, mandatory and positional, also from piped objects
         [Parameter(Mandatory = $true, Position = 0, ValueFromPipelineByPropertyName = $true)]
@@ -420,7 +420,7 @@ function Get-NarrationSetting {
             $s = $r.settings  # the settings object itself
             # an empty project.json still yields an object rather than nothing
             if ($null -eq $s) { $s = New-Object PSObject }
-            $s.PSObject.TypeNames.Insert(0, 'SpeechKitNarrate.Settings')  # tag it so it is recognisable as SpeechKitNarrate.Settings
+            $s.PSObject.TypeNames.Insert(0, 'SpeechKitVoiceTtsOfflinePipeline.Settings')  # tag it so it is recognisable as SpeechKitVoiceTtsOfflinePipeline.Settings
             $s  # emit the settings object to the pipeline as this command's result
         }
         catch { $PSCmdlet.ThrowTerminatingError($_) }  # rethrown under Get-NarrationSetting's name
@@ -455,10 +455,10 @@ function Set-NarrationSetting {
     Set-NarrationSetting .\projects\my-book -Settings @{ spoken = @{ years = $true }; voice = @{ workers = 4 } } -PassThru
 
     .OUTPUTS
-    SpeechKitNarrate.Settings
+    SpeechKitVoiceTtsOfflinePipeline.Settings
     #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Low')]
-    [OutputType('SpeechKitNarrate.Settings')]  # type returned with -PassThru
+    [OutputType('SpeechKitVoiceTtsOfflinePipeline.Settings')]  # type returned with -PassThru
     param(  # inputs: folder, settings hashtable and -PassThru
         # mandatory folder, first position, can come from the pipeline
         [Parameter(Mandatory = $true, Position = 0, ValueFromPipelineByPropertyName = $true)]
@@ -481,7 +481,7 @@ function Set-NarrationSetting {
             $r = Invoke-NarrationCli -Arguments @('settings', (ConvertTo-NarrationBackendPath -Path $proj), "--set=$json") -Target $proj
             if ($PassThru) {  # nothing is output unless -PassThru asks for the merged settings
                 $s = $r.settings  # the merged settings (note: no check for an empty result, unlike Get-NarrationSetting)
-                $s.PSObject.TypeNames.Insert(0, 'SpeechKitNarrate.Settings')  # tag the object type
+                $s.PSObject.TypeNames.Insert(0, 'SpeechKitVoiceTtsOfflinePipeline.Settings')  # tag the object type
                 $s  # write the merged settings to the pipeline for the caller to inspect
             }
         }

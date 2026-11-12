@@ -50,7 +50,7 @@ def quiet(*_):
 # Base class: a scratch folder per test, removed afterwards, and helpers that make small projects in it.
 class _Scratch(unittest.TestCase):
     def setUp(self):
-        self.tmp = Path(tempfile.mkdtemp(prefix="speechkit-narrate-fixes-"))
+        self.tmp = Path(tempfile.mkdtemp(prefix="speechkit-voice-tts-offline-pipeline-fixes-"))
         self.addCleanup(shutil.rmtree, self.tmp, True)
 
     # A project made with create() from a file holding text. name is the input's file name (its extension decides

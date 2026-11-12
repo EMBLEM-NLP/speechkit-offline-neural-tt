@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 EMBLEM-NLP
-# Python JSON -> typed PowerShell objects (PSTypeName SpeechKitNarrate.*), formatted by SpeechKitNarrate.Format.ps1xml.
+# Python JSON -> typed PowerShell objects (PSTypeName SpeechKitVoiceTtsOfflinePipeline.*), formatted by SpeechKitVoiceTtsOfflinePipeline.Format.ps1xml.
 
-# Creates a PowerShell object with the given properties and a type name such as SpeechKitNarrate.Stage. -TypeName is the
+# Creates a PowerShell object with the given properties and a type name such as SpeechKitVoiceTtsOfflinePipeline.Stage. -TypeName is the
 # name, -Property an ordered dictionary of property names and values. Returns the PSObject. The type name is what
-# makes SpeechKitNarrate.Format.ps1xml pick its table or list view, and what [OutputType()] declarations refer to.
+# makes SpeechKitVoiceTtsOfflinePipeline.Format.ps1xml pick its table or list view, and what [OutputType()] declarations refer to.
 function New-NarrationObject {
     # PSScriptAnalyzer asks for -WhatIf on New-* functions; this one only builds an in-memory object, so it is exempt
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '',
@@ -14,6 +14,11 @@ function New-NarrationObject {
     $o = New-Object -TypeName PSObject -Property $Property  # a property bag built from the dictionary
     # put the custom type name first so formatting and type checks find it before the generic names
     $o.PSObject.TypeNames.Insert(0, $TypeName)
+    # Existing scripts and serialized objects can still recognize the original module's type names.
+    if ($TypeName.StartsWith('SpeechKitVoiceTtsOfflinePipeline.')) {
+        $legacy = 'SpeechKitNarrate.' + $TypeName.Substring('SpeechKitVoiceTtsOfflinePipeline.'.Length)
+        $o.PSObject.TypeNames.Insert(1, $legacy)
+    }
     $o  # write the object to the pipeline, which is how a PowerShell function returns it
 }
 
@@ -37,7 +42,7 @@ function Get-NarrationToolCommandName {
     "Invoke-Narration$pascal"  # the verb-noun command name
 }
 
-# Turns one stage description from `speechkit-narrate stages` into a SpeechKitNarrate.Stage object for Get-NarrationStage.
+# Turns one stage description from `speechkit-voice-tts-offline-pipeline stages` into a SpeechKitVoiceTtsOfflinePipeline.Stage object for Get-NarrationStage.
 # -Stage is the parsed stage, -Registry the whole registry result (for its delegate setting), -Project the project
 # folder the registry was read for. Returns the object; Where says whether the stage runs here, is delegated or is
 # blocked.
@@ -47,7 +52,7 @@ function ConvertTo-NarrationStage {
     $where = 'here'  # assume it runs locally
     # otherwise it is delegated when a SPEECHKIT_DELEGATE command exists, else it cannot run at all
     if (-not $runsHere) { if ($Registry.delegate) { $where = 'delegate' } else { $where = 'blocked' } }
-    New-NarrationObject -TypeName 'SpeechKitNarrate.Stage' -Property ([ordered]@{  # build the typed object from these properties
+    New-NarrationObject -TypeName 'SpeechKitVoiceTtsOfflinePipeline.Stage' -Property ([ordered]@{  # build the typed object from these properties
             Name        = [string]$Stage.name  # stage name, such as extract or narrate
             Needs       = ConvertTo-NarrationStringArray $Stage.needs  # stages that must be up to date first
             Description = [string]$Stage.description  # one-line summary of the stage
@@ -61,7 +66,7 @@ function ConvertTo-NarrationStage {
             Options     = $Stage.options
             Default     = [bool]$Stage.default  # part of the default pipeline when true
             Heavy       = [bool]$Stage.heavy  # marks long-running stages such as narrate
-            # 'speechkit-narrate' for built-in stages, otherwise the plug-in that supplied it
+            # 'speechkit-voice-tts-offline-pipeline' for built-in stages, otherwise the plug-in that supplied it
             Source      = [string]$Stage.source
             RunsHere    = $runsHere  # whether it can run on this machine
             Where       = $where  # here, delegate or blocked
@@ -69,7 +74,7 @@ function ConvertTo-NarrationStage {
         })
 }
 
-# Turns one tool description from `speechkit-narrate tools` into a SpeechKitNarrate.Tool object for Get-NarrationTool.
+# Turns one tool description from `speechkit-voice-tts-offline-pipeline tools` into a SpeechKitVoiceTtsOfflinePipeline.Tool object for Get-NarrationTool.
 # -Tool is the parsed description. Returns the object, including the name of its generated command.
 function ConvertTo-NarrationTool {
     param($Tool)  # the parsed tool description
@@ -78,7 +83,7 @@ function ConvertTo-NarrationTool {
     if ($Tool.params -and $Tool.params.required) { $required = $Tool.params.required }
     $props = $null  # the schema's properties object, if any
     if ($Tool.params) { $props = $Tool.params.properties }  # taken from the params schema
-    New-NarrationObject -TypeName 'SpeechKitNarrate.Tool' -Property ([ordered]@{  # build the SpeechKitNarrate.Tool object
+    New-NarrationObject -TypeName 'SpeechKitVoiceTtsOfflinePipeline.Tool' -Property ([ordered]@{  # build the SpeechKitVoiceTtsOfflinePipeline.Tool object
             Name        = [string]$Tool.name  # tool name as the CLI knows it
             Command     = Get-NarrationToolCommandName -Tool ([string]$Tool.name)  # the generated command that runs it
             Description = [string]$Tool.description  # one-line summary of what the tool does, from its registration
@@ -91,11 +96,11 @@ function ConvertTo-NarrationTool {
         })
 }
 
-# Turns one step of `speechkit-narrate plan` into a SpeechKitNarrate.PlanStep. -Step is the parsed step, -Project the project folder.
+# Turns one step of `speechkit-voice-tts-offline-pipeline plan` into a SpeechKitVoiceTtsOfflinePipeline.PlanStep. -Step is the parsed step, -Project the project folder.
 # Returns the object (Stage, Action, Where, Reasons, Project) that Get-NarrationPlan outputs.
 function ConvertTo-NarrationPlanStep {
     param($Step, [string]$Project)  # plan step and project folder
-    New-NarrationObject -TypeName 'SpeechKitNarrate.PlanStep' -Property ([ordered]@{  # build the plan row
+    New-NarrationObject -TypeName 'SpeechKitVoiceTtsOfflinePipeline.PlanStep' -Property ([ordered]@{  # build the plan row
             Stage   = [string]$Step.stage  # the stage this plan row is about
             Action  = [string]$Step.action  # run, skip, adopt or blocked
             # where it would run: here, or delegate when another command (WSL on Windows) runs it
@@ -106,11 +111,11 @@ function ConvertTo-NarrationPlanStep {
         })
 }
 
-# Turns one step of a `speechkit-narrate run` result into a SpeechKitNarrate.RunStep. -Step is the parsed step, -Project the folder.
+# Turns one step of a `speechkit-voice-tts-offline-pipeline run` result into a SpeechKitVoiceTtsOfflinePipeline.RunStep. -Step is the parsed step, -Project the folder.
 # Returns the object with timing, the stage's result data and any error.
 function ConvertTo-NarrationRunStep {
     param($Step, [string]$Project)  # run step and project folder
-    New-NarrationObject -TypeName 'SpeechKitNarrate.RunStep' -Property ([ordered]@{  # build the run row
+    New-NarrationObject -TypeName 'SpeechKitVoiceTtsOfflinePipeline.RunStep' -Property ([ordered]@{  # build the run row
             Stage   = [string]$Step.stage  # the stage this row describes
             Action  = [string]$Step.action  # ran, skip, adopt or failed
             Where   = [string]$Step.where  # whether it ran locally or through delegation
@@ -122,14 +127,14 @@ function ConvertTo-NarrationRunStep {
         })
 }
 
-# Turns the whole `speechkit-narrate run` result into a SpeechKitNarrate.RunResult for Invoke-NarrationPipeline. -Result is the parsed
+# Turns the whole `speechkit-voice-tts-offline-pipeline run` result into a SpeechKitVoiceTtsOfflinePipeline.RunResult for Invoke-NarrationPipeline. -Result is the parsed
 # JSON. Returns the object with Project, Ran (stage names), Stopped (stage and reason, or $null) and Steps.
 function ConvertTo-NarrationRunResult {
     param($Result)  # the parsed run result
     $project = [string]$Result.project  # the project folder Python reports
     # convert every step, skipping null entries; @() keeps the list an array even with one step
     $steps = @(foreach ($s in @($Result.steps)) { if ($null -ne $s) { ConvertTo-NarrationRunStep -Step $s -Project $project } })
-    New-NarrationObject -TypeName 'SpeechKitNarrate.RunResult' -Property ([ordered]@{  # build the SpeechKitNarrate.RunResult object
+    New-NarrationObject -TypeName 'SpeechKitVoiceTtsOfflinePipeline.RunResult' -Property ([ordered]@{  # build the SpeechKitVoiceTtsOfflinePipeline.RunResult object
             Project = $project  # the project folder as Python reports it
             Ran     = ConvertTo-NarrationStringArray $Result.ran  # names of the stages that actually ran
             # set when a stage asked to stop (the first run stops after check so book.md can be reviewed)
@@ -138,11 +143,11 @@ function ConvertTo-NarrationRunResult {
         })
 }
 
-# Turns one row of `speechkit-narrate status` into a SpeechKitNarrate.StageStatus for Get-NarrationProject. -Status is the parsed row,
+# Turns one row of `speechkit-voice-tts-offline-pipeline status` into a SpeechKitVoiceTtsOfflinePipeline.StageStatus for Get-NarrationProject. -Status is the parsed row,
 # -Project the folder. Returns the object. Python's 'partial' flag is not carried over.
 function ConvertTo-NarrationStageStatus {
     param($Status, [string]$Project)  # status row and project folder
-    New-NarrationObject -TypeName 'SpeechKitNarrate.StageStatus' -Property ([ordered]@{  # build the status row
+    New-NarrationObject -TypeName 'SpeechKitVoiceTtsOfflinePipeline.StageStatus' -Property ([ordered]@{  # build the status row
             Stage    = [string]$Status.stage  # name of the stage this status row describes
             Done     = [bool]$Status.done  # true when the stage has a recorded, complete run
             Finished = $Status.finished  # when it last finished (local time stamp), or $null
@@ -153,7 +158,7 @@ function ConvertTo-NarrationStageStatus {
         })
 }
 
-# Turns the result of `speechkit-narrate tool NAME` into a SpeechKitNarrate.ToolResult. -Result is the parsed JSON. Returns the object
+# Turns the result of `speechkit-voice-tts-offline-pipeline tool NAME` into a SpeechKitVoiceTtsOfflinePipeline.ToolResult. -Result is the parsed JSON. Returns the object
 # with Tool and Files first, followed by whatever other keys the tool returned (pages, sheets, warnings and so on).
 function ConvertTo-NarrationToolResult {
     param($Result)  # the parsed tool result
@@ -163,5 +168,5 @@ function ConvertTo-NarrationToolResult {
         if (@('ok', 'tool', 'files') -contains $p.Name) { continue }  # skip the keys already handled and the ok flag
         $props[$p.Name] = $p.Value  # copy the rest under their own names
     }
-    New-NarrationObject -TypeName 'SpeechKitNarrate.ToolResult' -Property $props  # build the result object
+    New-NarrationObject -TypeName 'SpeechKitVoiceTtsOfflinePipeline.ToolResult' -Property $props  # build the result object
 }

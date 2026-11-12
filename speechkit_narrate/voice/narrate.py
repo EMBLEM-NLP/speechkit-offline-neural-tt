@@ -107,7 +107,7 @@ def run_workers(project, script: Path, out: Path, workers: int, log=print) -> No
     errs = []  # error excerpts of failed workers
     # The marker folder is new for every run, so markers of an earlier run cannot hide segments, and it is removed
     # when the run ends, whether the workers succeeded or not.
-    with tempfile.TemporaryDirectory(prefix="speechkit-narrate-claims-") as claims:
+    with tempfile.TemporaryDirectory(prefix="speechkit-voice-tts-offline-pipeline-claims-") as claims:
         share = ["--claims", claims] if workers > 1 else []  # a lone worker has nobody to share with
         # start all workers at once, each told its number as "k/n" and where to mark the segments it takes
         procs = [subprocess.Popen([py, str(HERE / "karaoke_voice.py"), *args, "--worker", f"{k}/{workers}", *share],

@@ -38,7 +38,7 @@ ST = {"fixed": "Fixed", "better": "Improved", "listen": "Listen", "kept": "Kept"
 HEAD = ('<div class="row head" role="row"><div>Word</div><div>What was wrong</div><div>Cause</div><div>Fix</div>'
         '<div>Result</div><div>Status</div></div>')
 # The credits line at the bottom of the page, the same text as the script writes.
-CREDITS = ("Voice: Piper en_US-ljspeech-high via speechkit-offline-neural-tt. Recognizers: sherpa-onnx NeMo CTC "
+CREDITS = ("Voice: Piper en_US-ljspeech-high via speechkit-voice-tts-offline-pipeline. Recognizers: sherpa-onnx NeMo CTC "
            "conformer (small) and Parakeet TDT 0.6B v2, both offline. Dictionary: CMUdict. "
            "Formants: Praat (parselmouth).")
 

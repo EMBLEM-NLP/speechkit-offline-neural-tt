@@ -11,7 +11,7 @@ function Get-NarrationLaunchSpec {
     # FilePath + ArgumentList + Environment that run `python -m speechkit_narrate --json <Arguments>` on a backend.
     # -ForRegistration: the stable form written into an MCP client config (no inherited PYTHONPATH).
     param(
-        [string[]]$Arguments = @(),  # the speechkit-narrate command and its arguments, for example 'plan', 'C:\Books\my-book'
+        [string[]]$Arguments = @(),  # the speechkit-voice-tts-offline-pipeline command and its arguments, for example 'plan', 'C:\Books\my-book'
         [string]$Backend,  # backend name; empty means the session's backend
         [switch]$ForRegistration  # produce the entry for Claude Desktop's config rather than for an immediate run
     )
@@ -31,7 +31,7 @@ function Get-NarrationLaunchSpec {
         # UTF-8 whatever the Linux locale is.
         $envArgs = @('PYTHONUTF8=1', 'PYTHONIOENCODING=utf-8')
         # Source mode: PYTHONPATH is the toolkit folder as WSL sees it (/mnt/c/...), listed first. Installed mode has
-        # none, because the WSL python must already have the speechkit-narrate package installed.
+        # none, because the WSL python must already have the speechkit-voice-tts-offline-pipeline package installed.
         if ($root) { $envArgs = @("PYTHONPATH=$(ConvertTo-NarrationWslPath -Path $root)") + $envArgs }
         $plugins = Get-NarrationWslPluginValue  # the plug-in list with .py paths translated to WSL paths, or $null
         # pass plug-ins along, since Windows environment variables do not cross into WSL by default
@@ -168,7 +168,7 @@ function ConvertTo-NarrationJson {
 # Builds a PowerShell ErrorRecord from a failure reported by Python, so callers get a normal terminating error with
 # a sensible category for -ErrorAction and $Error. -Message is the text, -Type the Python exception class name
 # (ProjectError, RegistryError, ValueError and so on), -Target the object involved (usually the project path),
-# -Trace Python's traceback text. Returns the ErrorRecord; its FullyQualifiedErrorId is SpeechKitNarrate.<Type>.
+# -Trace Python's traceback text. Returns the ErrorRecord; its FullyQualifiedErrorId is SpeechKitVoiceTtsOfflinePipeline.<Type>.
 function New-NarrationErrorRecord {
     # PSScriptAnalyzer asks for -WhatIf on New-* functions; this one only builds an in-memory ErrorRecord, so it is
     # exempt
@@ -196,7 +196,7 @@ function New-NarrationErrorRecord {
     $ex.Data['NarrationType'] = $Type
     if ($Trace) { $ex.Data['Trace'] = $Trace }  # the traceback, when Python sent one
     # exception, error id, category and target make up the record
-    New-Object System.Management.Automation.ErrorRecord($ex, "SpeechKitNarrate.$Type", $category, $Target)
+    New-Object System.Management.Automation.ErrorRecord($ex, "SpeechKitVoiceTtsOfflinePipeline.$Type", $category, $Target)
 }
 
 # The heart of the module: runs `python -m speechkit_narrate --json <Arguments>` on the chosen backend and returns Python's
@@ -211,16 +211,16 @@ function Invoke-NarrationCli {
     # Returns the stdout JSON object; throws a terminating error carrying the Python message when ok is false.
     [CmdletBinding()]
     param(  # the common parameters (-Verbose, -Debug, ...) work and $PSCmdlet is available
-        [Parameter(Mandatory = $true)][string[]]$Arguments,  # the speechkit-narrate subcommand and its arguments
+        [Parameter(Mandatory = $true)][string[]]$Arguments,  # the speechkit-voice-tts-offline-pipeline subcommand and its arguments
         [string]$Backend,  # backend override; empty means the session's backend
         [switch]$AllowFailure,  # return the result even when ok is false (the doctor reports failures as data)
-        [string]$Activity = 'speechkit-narrate',  # title of the progress bar
+        [string]$Activity = 'speechkit-voice-tts-offline-pipeline',  # title of the progress bar
         [int]$Total = 0,  # number of stages expected to run, for the percentage; 0 means unknown
         $Target  # attached to any error as its TargetObject
     )
     $spec = Get-NarrationLaunchSpec -Arguments $Arguments -Backend $Backend  # how to start Python for this backend
     # visible with -Debug: the exact command line
-    Write-Debug "speechkit-narrate: $($spec.FilePath) $(ConvertTo-NarrationArgumentString $spec.ArgumentList)"
+    Write-Debug "speechkit-voice-tts-offline-pipeline: $($spec.FilePath) $(ConvertTo-NarrationArgumentString $spec.ArgumentList)"
     # captured mode: the JSON comes from stdout, the log from stderr
     $psi = New-NarrationStartInfo -FilePath $spec.FilePath -ArgumentList $spec.ArgumentList -Environment $spec.Environment -Redirect
     # launch Python (or wsl.exe); a launch failure throws a message naming the program
@@ -258,7 +258,7 @@ function Invoke-NarrationCli {
                 Write-Progress -Id $progressId -Activity $Activity -Status $status -PercentComplete $pct
                 # the same news as an information record with tags, for -InformationVariable or -InformationAction
                 # Continue
-                Write-Information -MessageData "speechkit-narrate: running $status" -Tags 'SpeechKitNarrate', 'Stage'
+                Write-Information -MessageData "speechkit-voice-tts-offline-pipeline: running $status" -Tags 'SpeechKitVoiceTtsOfflinePipeline', 'Stage'
             }
         }
         $proc.WaitForExit()  # stderr is closed, now wait for the process itself
@@ -279,7 +279,7 @@ function Invoke-NarrationCli {
         $detail = ($tail | Select-Object -Last 12) -join [Environment]::NewLine
         if (-not $detail) { $detail = $stdout.Trim() }  # no log either: fall back to whatever stdout held
         $hint = Get-NarrationMissingPackageHint -Text $detail  # in Installed mode: how to install the missing package
-        $message = "speechkit-narrate $command exited with code $exit without a result. $detail".Trim()  # what happened
+        $message = "speechkit-voice-tts-offline-pipeline $command exited with code $exit without a result. $detail".Trim()  # what happened
         if ($hint) { $message += [Environment]::NewLine + $hint.Trim() }  # the advice goes on a line of its own
         # type NoResult so callers can tell this case apart from a reported error
         $er = New-NarrationErrorRecord -Message $message -Type 'NoResult' -Target $Target
@@ -289,7 +289,7 @@ function Invoke-NarrationCli {
     try { $obj = ConvertFrom-NarrationJson -Json $jsonLine }  # parse the result line
     catch {  # the line looked like JSON but was not
         # include the text so the problem can be seen
-        $er = New-NarrationErrorRecord -Message "speechkit-narrate $command printed output that is not JSON: $jsonLine" -Type 'BadResult' -Target $Target
+        $er = New-NarrationErrorRecord -Message "speechkit-voice-tts-offline-pipeline $command printed output that is not JSON: $jsonLine" -Type 'BadResult' -Target $Target
         $PSCmdlet.ThrowTerminatingError($er)  # report it as a terminating error from the calling command
     }
     # with the Wsl backend, map /mnt/c/... paths in the result back to the Windows paths the user gave
@@ -300,9 +300,9 @@ function Invoke-NarrationCli {
         if ($obj.type) { $type = [string]$obj.type }  # Python's exception class name
         $message = [string]$obj.error  # the error text Python put in the reply's error field
         # generic message if Python sent no text
-        if (-not $message) { $message = "speechkit-narrate $command failed (exit $exit)" }
+        if (-not $message) { $message = "speechkit-voice-tts-offline-pipeline $command failed (exit $exit)" }
         # unexpected Python exceptions include a traceback; show it with -Debug
-        if ($obj.trace) { Write-Debug "speechkit-narrate traceback:`n$($obj.trace)" }
+        if ($obj.trace) { Write-Debug "speechkit-voice-tts-offline-pipeline traceback:`n$($obj.trace)" }
         # stop with Python's message, category and traceback attached
         $PSCmdlet.ThrowTerminatingError((New-NarrationErrorRecord -Message $message -Type $type -Target $Target -Trace ([string]$obj.trace)))
     }

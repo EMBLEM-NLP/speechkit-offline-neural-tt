@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 EMBLEM-NLP
-"""Negative controls for speechkit-offline-neural-tt."""
+"""Negative controls for speechkit-voice-tts-offline-pipeline."""
 import hashlib  # Compute fixture identities, not production pins.
 import importlib.util  # Load the bootstrap without executing its CLI.
 import tempfile  # Keep all corruption fixtures outside production archives.

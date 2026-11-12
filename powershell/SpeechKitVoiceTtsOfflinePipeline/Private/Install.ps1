@@ -102,8 +102,8 @@ function Get-NarrationInstallStep {
     if (-not $root -and @($Component | Where-Object { @('Pip', 'WslPackages') -contains $_ }).Count) {
         throw (@(  # the message is made of the lines below
             'This module has no toolkit folder (Installed mode), so there are no requirements files to install the'
-            'Python packages from. Point it at the speechkit-offline-neural-tt checkout with'
-            "Set-NarrationBackend -ToolkitRoot 'C:\path\to\speechkit-offline-neural-tt', or install the package"
+            'Python packages from. Point it at the speechkit-voice-tts-offline-pipeline checkout with'
+            "Set-NarrationBackend -ToolkitRoot 'C:\path\to\speechkit-voice-tts-offline-pipeline', or install the package"
             'with pip yourself (python -m pip install <checkout>) and choose that Python with Set-NarrationBackend -Python.'
         ) -join ' ')  # the pieces make one sentence, joined by single spaces
     }
@@ -129,7 +129,7 @@ function Get-NarrationInstallStep {
         $reqPath = Join-Path $root $req  # the requirements file's full path, which pip is told to read
         # Then the toolkit's requirements (continued on the next line).
         $steps.Add((New-NarrationInstallStep -Name 'pip packages' -Component 'Pip' -UsesPython `
-                    -Description "the Python packages speechkit-narrate uses ($req)" `
+                    -Description "the Python packages speechkit-voice-tts-offline-pipeline uses ($req)" `
                     -FilePath $PythonCommand `
                     -ArgumentList @('-m', 'pip', 'install', '--upgrade', '-r', $reqPath)))  # install what it lists
     }
@@ -138,7 +138,7 @@ function Get-NarrationInstallStep {
         if ($root) { $setupEnv['PYTHONPATH'] = $root }  # Source mode: makes the speechkit_narrate package importable
         # setup installs the missing Python packages everywhere; the voice runtime and the recognizer models only on
         # Linux, because the runtime is Linux-only (on macOS it says so and stops after the packages)
-        $steps.Add((New-NarrationInstallStep -Name 'speechkit-narrate setup' -Component 'Setup' `
+        $steps.Add((New-NarrationInstallStep -Name 'speechkit-voice-tts-offline-pipeline setup' -Component 'Setup' `
                     -Description 'the Python packages, and on Linux the voice runtime and the recognizer models' -UsesPython `
                     -FilePath $PythonCommand -ArgumentList @('-m', 'speechkit_narrate', 'setup') `
                     -Environment $setupEnv))  # the variables built above
@@ -187,7 +187,7 @@ function Get-NarrationInstallStep {
         if ($root) { $setupArgs += "PYTHONPATH=$($script:WslToolkitToken)" }  # Source mode only
         $setupArgs += @('PYTHONUTF8=1', $vpy, '-m', 'speechkit_narrate', 'setup')  # then the command itself
         # Downloads the voice runtime and the recognizer models; the description names the python that really runs.
-        $steps.Add((New-NarrationInstallStep -Name 'wsl speechkit-narrate setup' -Component 'WslSetup' -Distribution $Distribution `
+        $steps.Add((New-NarrationInstallStep -Name 'wsl speechkit-voice-tts-offline-pipeline setup' -Component 'WslSetup' -Distribution $Distribution `
                     -Description "the voice runtime and recognizer models inside WSL ($vpy -m speechkit_narrate setup)" `
                     -FilePath $wslExe -ArgumentList $setupArgs))  # the arguments built above
         # Last step: point this session at the new WSL setup by running Set-NarrationBackend in PowerShell itself
@@ -213,7 +213,7 @@ function Expand-NarrationWslToken {
     if (-not @($ArgumentList | Where-Object { ([string]$_).Contains($token) }).Count) { return $ArgumentList }
     if (-not $Cache.ContainsKey($token)) {  # the WSL path is not known yet
         $windows = $script:Config.ToolkitRoot  # the Windows path to translate
-        if (-not $windows) { throw "speechkit-narrate: the path for $token is not known in this session." }  # Installed mode
+        if (-not $windows) { throw "speechkit-voice-tts-offline-pipeline: the path for $token is not known in this session." }  # Installed mode
         # ask wslpath inside the target distribution for the Linux path
         $w = Invoke-NarrationProcess -FilePath $FilePath -TimeoutSeconds 120 -Environment @{ WSL_UTF8 = '1' } `
             -ArgumentList @('-d', $Distribution, '--exec', 'wslpath', '-a', $windows)  # absolute Linux path wanted

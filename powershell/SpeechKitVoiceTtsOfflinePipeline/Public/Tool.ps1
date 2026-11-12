@@ -2,7 +2,7 @@
 # Copyright (C) 2026 EMBLEM-NLP
 # Public command: lists the standalone tools (`python -m speechkit_narrate tools`), which work on plain files without a project,
 # with their parameters and generated command names. -Name filters (wildcards allowed), -Plugin loads extra plug-ins
-# for this call. Returns SpeechKitNarrate.Tool objects and refreshes the module's tool cache.
+# for this call. Returns SpeechKitVoiceTtsOfflinePipeline.Tool objects and refreshes the module's tool cache.
 function Get-NarrationTool {
     <#
     .SYNOPSIS
@@ -30,10 +30,10 @@ function Get-NarrationTool {
     Get-NarrationTool | ForEach-Object { Get-Help $_.Command }
 
     .OUTPUTS
-    SpeechKitNarrate.Tool
+    SpeechKitVoiceTtsOfflinePipeline.Tool
     #>
     [CmdletBinding()]
-    [OutputType('SpeechKitNarrate.Tool')]  # declares SpeechKitNarrate.Tool as the output type, for help and property completion
+    [OutputType('SpeechKitVoiceTtsOfflinePipeline.Tool')]  # declares SpeechKitVoiceTtsOfflinePipeline.Tool as the output type, for help and property completion
     param(  # the parameters: -Name patterns and extra -Plugin files
         [Parameter(Position = 0)]  # -Name may come first without its name
         [SupportsWildcards()]  # wildcard patterns are accepted
@@ -50,7 +50,7 @@ function Get-NarrationTool {
                 foreach ($n in $Name) { if ([string]$t.name -like $n) { $hit = $true } }
                 if (-not $hit) { continue }  # skip tools that match none
             }
-            ConvertTo-NarrationTool -Tool $t  # typed SpeechKitNarrate.Tool with its generated command name
+            ConvertTo-NarrationTool -Tool $t  # typed SpeechKitVoiceTtsOfflinePipeline.Tool with its generated command name
         }
     }
     catch { $PSCmdlet.ThrowTerminatingError($_) }  # rethrow as this command's error
@@ -58,7 +58,7 @@ function Get-NarrationTool {
 
 # Public command: runs one standalone tool with `python -m speechkit_narrate tool NAME --params JSON`. -Name is the tool,
 # -Parameters a hashtable using the tool's own snake_case names (PascalCase works too), -Plugin extra plug-ins.
-# Path parameters are made absolute against the current location. Returns a SpeechKitNarrate.ToolResult whose Files lists
+# Path parameters are made absolute against the current location. Returns a SpeechKitVoiceTtsOfflinePipeline.ToolResult whose Files lists
 # the files written. The generated Invoke-Narration<Tool> commands all call this.
 function Invoke-NarrationTool {
     <#
@@ -88,10 +88,10 @@ function Invoke-NarrationTool {
     $r.project
 
     .OUTPUTS
-    SpeechKitNarrate.ToolResult
+    SpeechKitVoiceTtsOfflinePipeline.ToolResult
     #>
     [CmdletBinding()]
-    [OutputType('SpeechKitNarrate.ToolResult')]  # declares SpeechKitNarrate.ToolResult as the output type for Get-Help and completion
+    [OutputType('SpeechKitVoiceTtsOfflinePipeline.ToolResult')]  # declares SpeechKitVoiceTtsOfflinePipeline.ToolResult as the output type for Get-Help and completion
     param(  # the parameters: the tool -Name, its -Parameters dictionary and extra -Plugin files
         [Parameter(Mandatory = $true, Position = 0)]  # the tool name is required and may be given first without -Name
         [string]$Name,  # tool name, e.g. speak
@@ -118,15 +118,15 @@ function Invoke-NarrationTool {
         # tool NAME --params=<compact JSON>, plus any --plugin flags
         $cliArgs = @('tool', $Name, "--params=$(ConvertTo-NarrationJson $params)") + @(Get-NarrationPluginArgument -Plugin $Plugin -Backend $backend)
         # run it; the progress bar is named after the tool, errors name the tool
-        $r = Invoke-NarrationCli -Arguments $cliArgs -Backend $backend -Activity "speechkit-narrate tool $Name" -Target $Name
+        $r = Invoke-NarrationCli -Arguments $cliArgs -Backend $backend -Activity "speechkit-voice-tts-offline-pipeline tool $Name" -Target $Name
         ConvertTo-NarrationToolResult -Result $r  # typed result with Tool, Files and the tool's other keys
     }
     catch { $PSCmdlet.ThrowTerminatingError($_) }  # rethrow as an Invoke-NarrationTool error
 }
 
 # Public command: regenerates the per-tool commands (Invoke-NarrationSpeak, Invoke-NarrationQuick, ...) from a fresh
-# tool list and loads them as the dynamic module SpeechKitNarrate.Tools, imported globally. Runs automatically on import.
-# -PassThru returns one SpeechKitNarrate.GeneratedCommand per command. Supports -WhatIf. Replaces any earlier generated
+# tool list and loads them as the dynamic module SpeechKitVoiceTtsOfflinePipeline.Tools, imported globally. Runs automatically on import.
+# -PassThru returns one SpeechKitVoiceTtsOfflinePipeline.GeneratedCommand per command. Supports -WhatIf. Replaces any earlier generated
 # commands.
 function Update-NarrationCommand {
     <#
@@ -135,7 +135,7 @@ function Update-NarrationCommand {
 
     .DESCRIPTION
     Reads the standalone tools (python -m speechkit_narrate tools, which loads the plug-ins in $env:SPEECHKIT_PLUGINS) and
-    generates one command per tool in the dynamic module SpeechKitNarrate.Tools: snake_case parameters become
+    generates one command per tool in the dynamic module SpeechKitVoiceTtsOfflinePipeline.Tools: snake_case parameters become
     PascalCase, strings/integers/numbers/booleans/arrays/objects become string/int/double/switch/typed arrays/
     hashtable, enums become ValidateSet, required parameters are mandatory and path parameters are resolved
     to absolute paths. Runs automatically when the module is imported.
@@ -150,26 +150,26 @@ function Update-NarrationCommand {
     Adds Invoke-NarrationWordcount for a plug-in that registers a wordcount tool.
 
     .EXAMPLE
-    Get-Command -Module SpeechKitNarrate.Tools
+    Get-Command -Module SpeechKitVoiceTtsOfflinePipeline.Tools
 
     The generated commands.
 
     .OUTPUTS
-    SpeechKitNarrate.GeneratedCommand
+    SpeechKitVoiceTtsOfflinePipeline.GeneratedCommand
     #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Low')]
-    [OutputType('SpeechKitNarrate.GeneratedCommand')]  # type returned with -PassThru
+    [OutputType('SpeechKitVoiceTtsOfflinePipeline.GeneratedCommand')]  # type returned with -PassThru
     param([switch]$PassThru)  # -PassThru is the only parameter: it asks for one object per generated command
     try {  # failures become this command's terminating error
         $tools = @(Get-NarrationToolList -Refresh)  # ask Python for the current tools, including $env:SPEECHKIT_PLUGINS
         $gen = New-NarrationToolModuleText -Tools $tools  # generate the module source and the per-command details
         # -WhatIf reports how many commands would be generated and stops
-        if (-not $PSCmdlet.ShouldProcess('SpeechKitNarrate.Tools', "Generate $(@($gen.Commands).Count) tool commands")) { return }
+        if (-not $PSCmdlet.ShouldProcess('SpeechKitVoiceTtsOfflinePipeline.Tools', "Generate $(@($gen.Commands).Count) tool commands")) { return }
         Remove-NarrationToolModule  # unload the previous generation first
-        # this SpeechKitNarrate module object, handed to the generated module so its commands call back into it
+        # this SpeechKitVoiceTtsOfflinePipeline module object, handed to the generated module so its commands call back into it
         $owner = $ExecutionContext.SessionState.Module
         # build the dynamic module from the generated source; -ArgumentList fills its param($NarrationOwner)
-        $mod = New-Module -Name 'SpeechKitNarrate.Tools' -ScriptBlock ([scriptblock]::Create($gen.Text)) -ArgumentList $owner
+        $mod = New-Module -Name 'SpeechKitVoiceTtsOfflinePipeline.Tools' -ScriptBlock ([scriptblock]::Create($gen.Text)) -ArgumentList $owner
         # -Global makes the commands visible in the user's session rather than only inside this module; -Force replaces
         # an older copy
         Import-Module -ModuleInfo $mod -Global -Force -DisableNameChecking
@@ -177,7 +177,7 @@ function Update-NarrationCommand {
         if ($PassThru) {  # describe the generated commands only with -PassThru; otherwise output nothing
             foreach ($c in $gen.Commands) {  # one object per generated command
                 # describe the generated command
-                New-NarrationObject -TypeName 'SpeechKitNarrate.GeneratedCommand' -Property ([ordered]@{
+                New-NarrationObject -TypeName 'SpeechKitVoiceTtsOfflinePipeline.GeneratedCommand' -Property ([ordered]@{
                         Name       = $c.Name  # the generated command's name, e.g. Invoke-NarrationSpeak
                         Tool       = $c.Tool  # the registry tool the command runs, e.g. speak
                         Source     = $c.Source  # where the tool came from

@@ -1,4 +1,4 @@
-# speechkit-narrate core (every platform): pip install -r requirements.txt
+# speechkit-voice-tts-offline-pipeline core (every platform): pip install -r requirements.txt
 # audio arithmetic for the export and the speak tool
 numpy
 # CMU pronouncing dictionary for word checks and the pronunciation audit

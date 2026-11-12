@@ -1,4 +1,6 @@
-# Narration pipeline (`speechkit_narrate`)
+# SpeechKit Voice TTS Offline Pipeline
+
+Canonical package and command: `speechkit-voice-tts-offline-pipeline`. The `speechkit-narrate` command and `python -m speechkit_narrate` remain supported. See [the rename and installation guide](RENAMING.md).
 
 `speechkit_narrate` turns a text into a finished, checked narration with the SpeechKit voice:
 
@@ -48,7 +50,7 @@ On top of that:
 - **Stages that run only what changed.** Each stage's code, settings and input files are fingerprinted; `run`
   brings everything up to date and skips the rest. A stage whose last run failed, or was killed before it could
   record a result, is always rebuilt (its outputs are never taken as current).
-- **A PowerShell module** (`powershell/SpeechKitNarrate`) and **an MCP server** (`python -m speechkit_narrate mcp`)
+- **A PowerShell module** (`powershell/SpeechKitVoiceTtsOfflinePipeline`) and **an MCP server** (`python -m speechkit_narrate mcp`)
   drive the same commands; see [`powershell/README.md`](../powershell/README.md).
 - **Platforms.** The pipeline runs on Python 3.11 or newer on any platform. The voice side (prevoice, narrate,
   autofix, audit, the `speak` tool) needs the Linux x86-64 / CPython 3.13 runtime; on Windows it runs in WSL
@@ -78,7 +80,7 @@ python -m speechkit_narrate status .\projects\guide
 Use `run --accept-draft` to go straight through. On Windows the same commands are cmdlets:
 
 ```powershell
-Import-Module .\powershell\SpeechKitNarrate
+Import-Module .\powershell\SpeechKitVoiceTtsOfflinePipeline
 Set-NarrationBackend Auto
 New-NarrationProject .\projects\guide -Input .\guide.md -Title 'The Guide'
 Invoke-NarrationPipeline .\projects\guide -AcceptDraft

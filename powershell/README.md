@@ -1,6 +1,8 @@
-# SpeechKitNarrate PowerShell module
+# SpeechKitVoiceTtsOfflinePipeline PowerShell module
 
-PowerShell commands for **speechkit-narrate**, the narration toolkit in this checkout: make a project from a
+`SpeechKitNarrate` remains a compatibility module forwarding to `SpeechKitVoiceTtsOfflinePipeline`; the existing `*-Narration*` commands are preserved. See [the migration guide](../docs/RENAMING.md).
+
+PowerShell commands for **speechkit-voice-tts-offline-pipeline**, the narration toolkit in this checkout: make a project from a
 `.txt`, `.md` or SpeechKit request `.json`, bring its stages up to date (extract, check, script, prevoice,
 narrate, autofix, audit, report, export), run the standalone tools (`speak`, `quick`), and register the MCP
 server. Every command calls `python -m speechkit_narrate --json ...` and returns typed objects.
@@ -18,14 +20,14 @@ root, which holds `speechkit_narrate\`), so nothing has to be copied or installe
 
 ```powershell
 # 1. Get the checkout (any folder will do)
-git clone https://github.com/EMBLEM-NLP/speechkit-offline-neural-tt C:\src\speechkit-offline-neural-tt
+git clone https://github.com/EMBLEM-NLP/speechkit-voice-tts-offline-pipeline C:\src\speechkit-voice-tts-offline-pipeline
 
 # 2. Allow local scripts (once per user); unblock the files if you downloaded a zip instead of cloning
 Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
-Get-ChildItem C:\src\speechkit-offline-neural-tt -Recurse | Unblock-File
+Get-ChildItem C:\src\speechkit-voice-tts-offline-pipeline -Recurse | Unblock-File
 
 # 3. Import the module
-Import-Module C:\src\speechkit-offline-neural-tt\powershell\SpeechKitNarrate
+Import-Module C:\src\speechkit-voice-tts-offline-pipeline\powershell\SpeechKitVoiceTtsOfflinePipeline
 
 # 4. See what it found
 Get-NarrationBackend
@@ -35,14 +37,14 @@ Get-NarrationStage
 To load it in every session:
 
 ```powershell
-Add-Content -Path $PROFILE -Value 'Import-Module C:\src\speechkit-offline-neural-tt\powershell\SpeechKitNarrate'
+Add-Content -Path $PROFILE -Value 'Import-Module C:\src\speechkit-voice-tts-offline-pipeline\powershell\SpeechKitVoiceTtsOfflinePipeline'
 ```
 
 `Get-NarrationBackend` shows the `Mode`. In **Source mode** (the normal case) the module sits in the checkout
 and puts it on `PYTHONPATH`. If you move the module elsewhere, set `$env:SPEECHKIT_ROOT` to the checkout before
-importing, or run `Set-NarrationBackend -ToolkitRoot C:\src\speechkit-offline-neural-tt`. With no checkout at all
+importing, or run `Set-NarrationBackend -ToolkitRoot C:\src\speechkit-voice-tts-offline-pipeline`. With no checkout at all
 the module is in **Installed mode**: the Python it uses must have the package installed
-(`python -m pip install C:\src\speechkit-offline-neural-tt`).
+(`python -m pip install C:\src\speechkit-voice-tts-offline-pipeline`).
 
 ## Windows + WSL backend setup
 
@@ -59,7 +61,7 @@ Install-NarrationDependency -Wsl -WhatIf
 Install-NarrationDependency -Wsl
 
 # 3. Open a new PowerShell window (PATH changed), import again, and check both sides
-Import-Module C:\src\speechkit-offline-neural-tt\powershell\SpeechKitNarrate
+Import-Module C:\src\speechkit-voice-tts-offline-pipeline\powershell\SpeechKitVoiceTtsOfflinePipeline
 Set-NarrationBackend -Backend Auto -Distribution Ubuntu-24.04 -WslPython '/opt/speechkit-narrate/venv/bin/python'
 Test-NarrationEnvironment | Where-Object { -not $_.Ok }
 ```
@@ -137,7 +139,7 @@ Plug-in tools: set `$env:SPEECHKIT_PLUGINS` (paths separated by `;`) and run `Up
 ## MCP server
 
 ```powershell
-Register-NarrationMcpServer        # adds "speechkit-narrate" to Claude Desktop's config (backed up first)
+Register-NarrationMcpServer        # adds "speechkit-voice-tts-offline-pipeline" to Claude Desktop's config (backed up first)
 Start-NarrationMcpServer           # or run the server on this console's stdin/stdout
 Start-NarrationMcpServer -WhatIf   # shows the exact command line it would start, and starts nothing
 ```

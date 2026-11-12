@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 EMBLEM-NLP
-"""speechkit-narrate MCP server:  python -m speechkit_narrate mcp   (stdio)
+"""speechkit-voice-tts-offline-pipeline MCP server:  python -m speechkit_narrate mcp   (stdio)
 
 Requires the MCP Python SDK 2.x, mcp >= 2.3.0: the low-level `mcp.server.lowlevel.Server` that takes its
 `on_list_tools` / `on_call_tool` handlers in the constructor, and `mcp.server.stdio.stdio_server`. It speaks
@@ -73,7 +73,7 @@ except ImportError as _e:  # the toolkit works without the SDK; only this comman
 MIN_SDK = "2.3.0"
 
 # ROOT goes first on the children's PYTHONPATH, so they import this same copy of the toolkit.
-ROOT = Path(__file__).resolve().parent.parent      # the folder that holds the speechkit-narrate package
+ROOT = Path(__file__).resolve().parent.parent      # the folder that holds the speechkit-voice-tts-offline-pipeline package
 # 2000 lines is enough for a job_status tail while keeping memory per job small; the full log is in a file.
 LOG_RING = 2000                                     # log lines kept in memory per job
 KEEP_FINISHED = 200                                 # finished jobs remembered
@@ -93,7 +93,7 @@ NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 # projects as folders, every run as a background job polled with job_status. The pieces are joined by Python into
 # one string at compile time.
 INSTRUCTIONS = (
-    "speechkit-narrate turns a text (.txt, .md or a SpeechKit request .json) into an offline neural narration: one "
+    "speechkit-voice-tts-offline-pipeline turns a text (.txt, .md or a SpeechKit request .json) into an offline neural narration: one "
     "audio file per chapter with per-word timings, after a pronunciation audit that hears every word back and fixes "
     "what was misheard. Start with narrate_describe: it lists the stages (what each needs and makes), "
     "the standalone tools and the plug-ins. A project is a folder: make one with project_new, look at it with "
@@ -151,12 +151,13 @@ def toolkit_version() -> str:
     # An installed copy has no pyproject.toml beside it; fall through to the package metadata.
     except Exception:  # noqa: BLE001, S110 - an installed package has no pyproject.toml
         pass  # nothing to do here
-    try:  # second choice: the installed distribution
-        from importlib.metadata import version  # reads the version stored in the installed speechkit-narrate package's metadata
-        return version("speechkit-narrate")  # version of the installed "speechkit-narrate" distribution
-    # Neither source is available, e.g. running from a copied folder without metadata.
-    except Exception:  # noqa: BLE001
-        return "dev"  # a neutral version string
+    from importlib.metadata import version
+    for distribution in ("speechkit-voice-tts-offline-pipeline", "speechkit-narrate"):
+        try:
+            return version(distribution)
+        except Exception:  # noqa: BLE001 - incomplete installed metadata must not stop the server
+            continue
+    return "dev"
 
 
 # ------------------------------------------------------------------------------------------- subprocesses
@@ -178,13 +179,13 @@ def child_env() -> dict:
     return env  # handed to Popen as the child's complete environment
 
 
-# The full command line for one toolkit call. args: the words after `speechkit-narrate --json`. Uses the interpreter that
+# The full command line for one toolkit call. args: the words after `speechkit-voice-tts-offline-pipeline --json`. Uses the interpreter that
 # runs this server, so the children get the same Python and installed packages. Returns the list.
 def command(args: list[str]) -> list[str]:
     return [sys.executable, "-m", "speechkit_narrate", "--json", *args]  # --json: one result object on stdout, the log on stderr
 
 
-# Start one toolkit child process with pipes for stdout and stderr. args: the words after `speechkit-narrate --json`.
+# Start one toolkit child process with pipes for stdout and stderr. args: the words after `speechkit-voice-tts-offline-pipeline --json`.
 # Returns the Popen object; raises OSError when the interpreter cannot be started.
 def _popen(args: list[str]) -> subprocess.Popen:
     # stdin is the null device: the child must never read the client's protocol messages. Both outputs are captured.
@@ -252,11 +253,11 @@ def _failure(res: dict | None, stderr_tail: list[str], code: int | None) -> str:
     if res and res.get("error"):  # the toolkit explained the failure
         return str(res["error"])  # the toolkit's own message is the most precise explanation available
     tail = [ln for ln in stderr_tail if ln.strip()][-3:]  # last three lines that are not blank
-    msg = f"speechkit-narrate exited with code {code}"  # fallback message naming the child's exit code
+    msg = f"speechkit-voice-tts-offline-pipeline exited with code {code}"  # fallback message naming the child's exit code
     return msg + (": " + " | ".join(tail) if tail else "")  # append the lines separated by " | ", if any
 
 
-# Run a short toolkit command and wait for it. args: the words after `speechkit-narrate --json`; timeout: seconds
+# Run a short toolkit command and wait for it. args: the words after `speechkit-voice-tts-offline-pipeline --json`; timeout: seconds
 # (QUICK_TIMEOUT by default). Returns the command's JSON result; raises ToolError on timeout or failure.
 # Blocking, so async callers run it on a worker thread.
 def run_quick(args: list[str], timeout: float = QUICK_TIMEOUT) -> dict:
@@ -268,7 +269,7 @@ def run_quick(args: list[str], timeout: float = QUICK_TIMEOUT) -> dict:
         _kill_tree(p, hard=True)  # kill the process group at once
         p.communicate()  # collect what is left so the process is reaped
         # `from None` hides the timeout traceback; the message is enough
-        raise ToolError(f"speechkit-narrate {args[0]} took longer than {timeout:.0f} s") from None
+        raise ToolError(f"speechkit-voice-tts-offline-pipeline {args[0]} took longer than {timeout:.0f} s") from None
     res = None  # the parsed result, if any
     # search from the end: the result is the last JSON line
     for line in reversed(out.decode("utf-8", "replace").splitlines()):
@@ -318,7 +319,7 @@ class Job:
     """One `python -m speechkit_narrate --json ...` subprocess."""
 
     # kind: "run", "stage" or "tool"; name: the stage or tool name ("run" for project_run); args: the words after
-    # `speechkit-narrate --json`; project: the project folder, or None for tools (used to keep one job per project);
+    # `speechkit-voice-tts-offline-pipeline --json`; project: the project folder, or None for tools (used to keep one job per project);
     # post: optional function that reshapes the successful result. Picks the job id and log file name.
     def __init__(self, kind: str, name: str, args: list[str], project: str | None = None,
                  # post is called with the result dict and returns a new dict
@@ -603,9 +604,9 @@ PROJECT = {"type": "string", "description": "project folder (absolute, or relati
 ACCEPT_DRAFT = {"type": "boolean", "default": False,
                 "description": "go on past the first `check` (narrate the extracted draft) instead of stopping so "
                                "work/book.md can be reviewed"}
-# The planner arguments shared by project_plan and project_run, mirroring `speechkit-narrate run` options.
+# The planner arguments shared by project_plan and project_run, mirroring `speechkit-voice-tts-offline-pipeline run` options.
 RUN_PROPS = {
-    # positional stage names; whatever they need is added, as in speechkit-narrate run DIR TARGET
+    # positional stage names; whatever they need is added, as in speechkit-voice-tts-offline-pipeline run DIR TARGET
     "targets": _arr("stages to bring up to date, with what they need (default: the whole default pipeline)"),
     # each name becomes a --force=NAME flag: run it even when up to date
     "force": _arr("run these even if up to date ('all' for every selected stage)"),
@@ -653,7 +654,7 @@ def _tool(name: str, title: str, description: str, schema: dict, ann: dict) -> t
 
 
 # A Route is how one advertised tool name is served: a static tool with its own handler, a stage (run through
-# `speechkit-narrate run`) or a standalone tool (run through `speechkit-narrate tool`). It also keeps what is needed to describe
+# `speechkit-voice-tts-offline-pipeline run`) or a standalone tool (run through `speechkit-voice-tts-offline-pipeline tool`). It also keeps what is needed to describe
 # the tool again: schema, title, description and annotations.
 @dataclass
 class Route:  # one per tool name in the catalog
@@ -691,7 +692,7 @@ def _static(name: str, title: str, description: str, schema: dict, ann: dict):
 
 # ------------------------------------------------------------------------------------------- the catalog
 # A Catalog is one snapshot of the tool list: the MCP tools to advertise and how to serve each name, built from
-# one `speechkit-narrate stages` description of the registry. It is rebuilt at every tools/list.
+# one `speechkit-voice-tts-offline-pipeline stages` description of the registry. It is rebuilt at every tools/list.
 @dataclass
 class Catalog:  # one snapshot of the advertised tools
     tools: list  # list of types.Tool, in the order clients see them
@@ -722,7 +723,7 @@ def _safe_name(prefix: str, name: str, taken: set) -> str:
 RESERVED = {"project", "accept_draft", "wait_seconds"}
 
 
-# The MCP tool for one stage. st: the stage's dict from `speechkit-narrate stages`; tname: the tool name to use; delegate:
+# The MCP tool for one stage. st: the stage's dict from `speechkit-voice-tts-offline-pipeline stages`; tname: the tool name to use; delegate:
 # the SPEECHKIT_DELEGATE command or None. The arguments are project, accept_draft, the stage's own options and
 # wait_seconds. Returns (Route, types.Tool).
 def _stage_tool(st: dict, tname: str, delegate: str | None) -> tuple[Route, types.Tool]:
@@ -761,7 +762,7 @@ def _stage_tool(st: dict, tname: str, delegate: str | None) -> tuple[Route, type
     return route, route.tool(tname)  # the route and its tool description
 
 
-# The MCP tool for one standalone tool. t: the tool's dict from `speechkit-narrate stages` (params is a full JSON schema);
+# The MCP tool for one standalone tool. t: the tool's dict from `speechkit-voice-tts-offline-pipeline stages` (params is a full JSON schema);
 # tname: the tool name to use. Adds wait_seconds unless the tool declares its own. Returns (Route, types.Tool).
 def _tool_tool(t: dict, tname: str) -> tuple[Route, types.Tool]:
     # a deep copy via a JSON round trip, so adding wait_seconds never changes the registry description
@@ -776,7 +777,7 @@ def _tool_tool(t: dict, tname: str) -> tuple[Route, types.Tool]:
         # advise the model to expect a job_id and poll job_status
         notes.append("Long-running: expect a job_id and poll job_status.")
     if not t.get("runs_here", True):  # cannot run on this machine
-        # unlike stage tools this does not mention SPEECHKIT_DELEGATE, which `speechkit-narrate tool` would still use
+        # unlike stage tools this does not mention SPEECHKIT_DELEGATE, which `speechkit-voice-tts-offline-pipeline tool` would still use
         notes.append(f"Runs on {'/'.join(t.get('platforms') or [])} only (not on this machine).")
     if t.get("source", "speechkit-narrate") != "speechkit-narrate":  # the tool comes from a plug-in rather than the built-in set
         notes.append(f"Plug-in: {t['source']}.")  # name the plug-in that provides this tool
@@ -789,7 +790,7 @@ def _tool_tool(t: dict, tname: str) -> tuple[Route, types.Tool]:
     return route, route.tool(tname)  # the route and its tool description
 
 
-# Assemble the full tool list. desc: the registry description from `speechkit-narrate stages` (None if it failed); error:
+# Assemble the full tool list. desc: the registry description from `speechkit-voice-tts-offline-pipeline stages` (None if it failed); error:
 # why it failed. Order: the fixed project tools, one stage_<name> per stage, one tool_<name> per tool, then the
 # job tools. Returns a Catalog stamped with the current monotonic time.
 def build_catalog(desc: dict | None, error: str | None) -> Catalog:
@@ -836,7 +837,7 @@ async def catalog(fresh: bool) -> Catalog:
     if not fresh and c is not None and time.monotonic() - c.at < CATALOG_TTL:  # recent enough to reuse
         return c  # serve it from the cache
     try:  # loading the registry can fail, e.g. a broken plug-in or a timeout
-        # `speechkit-narrate --json stages` on a worker thread, so the event loop stays responsive
+        # `speechkit-voice-tts-offline-pipeline --json stages` on a worker thread, so the event loop stays responsive
         desc, err = await anyio.to_thread.run_sync(run_quick, ["stages"]), None
     except ToolError as e:  # the registry did not load (bad plug-in, timeout)
         desc, err = None, str(e)  # no stages or tools, only the reason
@@ -899,11 +900,11 @@ def project_dir(p: Any, must_exist: bool = True) -> str:
         # explain what is wrong with the folder
         hint = "it does not exist" if not d.exists() else "no project.json in it"
         # the folder is named the way the client wrote it (C:\... for a client that sends Windows paths)
-        raise ToolError(f"{winpaths.present(str(d))} is not a speechkit-narrate project ({hint}); create one with project_new")
+        raise ToolError(f"{winpaths.present(str(d))} is not a speechkit-voice-tts-offline-pipeline project ({hint}); create one with project_new")
     return str(d)  # as text for command lines and job bookkeeping
 
 
-# The planner flags for `speechkit-narrate run/plan` from the arguments targets, force, only, skip and from. Rejects empty
+# The planner flags for `speechkit-voice-tts-offline-pipeline run/plan` from the arguments targets, force, only, skip and from. Rejects empty
 # names and names starting with "-" so a value can never be read as an extra command-line option.
 # Returns the words to append to the command.
 def run_flags(a: dict) -> list[str]:
@@ -995,16 +996,16 @@ async def start_job(ctx, kind: str, name: str, args: list[str], project: str | N
     return await wait_for(ctx, job, wait)  # wait up to wait_seconds, then return the result or the job id
 
 
-# Run a short toolkit command on a worker thread and return its JSON result. args: the words after `speechkit-narrate
+# Run a short toolkit command on a worker thread and return its JSON result. args: the words after `speechkit-voice-tts-offline-pipeline
 # --json`. Raises ToolError on failure.
 async def quick(args: list[str]) -> dict:
     return await anyio.to_thread.run_sync(run_quick, args)  # run_quick blocks; the event loop must not
 
 
-# A result reshaper for stage jobs. name: the stage. `speechkit-narrate run` reports every step of the pipeline; the
+# A result reshaper for stage jobs. name: the stage. `speechkit-voice-tts-offline-pipeline run` reports every step of the pipeline; the
 # returned function picks this stage's step, so stage_<name> answers with just its own result.
 def _stage_post(name: str) -> Callable[[dict], dict]:
-    # The reshaper: res is the run report from `speechkit-narrate --json run`.
+    # The reshaper: res is the run report from `speechkit-voice-tts-offline-pipeline --json run`.
     def post(res: dict) -> dict:
         # this stage's step, or an empty dict if absent
         step = next((s for s in res.get("steps") or [] if s.get("stage") == name), {})
@@ -1021,14 +1022,14 @@ def _stage_post(name: str) -> Callable[[dict], dict]:
 # ctx (the request context) and a (the validated arguments as a dict) and returns a CallToolResult.
 # narrate_describe: the registry as JSON (stages, tools, plug-ins, platform, delegate).
 @_static("narrate_describe", "Describe the toolkit",
-         "What this speechkit-narrate toolkit can do: every stage (needs, inputs, outputs, settings, options, platforms, "
+         "What this speechkit-voice-tts-offline-pipeline toolkit can do: every stage (needs, inputs, outputs, settings, options, platforms, "
          "plug-in source, whether it runs here), the standalone tools with their parameters, the loaded plug-ins, "
          "this platform and the delegate (e.g. WSL) used for Linux-only stages. Give `project` to include that "
          "project's own plug-ins. Call this first.",
          # one optional argument: a project whose own plug-ins should be included
          _obj({"project": {**PROJECT, "description": "optional project folder: adds its own plug-ins"}}),
          _ann(read_only=True, idempotent=True))  # reads only; the same answer every time
-# Serve narrate_describe with `speechkit-narrate --json stages [DIR]`.
+# Serve narrate_describe with `speechkit-voice-tts-offline-pipeline --json stages [DIR]`.
 async def t_describe(ctx, a):
     # add the project folder when given (it must be a project)
     args = ["stages"] + ([project_dir(a["project"])] if a.get("project") else [])
@@ -1050,7 +1051,7 @@ async def t_describe(ctx, a):
                "settings": {"type": "object", "description": "project.json settings to start with"}},
               ["project", "input"]),
          _ann(destructive=False, idempotent=False))  # writes files; a second call fails because project.json exists
-# Serve project_new with `speechkit-narrate --json new DIR --input FILE ...`. The required arguments are checked here
+# Serve project_new with `speechkit-voice-tts-offline-pipeline --json new DIR --input FILE ...`. The required arguments are checked here
 # too, so a call without them gets a clear message even when jsonschema (the schema validator) is not installed.
 async def t_new(ctx, a):
     for k in ("project", "input"):
@@ -1074,7 +1075,7 @@ async def t_new(ctx, a):
          "the narration progress and the exported files.",
          # just the project folder; read-only and repeatable
          _obj({"project": PROJECT}, ["project"]), _ann(read_only=True, idempotent=True))
-# Serve project_status with `speechkit-narrate --json status DIR`.
+# Serve project_status with `speechkit-voice-tts-offline-pipeline --json status DIR`.
 async def t_status(ctx, a):
     # per-stage state, narration progress and exported files
     return ok_result(await quick(["status", project_dir(a["project"])]))
@@ -1094,9 +1095,9 @@ async def t_status(ctx, a):
                              "description": "show every setting, defaults included"}}, ["project"]),
          # writes project.json when `set` is given; the same `set` twice gives the same file
          _ann(destructive=False, idempotent=True))
-# Serve project_settings with `speechkit-narrate --json settings DIR [--set=JSON] [--effective]`.
+# Serve project_settings with `speechkit-voice-tts-offline-pipeline --json settings DIR [--set=JSON] [--effective]`.
 async def t_settings(ctx, a):
-    args = ["settings", project_dir(a["project"])]  # speechkit-narrate settings DIR; the folder must already hold a project.json
+    args = ["settings", project_dir(a["project"])]  # speechkit-voice-tts-offline-pipeline settings DIR; the folder must already hold a project.json
     if a.get("set") is not None:  # an empty {} is still passed (it changes nothing)
         args.append("--set=" + json.dumps(a["set"], ensure_ascii=False))  # the object as one JSON argument
     if a.get("effective"):  # the client asked for every setting with its default filled in
@@ -1110,7 +1111,7 @@ async def t_settings(ctx, a):
          "stage with action run|skip|adopt|blocked, its reasons and where it runs (here or delegate).",
          # project plus the planner arguments
          _obj({"project": PROJECT, **RUN_PROPS, "options": {"type": "object"}}, ["project"]), _ann(read_only=True, idempotent=True))
-# Serve project_plan with `speechkit-narrate --json plan DIR [targets] [--force=...] ...`.
+# Serve project_plan with `speechkit-voice-tts-offline-pipeline --json plan DIR [targets] [--force=...] ...`.
 async def t_plan(ctx, a):
     args = ["plan", project_dir(a["project"]), *run_flags(a)]
     if a.get("options"):
@@ -1132,7 +1133,7 @@ async def t_plan(ctx, a):
                            "description": "stage options, e.g. {\"narrate\": {\"workers\": 4}}"},
                "wait_seconds": _wait(20)}, ["project"]),  # runs wait 20 s by default before returning a job id
          _ann(destructive=False, idempotent=True))  # marked idempotent: a second run only redoes what changed
-# Serve project_run with `speechkit-narrate --json run DIR ...` as a job.
+# Serve project_run with `speechkit-voice-tts-offline-pipeline --json run DIR ...` as a job.
 async def t_run(ctx, a):
     d = project_dir(a["project"])  # the project must exist
     args = ["run", d, *run_flags(a)]  # base command with the planner flags
@@ -1225,7 +1226,7 @@ async def run_tool(ctx, route: Route, a: dict):
         if (props.get(k) or {}).get("format") == "path":  # the schema declares this argument a path
             v = _path_arg(v)  # a Windows path under WSL becomes the Linux one, and ~ is expanded
         params[k] = v  # store the argument, prepared or as given
-    # `speechkit-narrate --json tool NAME --params=JSON`
+    # `speechkit-voice-tts-offline-pipeline --json tool NAME --params=JSON`
     args = ["tool", route.name, "--params=" + json.dumps(params, ensure_ascii=False)]
     # tool jobs have no project, so they never block each other
     return await start_job(ctx, "tool", route.name, args, None, wait)
@@ -1279,9 +1280,9 @@ async def on_call_tool(ctx, params) -> types.CallToolResult:
 # handlers. Only tools are offered, so the SDK advertises just the tools capability. Returns the Server.
 def build_server() -> Server:
     # server name and the toolkit version; title for client displays
-    return Server("speechkit-narrate", version=toolkit_version(), title="speechkit-narrate",
+    return Server("speechkit-voice-tts-offline-pipeline", version=toolkit_version(), title="SpeechKit Voice TTS Offline Pipeline",
                   # one-line description of the server
-                  description="Offline neural narration with word timings and a pronunciation audit",
+                  description="Offline neural text-to-speech and narration pipeline with pronunciation auditing, resumable synthesis, word timings and chapter exports",
                   # handlers passed to the constructor, the SDK 2.x style; a sentence about Windows paths is added when
                   # they are accepted here
                   instructions=INSTRUCTIONS + winpaths.note(), on_list_tools=on_list_tools, on_call_tool=on_call_tool)
@@ -1322,7 +1323,7 @@ def _on_term(signum, frame):
 def main(argv=None) -> int:
     problem = _sdk_problem()  # check the SDK first
     if problem:  # the SDK is missing or too old to run the server
-        print(f"speechkit-narrate mcp: {problem}", file=sys.stderr)  # explain on stderr; stdout is the protocol channel
+        print(f"speechkit-voice-tts-offline-pipeline mcp: {problem}", file=sys.stderr)  # explain on stderr; stdout is the protocol channel
         return 2  # exit code 2, as for a usage error, so scripts notice the failure
     prune_logs()  # delete job logs older than LOG_DAYS
     if not WIN:  # signals exist only on Linux and macOS in this form
@@ -1332,7 +1333,7 @@ def main(argv=None) -> int:
         except ValueError:                             # not the main thread
             pass  # carry on without a SIGTERM handler; atexit still stops the jobs
     atexit.register(JOBS.shutdown)  # on a normal interpreter exit, stop jobs too
-    server = build_server()  # the low-level server with the speechkit-narrate handlers
+    server = build_server()  # the low-level server with the speechkit-voice-tts-offline-pipeline handlers
 
     # The coroutine that serves one connection: stdio_server() turns stdin/stdout into message streams (while
     # serving, the SDK points file descriptor 1 at stderr so stray prints cannot reach the protocol).
@@ -1342,7 +1343,7 @@ def main(argv=None) -> int:
             await server.run(read, write, server.create_initialization_options())
 
     # one start-up line on stderr: version, toolkit folder, job log folder
-    _log(f"speechkit-narrate MCP server {server.version} on stdio (toolkit {ROOT}, jobs log to {jobs_dir()})")
+    _log(f"speechkit-voice-tts-offline-pipeline MCP server {server.version} on stdio (toolkit {ROOT}, jobs log to {jobs_dir()})")
     try:  # Ctrl+C should end quietly
         anyio.run(serve)  # start the event loop and serve
     except KeyboardInterrupt:  # interrupted from the keyboard

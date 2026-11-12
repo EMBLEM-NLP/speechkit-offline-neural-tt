@@ -267,5 +267,5 @@ $("#loops").innerHTML = D.loops.map(l => `<div class="loop"><div class="n">${l.l
   <div class="kv"><span>score <b>${l.score}</b></span><span>WER <b>${pct(l.rows.asr_wer)}</b></span><span>misheard words <b>${l.rows.asr_confirmed_words}</b></span><span>dictionary + context flags <b>${l.rows.lexicon_flagged_words}</b></span></div>
   ${l.reasons.length ? `<ul>${l.reasons.map(x => `<li>${x}</li>`).join("")}</ul>` : ""}</div></div>`).join("");  // veto reasons as a bullet list, nothing for a promoted loop
 // credits: the voice, both recognizers, the dictionary and the formant tool
-$("#foot").textContent = "Voice: Piper en_US-ljspeech-high via speechkit-offline-neural-tt. Recognizers: sherpa-onnx NeMo CTC conformer (small) and Parakeet TDT 0.6B v2, both offline. Dictionary: CMUdict. Formants: Praat (parselmouth).";
+$("#foot").textContent = "Voice: Piper en_US-ljspeech-high via speechkit-voice-tts-offline-pipeline. Recognizers: sherpa-onnx NeMo CTC conformer (small) and Parakeet TDT 0.6B v2, both offline. Dictionary: CMUdict. Formants: Praat (parselmouth).";
 </script>

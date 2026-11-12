@@ -97,6 +97,17 @@ jobs:
           python -m pip freeze --all > artifacts/environment/coordinator-packages.txt
           installed/runtime/.venv/bin/python -m pip freeze --all > artifacts/environment/voice-packages.txt
           python scripts/record_runtime.py artifacts/environment/runtime.json
+      - name: Check out the previous narration implementation for upgrade verification
+        uses: actions/checkout@v4
+        with:
+          ref: df886b91301c171c6e44ae4ac12bc20e5c63c34e
+          path: compatibility/legacy
+      - name: Generate previous-version pilot and verify unchanged WAV reuse after upgrade
+        run: |
+          python compatibility/legacy/scripts/explainer_narration.py --input-package examples/explainer_chapter02/pilot.json --output-root artifacts/rename_resume --profile ljspeech-high --workers 1
+          python scripts/check_rename_resume.py artifacts/rename_resume artifacts/environment/rename-resume-before.json --snapshot
+          python scripts/explainer_narration.py --input-package examples/explainer_chapter02/pilot.json --output-root artifacts/rename_resume --profile ljspeech-high --workers 1
+          python scripts/check_rename_resume.py artifacts/rename_resume artifacts/environment/rename-resume-before.json > artifacts/environment/rename-resume-result.json
       - name: Synthesize and validate the 15 cue pilot
         run: python scripts/explainer_narration.py --input-package examples/explainer_chapter02/pilot.json --output-root artifacts/explainer_pilot --profile ljspeech-high --workers 1
       - name: Check the unchanged pilot resume
@@ -130,7 +141,7 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.13'}
       - run: python -m pip install -r requirements.txt
-      - name: Pester tests of the SpeechKitNarrate module
+      - name: Pester tests of the SpeechKitVoiceTtsOfflinePipeline module
         shell: pwsh
         run: |
           Set-PSRepository PSGallery -InstallationPolicy Trusted

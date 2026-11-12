@@ -938,7 +938,7 @@ def run(request_path=DEFAULT_REQUEST, speech_dir=DEFAULT_SPEECH, out_dir=DEFAULT
     # total seconds from the start until just before the file is written
     measure["timing"]["total_s"] = round(time.time() - t_all, 2)
     out_dir.mkdir(parents=True, exist_ok=True)  # create the output folder
-    path = out_dir / "asr_measure.json"  # final location of the measurement, which the speechkit-narrate audit tools read later
+    path = out_dir / "asr_measure.json"  # final location of the measurement, which the speechkit-voice-tts-offline-pipeline audit tools read later
     tmp = path.with_suffix(".tmp")  # written first as asr_measure.tmp so a reader never sees a half-written file
     tmp.write_text(json.dumps(measure, ensure_ascii=False, indent=1), encoding="utf-8")  # write the indented JSON
     os.replace(tmp, path)  # atomic rename into place

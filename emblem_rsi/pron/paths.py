@@ -3,7 +3,7 @@
 """Where the narration being audited lives, read from environment variables once at import.
 
 The audit works on a narration project laid out as <root>/work/{request.json, docmodel.json, speech/,
-pronunciations.json}. speechkit-narrate sets every variable below before importing the audit. Standalone
+pronunciations.json}. speechkit-voice-tts-offline-pipeline sets every variable below before importing the audit. Standalone
 use falls back to the current directory for the project root; the other settings have no default (None),
 and the code that needs one raises an error naming the variable to set.
 
@@ -19,7 +19,7 @@ and the code that needs one raises an error naming the variable to set.
 # lets type hints such as list[str] stay unevaluated strings on older Python versions
 from __future__ import annotations
 
-import json  # parses the JSON command lists that speechkit-narrate passes in the EMBLEM_*_CMD variables
+import json  # parses the JSON command lists that speechkit-voice-tts-offline-pipeline passes in the EMBLEM_*_CMD variables
 import os  # os.environ is where every setting below is read from
 from pathlib import Path  # Path gives operating-system-neutral path joining with the / operator
 
@@ -39,7 +39,7 @@ def _env_cmd(name: str):
 # supplies it and what describes the setting. Call sites use it so a missing setting gives one clear message.
 def need(value, name: str, what: str):
     if value is None:  # the variable was not set when this module was imported
-        raise RuntimeError(f"{what} is not configured: set {name} (speechkit-narrate sets it for you)")
+        raise RuntimeError(f"{what} is not configured: set {name} (speechkit-voice-tts-offline-pipeline sets it for you)")
     return value  # the configured value, unchanged
 
 
@@ -63,7 +63,7 @@ VOICE_MODEL = Path(_env("EMBLEM_VOICE_MODEL") or WORK / "ljspeech-high.aligned.o
 # Piper voice configuration JSON (sample rate, espeak voice name, phoneme map) for the voice above, or None.
 VOICE_CONFIG = Path(_env("EMBLEM_VOICE_CONFIG")) if _env("EMBLEM_VOICE_CONFIG") else None
 # Command (a JSON list, run with cwd = ROOT) that rebuilds request.json and docmodel.json after the overrides
-# change, or None. speechkit-narrate sets it to its own `run <root> --only script --force script`.
+# change, or None. speechkit-voice-tts-offline-pipeline sets it to its own `run <root> --only script --force script`.
 REBUILD_CMD = _env_cmd("EMBLEM_REBUILD_CMD")
 # Command that re-voices only the segments whose spoken text changed after an apply, or None.
 REVOICE_CMD = _env_cmd("EMBLEM_REVOICE_CMD")

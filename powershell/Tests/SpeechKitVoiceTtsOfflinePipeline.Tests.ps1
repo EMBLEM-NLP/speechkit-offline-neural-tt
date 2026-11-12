@@ -1,19 +1,19 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 EMBLEM-NLP
 #Requires -Version 7.2
-# Pester 5+ tests for the SpeechKitNarrate module. Run from the checkout:
+# Pester 5+ tests for the SpeechKitVoiceTtsOfflinePipeline module. Run from the checkout:
 #   pwsh -NoProfile -Command "Invoke-Pester ./powershell/Tests -Output Detailed"
 
-Describe 'SpeechKitNarrate module' {
+Describe 'SpeechKitVoiceTtsOfflinePipeline module' {
     # Runs once, before the first Context: finds the module and the checkout, saves and clears the SPEECHKIT_*
     # variables, imports the module (capturing any warning), and builds the shared fixtures: a small text, a plug-in
     # with a stage and a tool, a project path and a deliberately awkward title. Everything is stored in $script:
     # variables so It blocks see it.
     BeforeAll {  # Pester 5: setup code must live in BeforeAll, not loose in the Describe body
         # the module folder next to this Tests folder, as an absolute path
-        $script:ModuleDir = (Resolve-Path (Join-Path $PSScriptRoot '../SpeechKitNarrate')).Path
+        $script:ModuleDir = (Resolve-Path (Join-Path $PSScriptRoot '../SpeechKitVoiceTtsOfflinePipeline')).Path
         # the manifest is what Import-Module and Test-ModuleManifest read
-        $script:Manifest = Join-Path $ModuleDir 'SpeechKitNarrate.psd1'
+        $script:Manifest = Join-Path $ModuleDir 'SpeechKitVoiceTtsOfflinePipeline.psd1'
         # checkout root: powershell/Tests/../.. holds the speechkit_narrate package
         $script:Root = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
         # stand-in for wsl.exe used by the WSL and Auto contexts (shared with the Python tests)
@@ -169,7 +169,7 @@ Describe 'SpeechKitNarrate module' {
             if ($null -eq $SavedEnv[$k]) { Remove-Item -LiteralPath "Env:$k" -ErrorAction SilentlyContinue }
             else { Set-Item -LiteralPath "Env:$k" -Value $SavedEnv[$k] }
         }
-        Remove-Module SpeechKitNarrate -Force -ErrorAction SilentlyContinue
+        Remove-Module SpeechKitVoiceTtsOfflinePipeline -Force -ErrorAction SilentlyContinue
         if ($WorkBase -and (Test-Path -LiteralPath $WorkBase)) { Remove-Item -LiteralPath $WorkBase -Recurse -Force }
     }
 
@@ -177,12 +177,12 @@ Describe 'SpeechKitNarrate module' {
     Context 'Module' {
         It 'has a valid manifest with the new identity' {
             $m = Test-ModuleManifest -Path $Manifest -ErrorAction Stop
-            $m.Name | Should -Be 'SpeechKitNarrate'
-            $m.Version | Should -Be ([version]'1.0.0')
+            $m.Name | Should -Be 'SpeechKitVoiceTtsOfflinePipeline'
+            $m.Version | Should -Be ([version]'1.1.0')
             $m.Guid | Should -Not -Be ([guid]'da5586db-d9b2-4d16-8279-92bc643dcc93')  # not the module it came from
             $m.Author | Should -Be 'EMBLEM-NLP'
             $m.CompanyName | Should -Be 'EMBLEM-NLP'
-            [string]$m.ProjectUri | Should -Be 'https://github.com/EMBLEM-NLP/speechkit-offline-neural-tt'
+            [string]$m.ProjectUri | Should -Be 'https://github.com/EMBLEM-NLP/speechkit-voice-tts-offline-pipeline'
             $m.ExportedFunctions.Keys | Should -Contain 'Invoke-NarrationPipeline'
             $m.ExportedAliases.Keys | Should -Contain 'Invoke-Narration'
         }
@@ -197,7 +197,7 @@ Describe 'SpeechKitNarrate module' {
                 'Get-NarrationProject', 'Get-NarrationPlan', 'Invoke-NarrationPipeline', 'Get-NarrationSetting',
                 'Set-NarrationSetting', 'Test-NarrationEnvironment', 'Install-NarrationDependency',
                 'Start-NarrationMcpServer', 'Register-NarrationMcpServer')
-            $names = @(Get-Command -Module SpeechKitNarrate -CommandType Function | ForEach-Object Name)
+            $names = @(Get-Command -Module SpeechKitVoiceTtsOfflinePipeline -CommandType Function | ForEach-Object Name)
             $names | Sort-Object | Should -Be ($expected | Sort-Object)
             (Get-Alias Invoke-Narration).Definition | Should -Be 'Invoke-NarrationPipeline'
             Get-Command Invoke-NarrationCli -ErrorAction SilentlyContinue | Should -BeNullOrEmpty  # private stays private
@@ -212,7 +212,7 @@ Describe 'SpeechKitNarrate module' {
 
         It 'uses approved verbs and has help with PowerShell examples on every public function' {
             $verbs = @(Get-Verb | ForEach-Object Verb)
-            foreach ($c in @(Get-Command -Module SpeechKitNarrate -CommandType Function)) {
+            foreach ($c in @(Get-Command -Module SpeechKitVoiceTtsOfflinePipeline -CommandType Function)) {
                 $verbs | Should -Contain $c.Verb -Because $c.Name
                 $help = Get-Help $c.Name -Full
                 $help.Synopsis | Should -Not -BeNullOrEmpty -Because $c.Name
@@ -286,7 +286,7 @@ Describe 'SpeechKitNarrate module' {
 
         It 'quotes arguments for Windows PowerShell 5.1 so they parse back unchanged' {
             $cases = @('plain', 'with space', 'quote"inside', 'trail\', 'C:\Program Files\x\', '{"a": "b c", "d": [1, 2]}', '', 'a\\"b', "it's (1) `$5 & co")
-            $line = InModuleScope SpeechKitNarrate -Parameters @{ Cases = $cases } { param($Cases) ConvertTo-NarrationArgumentString -ArgumentList $Cases }
+            $line = InModuleScope SpeechKitVoiceTtsOfflinePipeline -Parameters @{ Cases = $cases } { param($Cases) ConvertTo-NarrationArgumentString -ArgumentList $Cases }
             $psi = New-Object System.Diagnostics.ProcessStartInfo
             $psi.FileName = $Py
             $psi.Arguments = '-c "import json,sys; print(json.dumps(sys.argv[1:]))" ' + $line
@@ -303,7 +303,7 @@ Describe 'SpeechKitNarrate module' {
         It 'parses JSON with the -Depth the engine supports (6.2 and later)' {
             # 60 levels of nesting: more than the old default of ConvertFrom-Json in some engines, less than 100
             $deep = ('{"a":' * 60) + '1' + ('}' * 60)
-            $o = InModuleScope SpeechKitNarrate -Parameters @{ J = $deep } { param($J) ConvertFrom-NarrationJson -Json $J }
+            $o = InModuleScope SpeechKitVoiceTtsOfflinePipeline -Parameters @{ J = $deep } { param($J) ConvertFrom-NarrationJson -Json $J }
             $o | Should -Not -BeNullOrEmpty
             # the check compares the full version, so 6.0 and 6.1 (no -Depth) take the other branch
             $src = Get-Content -Raw (Join-Path $ModuleDir 'Private/Invoke.ps1')
@@ -312,10 +312,29 @@ Describe 'SpeechKitNarrate module' {
     }
 
     # Backend: what Get-NarrationBackend reports by default and how Set-NarrationBackend validates its input.
+    Context 'Legacy module compatibility' {
+        It 'imports the legacy module in a fresh shell with canonical and legacy type names' {
+            $legacy = Join-Path $Root 'powershell/SpeechKitNarrate/SpeechKitNarrate.psd1'
+            $pwsh = (Get-Process -Id $PID).Path
+            $code = "Import-Module '$legacy' -ErrorAction Stop; `$b = Get-NarrationBackend -NoProbe; [pscustomobject]@{ Types = @(`$b.PSObject.TypeNames); Mode = `$b.Mode; Command = (Get-Command Invoke-NarrationPipeline).Name } | ConvertTo-Json -Compress"
+            $reply = ((& $pwsh -NoProfile -NonInteractive -Command $code) | Out-String) | ConvertFrom-Json
+            $reply.Types | Should -Contain 'SpeechKitVoiceTtsOfflinePipeline.Backend'
+            $reply.Types | Should -Contain 'SpeechKitNarrate.Backend'
+            $reply.Mode | Should -Be 'Source'
+            $reply.Command | Should -Be 'Invoke-NarrationPipeline'
+        }
+
+        It 'shares backend state when both module names are imported' {
+            $legacy = Join-Path $Root 'powershell/SpeechKitNarrate/SpeechKitNarrate.psd1'
+            $code = "Import-Module '$legacy' -ErrorAction Stop; Set-NarrationBackend -Distribution 'Compat-Shared'; (SpeechKitVoiceTtsOfflinePipeline\Get-NarrationBackend -NoProbe).Distribution"
+            (Invoke-ChildPwsh $code | Out-String).Trim() | Should -Be 'Compat-Shared'
+        }
+    }
+
     Context 'Backend' {
         It 'defaults to Auto in Source mode with a working native Python' {
             $b = Get-NarrationBackend
-            $b.PSObject.TypeNames[0] | Should -Be 'SpeechKitNarrate.Backend'
+            $b.PSObject.TypeNames[0] | Should -Be 'SpeechKitVoiceTtsOfflinePipeline.Backend'
             $b.Backend | Should -Be 'Auto'
             $b.Effective | Should -Be 'Native'
             $b.Mode | Should -Be 'Source'
@@ -326,25 +345,25 @@ Describe 'SpeechKitNarrate module' {
         # Bug fix: -ToolkitRoot used to be checked after the other settings were stored, so a bad folder left those
         # changes applied with stale caches. Now everything is validated first and nothing changes on a refusal.
         It 'refuses a bad toolkit root without changing any other setting or the caches' {
-            $before = InModuleScope SpeechKitNarrate { Resolve-NarrationPython | Out-Null; $script:Cache.Python }  # fill the cache
+            $before = InModuleScope SpeechKitVoiceTtsOfflinePipeline { Resolve-NarrationPython | Out-Null; $script:Cache.Python }  # fill the cache
             { Set-NarrationBackend -Backend Native -Python '/no/such/python' -WslPython 'nope' -Distribution 'Nope' -ToolkitRoot $TestDrive } |
                 Should -Throw '*does not contain the speechkit_narrate package*'
-            $cfg = InModuleScope SpeechKitNarrate { $script:Config }
+            $cfg = InModuleScope SpeechKitVoiceTtsOfflinePipeline { $script:Config }
             $cfg.Backend | Should -Be 'Auto'  # none of the settings given with the bad folder were applied
             $cfg.Python | Should -BeNullOrEmpty
             $cfg.WslPython | Should -BeNullOrEmpty
             $cfg.Distribution | Should -BeNullOrEmpty
             $cfg.ToolkitRoot | Should -Be $Root
             # the cached Python is still the one for the unchanged settings
-            InModuleScope SpeechKitNarrate { $script:Cache.Python } | Should -Be $before
+            InModuleScope SpeechKitVoiceTtsOfflinePipeline { $script:Cache.Python } | Should -Be $before
         }
 
         It 'applies a valid call as a whole and then clears the caches' {
-            InModuleScope SpeechKitNarrate { Resolve-NarrationPython } | Out-Null  # fill the cache
+            InModuleScope SpeechKitVoiceTtsOfflinePipeline { Resolve-NarrationPython } | Out-Null  # fill the cache
             try {
                 Set-NarrationBackend -Backend Native -ToolkitRoot $Root
                 (Get-NarrationBackend -NoProbe).Backend | Should -Be 'Native'
-                InModuleScope SpeechKitNarrate { $script:Cache.Python } | Should -BeNullOrEmpty  # reset after applying
+                InModuleScope SpeechKitVoiceTtsOfflinePipeline { $script:Cache.Python } | Should -BeNullOrEmpty  # reset after applying
             }
             finally { Set-NarrationBackend -Backend Auto }
         }
@@ -356,7 +375,7 @@ Describe 'SpeechKitNarrate module' {
                 $b.Mode | Should -Be 'Installed'
                 $b.ToolkitRoot | Should -BeNullOrEmpty
                 # Installed mode puts nothing on PYTHONPATH, natively or in the registered entry
-                $spec = InModuleScope SpeechKitNarrate { Get-NarrationLaunchSpec -Arguments @('mcp') -ForRegistration }
+                $spec = InModuleScope SpeechKitVoiceTtsOfflinePipeline { Get-NarrationLaunchSpec -Arguments @('mcp') -ForRegistration }
                 @($spec.Environment.Keys) | Should -Not -Contain 'PYTHONPATH'
                 @($spec.Environment.Keys) | Should -Contain 'PYTHONUTF8'
             }
@@ -388,12 +407,12 @@ Describe 'SpeechKitNarrate module' {
         It 'uses SPEECHKIT_PYTHON before any discovered Python' {
             $env:SPEECHKIT_PYTHON = $FakePy
             try {
-                $r = InModuleScope SpeechKitNarrate { Resolve-NarrationPython -Refresh }
+                $r = InModuleScope SpeechKitVoiceTtsOfflinePipeline { Resolve-NarrationPython -Refresh }
                 $r.Executable | Should -Be $FakePy
                 $r.Version | Should -Be '3.13.0'
                 # and Set-NarrationBackend -Python beats the environment variable
                 Set-NarrationBackend -Python $Py
-                (InModuleScope SpeechKitNarrate { Resolve-NarrationPython -Refresh }).Executable | Should -Be $Py
+                (InModuleScope SpeechKitVoiceTtsOfflinePipeline { Resolve-NarrationPython -Refresh }).Executable | Should -Be $Py
             }
             finally { $env:SPEECHKIT_PYTHON = $null; Set-NarrationBackend -Python '' }
         }
@@ -411,7 +430,7 @@ Describe 'SpeechKitNarrate module' {
             $saved = @{ L = $env:LOCALAPPDATA; P = $env:ProgramFiles }
             $env:LOCALAPPDATA = $local; $env:ProgramFiles = $programs  # ProgramFiles last: the old loop left it in $Base
             try {
-                $r = InModuleScope SpeechKitNarrate {
+                $r = InModuleScope SpeechKitVoiceTtsOfflinePipeline {
                     $realWindows = $script:OnWindows
                     $script:OnWindows = $true  # take the Windows branch of the discovery
                     try {
@@ -436,7 +455,7 @@ Describe 'SpeechKitNarrate module' {
         It 'Get-NarrationStage returns the 9 built-in stages in run order with what they need' {
             $stages = @(Get-NarrationStage)
             $stages.Count | Should -Be 9
-            $stages | ForEach-Object { $_.PSObject.TypeNames[0] | Should -Be 'SpeechKitNarrate.Stage' }
+            $stages | ForEach-Object { $_.PSObject.TypeNames[0] | Should -Be 'SpeechKitVoiceTtsOfflinePipeline.Stage' }
             $stages.Name | Should -Be @('extract', 'check', 'script', 'prevoice', 'narrate', 'autofix', 'audit', 'report', 'export')
             ($stages | Where-Object Name -eq 'extract').Needs | Should -BeNullOrEmpty
             ($stages | Where-Object Name -eq 'narrate').Needs | Should -Be @('script', 'prevoice')
@@ -451,7 +470,7 @@ Describe 'SpeechKitNarrate module' {
             $tools = @(Get-NarrationTool)
             $tools.Name | Should -Be @('speak', 'quick')
             $tools.Command | Should -Be @('Invoke-NarrationSpeak', 'Invoke-NarrationQuick')
-            foreach ($t in $tools) { (Get-Command $t.Command -ErrorAction Stop).Source | Should -Be 'SpeechKitNarrate.Tools' }
+            foreach ($t in $tools) { (Get-Command $t.Command -ErrorAction Stop).Source | Should -Be 'SpeechKitVoiceTtsOfflinePipeline.Tools' }
         }
 
         It 'generates the tool commands with typed, validated parameters' {
@@ -475,7 +494,7 @@ Describe 'SpeechKitNarrate module' {
             Push-Location $Work
             try { $r = Invoke-NarrationQuick -InputPath './small book.txt' -Out './quick out/proj' -Targets script }
             finally { Pop-Location }
-            $r.PSObject.TypeNames[0] | Should -Be 'SpeechKitNarrate.ToolResult'
+            $r.PSObject.TypeNames[0] | Should -Be 'SpeechKitVoiceTtsOfflinePipeline.ToolResult'
             $r.Tool | Should -Be 'quick'
             $r.project | Should -Be (Join-Path $Work 'quick out/proj')
             $r.ran | Should -Be @('extract', 'check', 'script')
@@ -501,7 +520,7 @@ Describe 'SpeechKitNarrate module' {
     Context 'Project workflow' {
         It 'New-NarrationProject makes a project from a .txt file, with -Set as a hashtable' {
             $p = New-NarrationProject -Path $Project -InputFile $BookTxt -Title $Title -Author 'A. Writer' -Set @{ spoken = @{ years = $true } }
-            $p.PSObject.TypeNames[0] | Should -Be 'SpeechKitNarrate.ProjectInfo'
+            $p.PSObject.TypeNames[0] | Should -Be 'SpeechKitVoiceTtsOfflinePipeline.ProjectInfo'
             $p.Project | Should -Be $Project
             $p.Title | Should -BeExactly $Title
             $p.Settings.spoken.years | Should -BeTrue
@@ -534,17 +553,17 @@ Describe 'SpeechKitNarrate module' {
 
         It 'Invoke-NarrationPipeline -Target script -AcceptDraft builds the narration script' {
             $r = [pscustomobject]@{ Project = $Project } | Invoke-NarrationPipeline -Target script -AcceptDraft
-            $r.PSObject.TypeNames[0] | Should -Be 'SpeechKitNarrate.RunResult'
+            $r.PSObject.TypeNames[0] | Should -Be 'SpeechKitVoiceTtsOfflinePipeline.RunResult'
             $r.Ran | Should -Be @('extract', 'check', 'script')
             $r.Stopped | Should -BeNullOrEmpty
-            $r.Steps[0].PSObject.TypeNames[0] | Should -Be 'SpeechKitNarrate.RunStep'
+            $r.Steps[0].PSObject.TypeNames[0] | Should -Be 'SpeechKitVoiceTtsOfflinePipeline.RunStep'
             Join-Path $Project 'work/request.json' | Should -Exist
             Join-Path $Project 'work/book.md' | Should -Exist
         }
 
         It 'Get-NarrationPlan afterwards shows script as skip (up to date)' {
             $plan = @(Get-NarrationPlan -Path $Project -Target script)
-            $plan[0].PSObject.TypeNames[0] | Should -Be 'SpeechKitNarrate.PlanStep'
+            $plan[0].PSObject.TypeNames[0] | Should -Be 'SpeechKitVoiceTtsOfflinePipeline.PlanStep'
             $script = $plan | Where-Object Stage -eq 'script'
             $script.Action | Should -Be 'skip'
             $script.Reasons | Should -Be @('up to date')
@@ -552,7 +571,7 @@ Describe 'SpeechKitNarrate module' {
 
         It 'Get-NarrationProject shows the stages that are done and the narration still to voice' {
             $p = Get-NarrationProject $Project
-            $p.PSObject.TypeNames[0] | Should -Be 'SpeechKitNarrate.Project'
+            $p.PSObject.TypeNames[0] | Should -Be 'SpeechKitVoiceTtsOfflinePipeline.Project'
             $p.Title | Should -BeExactly $Title
             $p.Done | Should -Be @('extract', 'check', 'script')
             ($p.Stages | Where-Object Stage -eq 'narrate').Missing | Should -Contain 'speech'
@@ -583,7 +602,7 @@ Describe 'SpeechKitNarrate module' {
 
         It 'Invoke-NarrationStage runs the stage and brings it up to date' {
             $r = Invoke-NarrationStage -Path $Project -Name script
-            $r.PSObject.TypeNames[0] | Should -Be 'SpeechKitNarrate.StageResult'
+            $r.PSObject.TypeNames[0] | Should -Be 'SpeechKitVoiceTtsOfflinePipeline.StageResult'
             $r.Action | Should -Be 'ran'
             $r.Ran | Should -Be @('script')
             (Get-NarrationPlan $Project -Target script | Where-Object Stage -eq 'script').Action | Should -Be 'skip'
@@ -629,7 +648,7 @@ Describe 'SpeechKitNarrate module' {
         It 'Update-NarrationCommand creates Invoke-NarrationWordcount from SPEECHKIT_PLUGINS' {
             Get-Command Invoke-NarrationWordcount -ErrorAction SilentlyContinue | Should -BeNullOrEmpty
             $gen = @(Update-NarrationCommand -PassThru)
-            $gen[0].PSObject.TypeNames[0] | Should -Be 'SpeechKitNarrate.GeneratedCommand'
+            $gen[0].PSObject.TypeNames[0] | Should -Be 'SpeechKitVoiceTtsOfflinePipeline.GeneratedCommand'
             $gen.Name | Should -Contain 'Invoke-NarrationWordcount'
             Get-Mandatory Invoke-NarrationWordcount File | Should -BeTrue
             Get-Command Invoke-NarrationSpeak | Should -Not -BeNullOrEmpty  # built-in commands survive
@@ -666,15 +685,15 @@ Describe 'SpeechKitNarrate module' {
             [System.IO.File]::WriteAllText($Cfg, $original)
         }
 
-        It 'keeps the other entries and adds a valid speechkit-narrate entry, with a backup' {
+        It 'keeps the other entries and adds a valid speechkit-voice-tts-offline-pipeline entry, with a backup' {
             $r = Register-NarrationMcpServer -ConfigPath $Cfg
-            $r.PSObject.TypeNames[0] | Should -Be 'SpeechKitNarrate.McpRegistration'
+            $r.PSObject.TypeNames[0] | Should -Be 'SpeechKitVoiceTtsOfflinePipeline.McpRegistration'
             $json = Get-Content -Raw -LiteralPath $Cfg | ConvertFrom-Json
             $json.theme | Should -Be 'dark'
             @($json.list) | Should -Be @(1)
             $json.mcpServers.other.command | Should -Be 'node'
             @($json.mcpServers.other.args) | Should -Be @('server.js')
-            $b = $json.mcpServers.'speechkit-narrate'
+            $b = $json.mcpServers.'speechkit-voice-tts-offline-pipeline'
             $b.command | Should -Exist
             @($b.args) | Should -Be @('-m', 'speechkit_narrate', '--json', 'mcp')
             $b.env.PYTHONPATH | Should -Be $Root
@@ -682,6 +701,32 @@ Describe 'SpeechKitNarrate module' {
             $r.Backup | Should -Exist
             [System.IO.File]::ReadAllBytes($Cfg)[0] | Should -Be ([byte][char]'{')  # no BOM
             "$Cfg.tmp" | Should -Not -Exist
+        }
+
+        It 'migrates an identified legacy default with an exact backup' {
+            Register-NarrationMcpServer -ConfigPath $Cfg -Name 'speechkit-narrate' | Out-Null
+            $before = [System.IO.File]::ReadAllText($Cfg)
+            $result = Register-NarrationMcpServer -ConfigPath $Cfg
+            $after = Get-Content -Raw -LiteralPath $Cfg | ConvertFrom-Json
+            @($after.mcpServers.PSObject.Properties.Name) | Should -Not -Contain 'speechkit-narrate'
+            @($after.mcpServers.PSObject.Properties.Name) | Should -Contain 'speechkit-voice-tts-offline-pipeline'
+            $after.mcpServers.other.command | Should -Be 'node'
+            [System.IO.File]::ReadAllText($result.Backup) | Should -BeExactly $before
+        }
+
+        It 'leaves ambiguous canonical and legacy entries unchanged' {
+            Register-NarrationMcpServer -ConfigPath $Cfg | Out-Null
+            Register-NarrationMcpServer -ConfigPath $Cfg -Name 'speechkit-narrate' | Out-Null
+            $before = [System.IO.File]::ReadAllText($Cfg)
+            { Register-NarrationMcpServer -ConfigPath $Cfg } | Should -Throw '*Both canonical and legacy*'
+            [System.IO.File]::ReadAllText($Cfg) | Should -BeExactly $before
+        }
+
+        It 'does not replace an unidentified legacy registration' {
+            $original = '{"mcpServers":{"speechkit-narrate":{"command":"node","args":["unrelated.js"]}}}'
+            [System.IO.File]::WriteAllText($Cfg, $original)
+            { Register-NarrationMcpServer -ConfigPath $Cfg } | Should -Throw '*not an identified*'
+            [System.IO.File]::ReadAllText($Cfg) | Should -BeExactly $original
         }
 
         It 'writes SPEECHKIT_DELEGATE and a custom name' {
@@ -697,7 +742,7 @@ Describe 'SpeechKitNarrate module' {
             [System.IO.File]::ReadAllText($Cfg) | Should -BeExactly $before
             $fresh = Join-Path $TestDrive 'new folder/claude_desktop_config.json'
             Register-NarrationMcpServer -ConfigPath $fresh | Out-Null
-            (Get-Content -Raw $fresh | ConvertFrom-Json).mcpServers.'speechkit-narrate'.env.PYTHONPATH | Should -Be $Root
+            (Get-Content -Raw $fresh | ConvertFrom-Json).mcpServers.'speechkit-voice-tts-offline-pipeline'.env.PYTHONPATH | Should -Be $Root
         }
 
         # Bug fix: the temporary <file>.tmp used to stay behind when the final copy failed. Here the "config file" is
@@ -712,7 +757,7 @@ Describe 'SpeechKitNarrate module' {
 
         It 'writes an entry that starts a working MCP server' {
             Register-NarrationMcpServer -ConfigPath $Cfg -NoBackup | Out-Null
-            $b = (Get-Content -Raw -LiteralPath $Cfg | ConvertFrom-Json).mcpServers.'speechkit-narrate'
+            $b = (Get-Content -Raw -LiteralPath $Cfg | ConvertFrom-Json).mcpServers.'speechkit-voice-tts-offline-pipeline'
             $envMap = @{}
             foreach ($p in $b.env.PSObject.Properties) { $envMap[$p.Name] = $p.Value }
             $reply = Invoke-McpInitialize -FilePath $b.command -Arguments @($b.args) -Environment $envMap
@@ -772,7 +817,7 @@ Describe 'SpeechKitNarrate module' {
             try {
                 $env:SPEECHKIT_WSL = $null
                 Set-NarrationBackend -Backend Wsl -Distribution 'Ubuntu-24.04'
-                $prefix = InModuleScope SpeechKitNarrate { Get-NarrationWslPrefix }
+                $prefix = InModuleScope SpeechKitVoiceTtsOfflinePipeline { Get-NarrationWslPrefix }
                 Split-Path -Leaf $prefix.FilePath | Should -Be 'wsl.exe'
                 $prefix.Arguments | Should -Be @('-d', 'Ubuntu-24.04', '--exec')
             }
@@ -784,8 +829,8 @@ Describe 'SpeechKitNarrate module' {
             $env:SPEECHKIT_PLUGINS = $StatsPlugin
             Set-NarrationBackend -Backend Wsl -WslPython python3
             try {
-                InModuleScope SpeechKitNarrate { ConvertTo-NarrationWslPath -Path '/tmp/a b/c.txt' } | Should -Be '/wsl/tmp/a b/c.txt'
-                $spec = InModuleScope SpeechKitNarrate { Get-NarrationLaunchSpec -Arguments @('plan', '/x', '--options={"a": 1}') }
+                InModuleScope SpeechKitVoiceTtsOfflinePipeline { ConvertTo-NarrationWslPath -Path '/tmp/a b/c.txt' } | Should -Be '/wsl/tmp/a b/c.txt'
+                $spec = InModuleScope SpeechKitVoiceTtsOfflinePipeline { Get-NarrationLaunchSpec -Arguments @('plan', '/x', '--options={"a": 1}') }
                 $spec.FilePath | Should -Be $Py
                 $spec.ArgumentList | Should -Be @($FakeWsl, 'env', "PYTHONPATH=/wsl$Root", 'PYTHONUTF8=1', 'PYTHONIOENCODING=utf-8',
                     "SPEECHKIT_PLUGINS=/wsl$StatsPlugin", 'python3', '-m', 'speechkit_narrate', '--json', 'plan', '/x', '--options={"a": 1}')
@@ -833,8 +878,8 @@ Describe 'SpeechKitNarrate module' {
     # so Linux-only stages and tools go through SPEECHKIT_DELEGATE, here fake_wsl.py.
     Context 'Auto backend on Windows (simulated)' {
         BeforeAll {
-            $script:RealOnWindows = InModuleScope SpeechKitNarrate { $script:OnWindows }
-            InModuleScope SpeechKitNarrate { $script:OnWindows = $true }
+            $script:RealOnWindows = InModuleScope SpeechKitVoiceTtsOfflinePipeline { $script:OnWindows }
+            InModuleScope SpeechKitVoiceTtsOfflinePipeline { $script:OnWindows = $true }
             $env:SPEECHKIT_WSL = "`"$Py`" `"$FakeWsl`""
             $env:FAKE_WSL_LOG = Join-Path $TestDrive 'fake_wsl_auto.log'
             $env:SPEECHKIT_PYTHON = $Py  # on "Windows" discovery would look for py -3.13; use the real Python
@@ -860,7 +905,7 @@ Describe 'SpeechKitNarrate module' {
             [System.IO.File]::WriteAllText((Join-Path $Delegated 'plugins/penguin.py'), $plugin + "`n")
         }
         AfterAll {
-            InModuleScope SpeechKitNarrate -Parameters @{ Value = $RealOnWindows } { param($Value) $script:OnWindows = $Value }
+            InModuleScope SpeechKitVoiceTtsOfflinePipeline -Parameters @{ Value = $RealOnWindows } { param($Value) $script:OnWindows = $Value }
             foreach ($k in @('SPEECHKIT_WSL', 'FAKE_WSL_LOG', 'SPEECHKIT_PYTHON', 'SPEECHKIT_PLATFORM', 'SPEECHKIT_DELEGATE_PYTHON')) { Remove-Item -LiteralPath "Env:$k" -ErrorAction SilentlyContinue }
             Set-NarrationBackend -Backend Auto -WslPython ''
         }
@@ -869,7 +914,7 @@ Describe 'SpeechKitNarrate module' {
             $b = Get-NarrationBackend
             $b.Platform | Should -Be 'Windows'
             $b.Delegate | Should -Be "$Py $FakeWsl"
-            $spec = InModuleScope SpeechKitNarrate { Get-NarrationLaunchSpec -Arguments @('stages') }
+            $spec = InModuleScope SpeechKitVoiceTtsOfflinePipeline { Get-NarrationLaunchSpec -Arguments @('stages') }
             $spec.Environment['SPEECHKIT_DELEGATE'] | Should -Be "$Py $FakeWsl"
             (Get-NarrationStage -Name narrate).Where | Should -Be 'delegate'
         }
@@ -922,7 +967,7 @@ Describe 'SpeechKitNarrate module' {
         It 'Register-NarrationMcpServer writes the delegation command' {
             $cfg = Join-Path $TestDrive 'auto_mcp.json'
             Register-NarrationMcpServer -ConfigPath $cfg | Out-Null
-            (Get-Content -Raw $cfg | ConvertFrom-Json).mcpServers.'speechkit-narrate'.env.SPEECHKIT_DELEGATE | Should -Be "$Py $FakeWsl"
+            (Get-Content -Raw $cfg | ConvertFrom-Json).mcpServers.'speechkit-voice-tts-offline-pipeline'.env.SPEECHKIT_DELEGATE | Should -Be "$Py $FakeWsl"
         }
     }
 
@@ -934,7 +979,7 @@ Describe 'SpeechKitNarrate module' {
             try { Get-NarrationProject -Path $missing } catch { $err = $_ }
             $err | Should -Not -BeNullOrEmpty
             $err.Exception.Message | Should -BeLike '*project.json not found*'
-            $err.FullyQualifiedErrorId | Should -Be 'SpeechKitNarrate.ProjectError,Get-NarrationProject'
+            $err.FullyQualifiedErrorId | Should -Be 'SpeechKitVoiceTtsOfflinePipeline.ProjectError,Get-NarrationProject'
             $err.CategoryInfo.Category | Should -Be 'ObjectNotFound'
             $err.Exception.Data['NarrationType'] | Should -Be 'ProjectError'
             { Invoke-NarrationPipeline -Path $missing } | Should -Throw '*project.json not found*'
@@ -946,13 +991,13 @@ Describe 'SpeechKitNarrate module' {
         }
 
         It 'reports a usage mistake with the message Python gives (as JSON)' {
-            { InModuleScope SpeechKitNarrate { Invoke-NarrationCli -Arguments @('--no-such-flag') } } | Should -Throw '*speechkit-narrate:*arguments*'
+            { InModuleScope SpeechKitVoiceTtsOfflinePipeline { Invoke-NarrationCli -Arguments @('--no-such-flag') } } | Should -Throw '*speechkit-voice-tts-offline-pipeline:*arguments*'
             { Invoke-NarrationTool -Name quick -Parameters @{ out = (Join-Path $Work 'q bad'); no_such = 1 } } | Should -Throw '*unexpected keyword*'
         }
 
         It 'reports a Python failure that printed no JSON (exit code and stderr)' {
             $fake = New-FakePython (Join-Path $TestDrive 'fakepy')
-            InModuleScope SpeechKitNarrate -Parameters @{ Fake = $fake } {
+            InModuleScope SpeechKitVoiceTtsOfflinePipeline -Parameters @{ Fake = $fake } {
                 param($Fake)
                 $saved = $script:Config.Python
                 Set-NarrationBackend -Python $Fake
@@ -966,7 +1011,7 @@ Describe 'SpeechKitNarrate module' {
     Context 'Environment and installation' {
         It 'Test-NarrationEnvironment returns checks (doctor) as objects' {
             $checks = @(Test-NarrationEnvironment)
-            $checks[0].PSObject.TypeNames[0] | Should -Be 'SpeechKitNarrate.Check'
+            $checks[0].PSObject.TypeNames[0] | Should -Be 'SpeechKitVoiceTtsOfflinePipeline.Check'
             ($checks | Where-Object Name -eq 'python').Ok | Should -BeTrue
             ($checks | Where-Object Name -eq 'ffmpeg') | Should -Not -BeNullOrEmpty
             ($checks | Where-Object Name -eq 'speechkit checkout').Detail | Should -Be $Root
@@ -974,7 +1019,7 @@ Describe 'SpeechKitNarrate module' {
         }
 
         It 'plans the winget, pip and WSL steps on Windows' {
-            $steps = InModuleScope SpeechKitNarrate { Get-NarrationInstallStep -Platform Windows -Wsl -Distribution 'Ubuntu-24.04' }
+            $steps = InModuleScope SpeechKitVoiceTtsOfflinePipeline { Get-NarrationInstallStep -Platform Windows -Wsl -Distribution 'Ubuntu-24.04' }
             $steps.Component | Select-Object -Unique | Should -Be @('Winget', 'Pip', 'WslInstall', 'WslPackages', 'WslSetup')
             $all = ($steps | ForEach-Object { $_.CommandLine }) -join "`n"
             foreach ($id in @('Python.Python.3.13', 'Gyan.FFmpeg')) { $all | Should -Match ([regex]::Escape("winget install --id $id --exact")) }
@@ -993,12 +1038,12 @@ Describe 'SpeechKitNarrate module' {
         # Review fix: the WslSetup text named `python3 -m bookcast setup` but the venv python ran; the Setup text said
         # Linux although it is also the default on macOS. The descriptions now say what really runs, and where.
         It 'describes the setup steps as they really run' {
-            $win = InModuleScope SpeechKitNarrate { Get-NarrationInstallStep -Platform Windows -Component WslSetup }
-            $setup = $win | Where-Object Name -eq 'wsl speechkit-narrate setup'
+            $win = InModuleScope SpeechKitVoiceTtsOfflinePipeline { Get-NarrationInstallStep -Platform Windows -Component WslSetup }
+            $setup = $win | Where-Object Name -eq 'wsl speechkit-voice-tts-offline-pipeline setup'
             $setup.Description | Should -Match ([regex]::Escape('/opt/speechkit-narrate/venv/bin/python -m speechkit_narrate setup'))
             $setup.ArgumentList | Should -Contain '/opt/speechkit-narrate/venv/bin/python'
             $setup.Description | Should -Not -Match 'python3 '
-            $mac = InModuleScope SpeechKitNarrate { Get-NarrationInstallStep -Platform MacOS }
+            $mac = InModuleScope SpeechKitVoiceTtsOfflinePipeline { Get-NarrationInstallStep -Platform MacOS }
             @($mac).Count | Should -Be 1
             $mac[0].Component | Should -Be 'Setup'
             $mac[0].Description | Should -Match 'on Linux the voice runtime'  # not "(Linux)" for a macOS default
@@ -1009,9 +1054,9 @@ Describe 'SpeechKitNarrate module' {
         It 'Install-NarrationDependency -WhatIf runs nothing and reports every step as skipped' {
             $out = @(Install-NarrationDependency -Wsl -WhatIf)
             # Setup (the Linux default), WSL install, WSL packages, WSL setup and the final Set-NarrationBackend step
-            $out.Step | Should -Be @('speechkit-narrate setup', 'wsl install Ubuntu-24.04', 'wsl packages', 'wsl speechkit-narrate setup', 'use wsl')
+            $out.Step | Should -Be @('speechkit-voice-tts-offline-pipeline setup', 'wsl install Ubuntu-24.04', 'wsl packages', 'wsl speechkit-voice-tts-offline-pipeline setup', 'use wsl')
             foreach ($o in $out) {
-                $o.PSObject.TypeNames[0] | Should -Be 'SpeechKitNarrate.InstallStep'
+                $o.PSObject.TypeNames[0] | Should -Be 'SpeechKitVoiceTtsOfflinePipeline.InstallStep'
                 $o.Status | Should -BeExactly 'skipped'
                 $o.ExitCode | Should -BeNullOrEmpty  # nothing ran
                 $o.Command | Should -Not -BeNullOrEmpty  # the command it would have run
@@ -1022,8 +1067,8 @@ Describe 'SpeechKitNarrate module' {
         It 'refuses to plan pip packages in Installed mode and plans setup without PYTHONPATH' {
             try {
                 Set-NarrationBackend -ToolkitRoot ''
-                { InModuleScope SpeechKitNarrate { Get-NarrationInstallStep -Platform Windows } } | Should -Throw '*Installed mode*'
-                $setup = InModuleScope SpeechKitNarrate { Get-NarrationInstallStep -Platform Linux }
+                { InModuleScope SpeechKitVoiceTtsOfflinePipeline { Get-NarrationInstallStep -Platform Windows } } | Should -Throw '*Installed mode*'
+                $setup = InModuleScope SpeechKitVoiceTtsOfflinePipeline { Get-NarrationInstallStep -Platform Linux }
                 $setup[0].Environment.ContainsKey('PYTHONPATH') | Should -BeFalse
             }
             finally { Set-NarrationBackend -ToolkitRoot $Root }

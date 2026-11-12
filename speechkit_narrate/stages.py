@@ -152,7 +152,7 @@ def _prevoice_off(project):
        # its own settings, everything that changes the script's words, and the voice (its phoneme set)
        settings=["prevoice", "title", "subtitle", "author", "language", "spoken", "chapters", "voice"],
        platforms=["linux"], refreshes=["script"], satisfied=_prevoice_off,  # espeak lives in the Linux voice runtime
-       # the one-line summary shown by `speechkit-narrate stages`, MCP and PowerShell help
+       # the one-line summary shown by `speechkit-voice-tts-offline-pipeline stages`, MCP and PowerShell help
        description="opt-in: fix heteronyms espeak would read in the wrong role before narration (prevoice.enabled)")
 def prevoice(project, ctx):  # prevoice(project, ctx) -> dict summary; off, it only takes its old fixes out
     from .audit import prevoice as pv  # speechkit_narrate/audit/prevoice.py, imported only when the stage runs
@@ -173,7 +173,7 @@ def prevoice(project, ctx):  # prevoice(project, ctx) -> dict summary; off, it o
        # workers: how many voice processes to run in parallel; no default, so project.json voice.workers applies
        heavy=True, options={"workers": {"type": "integer", "minimum": 1, "description": "parallel voice workers"}},
        # it resumes after an interruption and re-voices only segments whose text changed
-       description="voice every segment with speechkit-offline-neural-tt (resumes; re-voices only what changed)")
+       description="voice every segment with speechkit-voice-tts-offline-pipeline (resumes; re-voices only what changed)")
 # narrate(project, ctx) -> dict; side effects: WAV and .wav.json files in work/speech, worker processes started
 def narrate(project, ctx):
     from .voice import narrate as nar  # the voice module is imported only when narration actually runs
@@ -227,7 +227,7 @@ def autofix(project, ctx):  # autofix(project, ctx) -> dict summary of the loops
                              "../emblem_rsi/rubrics/pronunciation.json"], settings=["voice.profile", "audit"], needs=["narrate"], inputs=["request", "speech"], platforms=["linux"], default=False, heavy=True,
        # note: free text recorded in the loop log as the change being judged
        options={"note": {"type": "string", "description": "what changed since the last measurement"}},
-       # the summary printed by `speechkit-narrate stages`
+       # the summary printed by `speechkit-voice-tts-offline-pipeline stages`
        description="one measured step of the pronunciation loop (measure + promote/veto), no fixes")
 # audit(project, ctx) -> dict; side effect: a new measurement folder and log entry in work/rsi/pron
 def audit(project, ctx):

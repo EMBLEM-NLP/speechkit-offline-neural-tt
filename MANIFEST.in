@@ -1,0 +1,14 @@
+include .gitattributes .gitignore BUNDLE_MANIFEST.json CHANGELOG.md LICENSE README.md SHA256SUMS THIRD_PARTY_NOTICES.md bootstrap.py
+include pyproject.toml requirements.txt requirements-voice.txt constraints-voice.txt MANIFEST.in
+include archives/.gitkeep
+graft .github
+graft docs
+graft requests
+graft speechkit
+graft speechkit_narrate
+graft emblem_rsi
+graft powershell
+graft tests
+graft scripts
+graft examples
+global-exclude __pycache__ *.py[cod]

@@ -1,6 +1,6 @@
 # Third-party components
 
-Delivered inside the runtime release asset [`EMBLEM-NLP_Offline_Neural_Runtime_Linux_Py313.zip`](https://github.com/EMBLEM-NLP/speechkit-offline-neural-tt/releases/download/v1.1.0/EMBLEM-NLP_Offline_Neural_Runtime_Linux_Py313.zip) (full license texts under its `notices/`, corresponding source under its `sources/`).
+Delivered inside the runtime release asset [`EMBLEM-NLP_Offline_Neural_Runtime_Linux_Py313.zip`](https://github.com/EMBLEM-NLP/speechkit-voice-tts-offline-pipeline/releases/download/v1.1.0/EMBLEM-NLP_Offline_Neural_Runtime_Linux_Py313.zip) (full license texts under its `notices/`, corresponding source under its `sources/`).
 
 | Component | Version | License |
 |---|---|---|

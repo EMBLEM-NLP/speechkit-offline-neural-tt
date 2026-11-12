@@ -5,7 +5,7 @@
 Override any location with an environment variable:
   SPEECHKIT_HOME          base folder for downloads and caches (default: %LOCALAPPDATA%\\speechkit-narrate on Windows,
                           ~/.local/share/speechkit-narrate elsewhere)
-  SPEECHKIT_CHECKOUT      speechkit-offline-neural-tt checkout (has speechkit/src, speechkit/profiles, bootstrap.py);
+  SPEECHKIT_CHECKOUT      speechkit-voice-tts-offline-pipeline checkout (has speechkit/src, speechkit/profiles, bootstrap.py);
                           default: the checkout this package sits in
   SPEECHKIT_RUNTIME       installed speechkit runtime (has .venv/bin/python, voices/); default: <checkout>/installed/runtime
   SPEECHKIT_ASR_MODELS    folder with the two sherpa-onnx recognizer models for the pronunciation audit
@@ -24,27 +24,27 @@ import tempfile
 import os  # environment variables (SPEECHKIT_*, LOCALAPPDATA, PATH, ...)
 import shutil  # shutil.which finds programs on PATH
 import subprocess  # runs pip, Playwright's installer and the speechkit bootstrap
-import sys  # sys.platform and sys.executable (the Python running speechkit-narrate)
+import sys  # sys.platform and sys.executable (the Python running speechkit-voice-tts-offline-pipeline)
 import tarfile  # unpacks the downloaded .tar.bz2 recognizer models
 import urllib.request  # downloads the recognizer models from GitHub
 from pathlib import Path  # Path joins folders with the right separator on each platform
 
-# Folder of the speechkit-narrate package itself (speechkit_narrate/), resolved to an absolute path.
+# Folder of the speechkit-voice-tts-offline-pipeline package itself (speechkit_narrate/), resolved to an absolute path.
 PKG = Path(__file__).resolve().parent
 # repository root, the folder that contains speechkit_narrate/ and emblem_rsi/; used for PYTHONPATH and delegation
 REPO = PKG.parent
 WINDOWS = sys.platform == "win32"  # True on native Windows Python (not WSL, where sys.platform is "linux")
 
 
-# Tells whether this copy of speechkit-narrate was installed with pip (a speechkit-narrate-<version>.dist-info folder sits beside the
+# Tells whether this copy of speechkit-voice-tts-offline-pipeline was installed with pip (a speechkit-voice-tts-offline-pipeline-<version>.dist-info folder sits beside the
 # package, which is then inside a site-packages folder) instead of being run from a toolkit folder or checkout.
 # Takes no parameters and returns True or False. Callers use it wherever a toolkit folder would be put on PYTHONPATH:
 # for an installed copy that folder is site-packages, which holds every other package too and would shadow the
 # packages of a different Python that receives it.
 def installed() -> bool:
-    """True for a pip-installed copy of speechkit-narrate, False for a toolkit folder or checkout."""
+    """True for a pip-installed copy of speechkit-voice-tts-offline-pipeline, False for a toolkit folder or checkout."""
     try:  # listing a folder can fail on an odd file system, and a yes-or-no question must not raise
-        return any(REPO.glob("speechkit[-_]narrate-*.dist-info"))  # pip writes this folder beside every package it installs
+        return any(REPO.glob("speechkit[-_]voice[-_]tts[-_]offline[-_]pipeline-*.dist-info")) or any(REPO.glob("speechkit[-_]narrate-*.dist-info"))
     except OSError:  # the folder could not be listed
         return False  # answer "toolkit folder", which is what every caller assumed before this function existed
 
@@ -65,21 +65,22 @@ def _home() -> Path:
 # Picks one location for an external component.
 # env_key is the SPEECHKIT_* variable that overrides it; candidates are paths tried in order.
 # Returns the override, else the first candidate that exists, else the last candidate (the normal install place).
-def _first(env_key: str, *candidates) -> Path:
+def _first(env_key: str, *candidates, default: Path | None = None) -> Path:
     """The env override, else the first candidate that exists, else the last candidate."""
     if os.environ.get(env_key):  # the environment variable is set and not empty
         return Path(os.environ[env_key])  # trust it without checking that it exists
     for c in candidates:  # try each candidate path in order
         if Path(c).exists():  # the first one present on this machine is used
             return Path(c)  # as a Path even if a string was given
-    return Path(candidates[-1])  # nothing found: report the standard location so messages and setup point there
+    return Path(default if default is not None else candidates[-1])  # prefer the canonical location when none exists
 
 
 HOME = _home()  # resolved once per process
-# The speechkit-offline-neural-tt checkout (has bootstrap.py and the voice profiles): normally the one this package
+# The speechkit-voice-tts-offline-pipeline checkout (has bootstrap.py and the voice profiles): normally the one this package
 # sits in, so a fresh clone needs no setting at all.
 SPEECHKIT = _first("SPEECHKIT_CHECKOUT", *([REPO] if (REPO / "speechkit" / "src" / "voice.py").exists() else []),
-                   HOME / "speechkit-offline-neural-tt")
+                   HOME / "speechkit-voice-tts-offline-pipeline", HOME / "speechkit-offline-neural-tt",
+                   default=HOME / "speechkit-voice-tts-offline-pipeline")
 # the installed voice runtime (its own Python venv and voices/ folder); bootstrap.py install --out <checkout>/installed
 # puts it in <checkout>/installed/runtime
 RUNTIME = _first("SPEECHKIT_RUNTIME", SPEECHKIT / "installed" / "runtime", HOME / "runtime")
@@ -385,7 +386,7 @@ def setup(log=print) -> None:
         boot = SPEECHKIT / "bootstrap.py"  # the checkout's verified installer
         if not boot.exists():
             raise RuntimeError(f"speechkit checkout not found at {SPEECHKIT}; clone "
-                               "https://github.com/EMBLEM-NLP/speechkit-offline-neural-tt there or set "
+                               "https://github.com/EMBLEM-NLP/speechkit-voice-tts-offline-pipeline there or set "
                                "SPEECHKIT_CHECKOUT")
         py = shutil.which("python3.13") or sys.executable  # the runtime needs CPython 3.13
         # fetch the pinned archive, verify all hashes, install into a NEW folder (the installer creates <out>/runtime)

@@ -148,7 +148,7 @@ function Resolve-NarrationWslPython {
         if ($r.ExitCode -eq 0) { $py = $script:WslVenvPython }  # exit code 0 means the venv is there, so use it
     }
     # WSL missing or not answering: keep python3 and say why under -Verbose
-    catch { Write-Verbose "speechkit-narrate: could not probe WSL for $($script:WslVenvPython): $_" }
+    catch { Write-Verbose "speechkit-voice-tts-offline-pipeline: could not probe WSL for $($script:WslVenvPython): $_" }
     $script:Cache.WslPython = $py  # remember the decision for the session
     $py  # output the chosen python command, which is the function's return value
 }

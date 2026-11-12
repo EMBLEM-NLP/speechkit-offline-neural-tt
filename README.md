@@ -1,14 +1,16 @@
-# speechkit-offline-neural-tt
+# speechkit-voice-tts-offline-pipeline
 
-**Standalone offline neural text-to-speech by EMBLEM-NLP.** A hash-pinned Piper/ONNX runtime with the bundled `en_US-ljspeech-high` voice, a small CLI, and a verifying bootstrap. It turns a JSON script into hashed 22.05 kHz mono WAVs plus a [`speech.json`](speechkit/schemas/speech.schema.json) manifest. Inference uses local models without a cloud API or another EMBLEM-NLP project. The optional narration audit downloads its separate pinned recognizers during setup.
+**SpeechKit Voice TTS Offline Pipeline by EMBLEM-NLP.** Offline neural text-to-speech and narration pipeline with pronunciation auditing, resumable synthesis, word timings and chapter exports. Combines a hash-pinned Piper/ONNX voice runtime with CLI, MCP and PowerShell interfaces. The runtime and optional recognizers are provisioned during setup; inference uses local models.
 
-Version **1.2.0** (voice runtime unchanged since 1.1.0) · License **GPL-3.0-or-later** (see [docs/LICENSING.md](docs/LICENSING.md)) · Linux x86_64, CPython 3.13, glibc ≥ 2.28, ≥ 1.5 GB free.
+Version **1.3.0** (voice runtime unchanged since 1.1.0) · License **GPL-3.0-or-later** (see [docs/LICENSING.md](docs/LICENSING.md)) · Linux x86_64, CPython 3.13, glibc ≥ 2.28, ≥ 1.5 GB free.
+
+The canonical Python package and command are `speechkit-voice-tts-offline-pipeline`; the existing `speechkit-narrate` command and `speechkit_narrate` imports remain supported. See [migration and compatibility](docs/RENAMING.md).
 
 ## Quick start
 
 ```sh
-git clone https://github.com/EMBLEM-NLP/speechkit-offline-neural-tt.git
-cd speechkit-offline-neural-tt
+git clone https://github.com/EMBLEM-NLP/speechkit-voice-tts-offline-pipeline.git
+cd speechkit-voice-tts-offline-pipeline
 python3.13 bootstrap.py fetch                      # 232 MB runtime release asset, SHA-256 checked
 python3.13 bootstrap.py verify                     # CRCs, member safety, internal SHA-256 ledgers
 python3.13 bootstrap.py install --out ./installed  # new dir only; runs doctor + real synthesis
@@ -58,7 +60,7 @@ Add a script under [`requests/`](requests/README.md), then in GitHub open **Acti
 | [`requests/`](requests/README.md) | Narration scripts for the [`narrate`](.github/workflows/narrate.yml) workflow |
 | [`speechkit_narrate/`](speechkit_narrate/) | The narration pipeline ([docs/NARRATION.md](docs/NARRATION.md)) |
 | [`emblem_rsi/`](emblem_rsi/) | The sealed-rubric measure/promote/veto loop behind the pronunciation audit |
-| [`powershell/SpeechKitNarrate/`](powershell/) | PowerShell module for the pipeline (Windows with WSL, or any platform) |
+| [`powershell/SpeechKitVoiceTtsOfflinePipeline/`](powershell/) | PowerShell module for the pipeline (Windows with WSL, or any platform) |
 | [`archives/`](archives/) | Runtime ZIP lands here (Release asset, git-ignored) |
 
 ## Boundaries
