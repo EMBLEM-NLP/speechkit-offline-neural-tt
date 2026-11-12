@@ -1,0 +1,393 @@
+{
+  "schema_version": 1,
+  "title": "Scene structure, transforms and the missing monitor arm",
+  "chapter": "03",
+  "scope": "full",
+  "cue_count": 57,
+  "voice_approval": "PENDING",
+  "scenes": [
+    {
+      "id": "C03-S01",
+      "title": "A visible housing is not the whole assembly",
+      "target": 31,
+      "cues": [
+        {
+          "id": "C03-S01-N01",
+          "scene_id": "C03-S01",
+          "text": "The missing monitor arm began as a diagnosis problem, before it became a geometry problem."
+        },
+        {
+          "id": "C03-S01-N02",
+          "scene_id": "C03-S01",
+          "text": "The agent first focused on blank display surfaces and raised controls, then later identified the keyboard drawer as the clearest omission."
+        },
+        {
+          "id": "C03-S01-N03",
+          "scene_id": "C03-S01",
+          "text": "The user corrected that assessment: the right monitor arm was missing, and the left side supplied the reference."
+        },
+        {
+          "id": "C03-S01-N04",
+          "scene_id": "C03-S01",
+          "text": "The subsequent repair belongs to that clarified request. The earlier mistaken conclusion remains part of the execution history."
+        }
+      ]
+    },
+    {
+      "id": "C03-S02",
+      "title": "Objects, geometry and organization are different",
+      "target": 35,
+      "cues": [
+        {
+          "id": "C03-S02-N01",
+          "scene_id": "C03-S02",
+          "text": "An imported Blender scene contains object instances, mesh datablocks, parents and collections. Each relationship answers a different question."
+        },
+        {
+          "id": "C03-S02-N02",
+          "scene_id": "C03-S02",
+          "text": "An object carries placement and other state; its mesh datablock supplies geometry, and multiple objects can refer to the same data."
+        },
+        {
+          "id": "C03-S02-N03",
+          "scene_id": "C03-S02",
+          "text": "The repair explicitly copies both the object and its mesh data, creating an independently editable right-side copy."
+        },
+        {
+          "id": "C03-S02-N04",
+          "scene_id": "C03-S02",
+          "text": "A collection organizes those copies and records metadata. That collection does not create a mechanical joint."
+        },
+        {
+          "id": "C03-S02-N05",
+          "scene_id": "C03-S02",
+          "text": "The earlier twenty-four manual-linked viewport annotations identified parts, but labels alone did not rig either support."
+        }
+      ]
+    },
+    {
+      "id": "C03-S03",
+      "title": "Mirror the world transform around a datum",
+      "target": 34,
+      "cues": [
+        {
+          "id": "C03-S03-N01",
+          "scene_id": "C03-S03",
+          "text": "The V06 builder selects three named left-arm mesh objects: the support volume, outer arm and inner inset."
+        },
+        {
+          "id": "C03-S03-N02",
+          "scene_id": "C03-S03",
+          "text": "It builds a reflection matrix that negates the world X coordinate and adds a translation called mirror sum."
+        },
+        {
+          "id": "C03-S03-N03",
+          "scene_id": "C03-S03",
+          "text": "In one dimension, the mapping is X prime equals mirror sum minus X. The mirror plane is halfway along that sum."
+        },
+        {
+          "id": "C03-S03-N04",
+          "scene_id": "C03-S03",
+          "text": "Applying the matrix to each source world matrix reflects both placement and orientation, so the chosen datum directly controls the result."
+        }
+      ]
+    },
+    {
+      "id": "C03-S04",
+      "title": "A symmetric copy can still be misplaced",
+      "target": 35,
+      "cues": [
+        {
+          "id": "C03-S04-N01",
+          "scene_id": "C03-S04",
+          "text": "The user later reported that the new right arm was not correctly placed."
+        },
+        {
+          "id": "C03-S04-N02",
+          "scene_id": "C03-S04",
+          "text": "The retained V06 source combines outer X edges; the V08 correction instead uses the centres of the two monitor-side world ranges."
+        },
+        {
+          "id": "C03-S04-N03",
+          "scene_id": "C03-S04",
+          "text": "It subtracts the old mirror sum from the new one, then shifts the right-arm copies by that difference."
+        },
+        {
+          "id": "C03-S04-N04",
+          "scene_id": "C03-S04",
+          "text": "The saved V08 report records a movement of about twenty-six point seven millimetres. A plausible mirror was not enough to establish the correct placement."
+        }
+      ]
+    },
+    {
+      "id": "C03-S05",
+      "title": "Bake the reflected copy without claiming closed geometry",
+      "target": 32,
+      "cues": [
+        {
+          "id": "C03-S05-N01",
+          "scene_id": "C03-S05",
+          "text": "Before baking the corrected arm, the script makes another mesh copy if the data has multiple users."
+        },
+        {
+          "id": "C03-S05-N02",
+          "scene_id": "C03-S05",
+          "text": "It applies the captured world matrix to the mesh data and resets the object matrix to identity."
+        },
+        {
+          "id": "C03-S05-N03",
+          "scene_id": "C03-S05",
+          "text": "It then updates the data and flips polygon winding for the reflected copy."
+        },
+        {
+          "id": "C03-S05-N04",
+          "scene_id": "C03-S05",
+          "text": "Those operations address the transformed copy and its surface orientation. They do not fill the open arm surfaces or establish fabrication-ready geometry."
+        }
+      ]
+    },
+    {
+      "id": "C03-S06",
+      "title": "Change a parent while preserving the current pose",
+      "target": 33,
+      "cues": [
+        {
+          "id": "C03-S06-N01",
+          "scene_id": "C03-S06",
+          "text": "Parenting changes the transform relationship, so assigning a parent can change an object’s visible placement."
+        },
+        {
+          "id": "C03-S06-N02",
+          "scene_id": "C03-S06",
+          "text": "The parent-keep-world helper updates the view layer and copies the object’s current world matrix."
+        },
+        {
+          "id": "C03-S06-N03",
+          "scene_id": "C03-S06",
+          "text": "It assigns the new parent, restores that captured world matrix, and updates evaluation again."
+        },
+        {
+          "id": "C03-S06-N04",
+          "scene_id": "C03-S06",
+          "text": "The goal is to preserve the current pose while establishing the hierarchy that future parent motion will drive."
+        }
+      ]
+    },
+    {
+      "id": "C03-S07",
+      "title": "Remove unrelated children from the moving group",
+      "target": 32,
+      "cues": [
+        {
+          "id": "C03-S07-N01",
+          "scene_id": "C03-S07",
+          "text": "The imported hierarchy also attached unrelated desk meshes beneath some of the intended wing owners."
+        },
+        {
+          "id": "C03-S07-N02",
+          "scene_id": "C03-S07",
+          "text": "If those children were carried into the new motion hierarchy, a wing rotation could move parts of the desk."
+        },
+        {
+          "id": "C03-S07-N03",
+          "scene_id": "C03-S07",
+          "text": "The script captures each such child’s world matrix, clears its parent and restores its world placement."
+        },
+        {
+          "id": "C03-S07-N04",
+          "scene_id": "C03-S07",
+          "text": "Only the selected wing parts and support pieces are then assigned to the intended hinge stages."
+        }
+      ]
+    },
+    {
+      "id": "C03-S08",
+      "title": "State what the hinge coordinates actually mean",
+      "target": 35,
+      "cues": [
+        {
+          "id": "C03-S08-N01",
+          "scene_id": "C03-S08",
+          "text": "The requested repair called for lower and upper hinge axes based on reference geometry."
+        },
+        {
+          "id": "C03-S08-N02",
+          "scene_id": "C03-S08",
+          "text": "The retained script describes its actual pivot positions as approximate centres of rounded silhouettes on the imported side arm."
+        },
+        {
+          "id": "C03-S08-N03",
+          "scene_id": "C03-S08",
+          "text": "It creates two empty objects with arrows, using coordinates in the source model’s inch-sized unit system."
+        },
+        {
+          "id": "C03-S08-N04",
+          "scene_id": "C03-S08",
+          "text": "Those controls define a visual rig. They are not surveyed bearing coordinates, and the code explicitly labels the result as not fabrication-ready."
+        }
+      ]
+    },
+    {
+      "id": "C03-S09",
+      "title": "Build the two-stage parent chain",
+      "target": 34,
+      "cues": [
+        {
+          "id": "C03-S09-N01",
+          "scene_id": "C03-S09",
+          "text": "The lower hinge is linked to the imported root when that root is present."
+        },
+        {
+          "id": "C03-S09-N02",
+          "scene_id": "C03-S09",
+          "text": "The upper hinge becomes a child of the lower stage, with its initial world position preserved."
+        },
+        {
+          "id": "C03-S09-N03",
+          "scene_id": "C03-S09",
+          "text": "Both arm assemblies follow the lower hinge; the selected display wing follows the upper hinge."
+        },
+        {
+          "id": "C03-S09-N04",
+          "scene_id": "C03-S09",
+          "text": "A change at the lower stage therefore carries the upper stage with it, while the upper stage adds its own relative rotation."
+        }
+      ]
+    },
+    {
+      "id": "C03-S10",
+      "title": "Key poses describe prescribed motion",
+      "target": 34,
+      "cues": [
+        {
+          "id": "C03-S10-N01",
+          "scene_id": "C03-S10",
+          "text": "The script names four poses: open, intermediate, folded and locked, at frames one, forty, eighty and one hundred."
+        },
+        {
+          "id": "C03-S10-N02",
+          "scene_id": "C03-S10",
+          "text": "It sets lower and upper X rotations in radians, then inserts rotation keyframes for both controls."
+        },
+        {
+          "id": "C03-S10-N03",
+          "scene_id": "C03-S10",
+          "text": "Illustrative lock objects are shown at the final pose by keying their viewport and render visibility."
+        },
+        {
+          "id": "C03-S10-N04",
+          "scene_id": "C03-S10",
+          "text": "A pose named locked and a visible wire loop do not demonstrate a functioning latch, bearing forces or a dynamic simulation."
+        }
+      ]
+    },
+    {
+      "id": "C03-S11",
+      "title": "Trace the TimelineMarker failure and repair",
+      "target": 34,
+      "cues": [
+        {
+          "id": "C03-S11-N01",
+          "scene_id": "C03-S11",
+          "text": "One recorded V08 attempt tried to store a custom angle property on a timeline marker."
+        },
+        {
+          "id": "C03-S11-N02",
+          "scene_id": "C03-S11",
+          "text": "Blender rejected the assignment because that type did not support the attempted ID properties."
+        },
+        {
+          "id": "C03-S11-N03",
+          "scene_id": "C03-S11",
+          "text": "The historical patch removed the unsupported assignment and retained the marker creation call with its label and frame."
+        },
+        {
+          "id": "C03-S11-N04",
+          "scene_id": "C03-S11",
+          "text": "The rig then reran successfully. Being a Blender RNA structure does not mean that every type accepts arbitrary custom properties."
+        }
+      ]
+    },
+    {
+      "id": "C03-S12",
+      "title": "Evaluate a pose before measuring its envelope",
+      "target": 34,
+      "cues": [
+        {
+          "id": "C03-S12-N01",
+          "scene_id": "C03-S12",
+          "text": "The source sets each pose frame and updates the view layer before collecting transformed mesh bounds."
+        },
+        {
+          "id": "C03-S12-N02",
+          "scene_id": "C03-S12",
+          "text": "The recorded development also encountered hinge empties evaluated at the origin before the pivot and dependency updates were corrected."
+        },
+        {
+          "id": "C03-S12-N03",
+          "scene_id": "C03-S12",
+          "text": "The saved report gives a folded height of about one hundred eighty-two millimetres, compared with the recorded reference value of one hundred eighty-one."
+        },
+        {
+          "id": "C03-S12-N04",
+          "scene_id": "C03-S12",
+          "text": "The width and depth still exceeded the reference values. Agreement on one envelope dimension did not validate the complete assembly."
+        }
+      ]
+    },
+    {
+      "id": "C03-S13",
+      "title": "Keep visual comparison inside its evidence boundary",
+      "target": 32,
+      "cues": [
+        {
+          "id": "C03-S13-N01",
+          "scene_id": "C03-S13",
+          "text": "The mechanics audit found that visual symmetry alone had not supplied pivots, grouped motion or closed arm surfaces."
+        },
+        {
+          "id": "C03-S13-N02",
+          "scene_id": "C03-S13",
+          "text": "The reference-view fit helped compare visible screens, encoders and supports, but one illustration could not establish hidden geometry or folding behaviour."
+        },
+        {
+          "id": "C03-S13-N03",
+          "scene_id": "C03-S13",
+          "text": "Later sampled poses and limited overlap tests answered narrower questions than continuous clearance or full mechanical validation."
+        },
+        {
+          "id": "C03-S13-N04",
+          "scene_id": "C03-S13",
+          "text": "Keep the geometry, parent chain, chosen datums, unit assumptions and tested pose set attached to each claim."
+        }
+      ]
+    },
+    {
+      "id": "C03-S14",
+      "title": "Carry a structured assembly into measurement",
+      "target": 29,
+      "cues": [
+        {
+          "id": "C03-S14-N01",
+          "scene_id": "C03-S14",
+          "text": "The missing-arm case moved from a corrected diagnosis to copied geometry, a corrected datum and a two-stage visual hierarchy."
+        },
+        {
+          "id": "C03-S14-N02",
+          "scene_id": "C03-S14",
+          "text": "Objects, mesh data, collections and parents remained separate parts of that explanation."
+        },
+        {
+          "id": "C03-S14-N03",
+          "scene_id": "C03-S14",
+          "text": "The marker failure has a recorded repair, while the approximate pivots and open surfaces retain their stated limits."
+        },
+        {
+          "id": "C03-S14-N04",
+          "scene_id": "C03-S14",
+          "text": "The next chapter follows the measurement problem: connecting photographs and drawings to model coordinates through explicit assumptions."
+        }
+      ]
+    }
+  ]
+}

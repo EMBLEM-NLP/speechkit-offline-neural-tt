@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "title": "Scene structure, transforms and the missing monitor arm",
+  "chapter": "03",
+  "scope": "pilot",
+  "cue_count": 12,
+  "voice_approval": "PENDING",
+  "scenes": [
+    {
+      "id": "C03-S04",
+      "title": "A symmetric copy can still be misplaced",
+      "target": 35,
+      "cues": [
+        {
+          "id": "C03-S04-N01",
+          "scene_id": "C03-S04",
+          "text": "The user later reported that the new right arm was not correctly placed."
+        },
+        {
+          "id": "C03-S04-N02",
+          "scene_id": "C03-S04",
+          "text": "The retained V06 source combines outer X edges; the V08 correction instead uses the centres of the two monitor-side world ranges."
+        },
+        {
+          "id": "C03-S04-N03",
+          "scene_id": "C03-S04",
+          "text": "It subtracts the old mirror sum from the new one, then shifts the right-arm copies by that difference."
+        },
+        {
+          "id": "C03-S04-N04",
+          "scene_id": "C03-S04",
+          "text": "The saved V08 report records a movement of about twenty-six point seven millimetres. A plausible mirror was not enough to establish the correct placement."
+        }
+      ]
+    },
+    {
+      "id": "C03-S06",
+      "title": "Change a parent while preserving the current pose",
+      "target": 33,
+      "cues": [
+        {
+          "id": "C03-S06-N01",
+          "scene_id": "C03-S06",
+          "text": "Parenting changes the transform relationship, so assigning a parent can change an object’s visible placement."
+        },
+        {
+          "id": "C03-S06-N02",
+          "scene_id": "C03-S06",
+          "text": "The parent-keep-world helper updates the view layer and copies the object’s current world matrix."
+        },
+        {
+          "id": "C03-S06-N03",
+          "scene_id": "C03-S06",
+          "text": "It assigns the new parent, restores that captured world matrix, and updates evaluation again."
+        },
+        {
+          "id": "C03-S06-N04",
+          "scene_id": "C03-S06",
+          "text": "The goal is to preserve the current pose while establishing the hierarchy that future parent motion will drive."
+        }
+      ]
+    },
+    {
+      "id": "C03-S11",
+      "title": "Trace the TimelineMarker failure and repair",
+      "target": 34,
+      "cues": [
+        {
+          "id": "C03-S11-N01",
+          "scene_id": "C03-S11",
+          "text": "One recorded V08 attempt tried to store a custom angle property on a timeline marker."
+        },
+        {
+          "id": "C03-S11-N02",
+          "scene_id": "C03-S11",
+          "text": "Blender rejected the assignment because that type did not support the attempted ID properties."
+        },
+        {
+          "id": "C03-S11-N03",
+          "scene_id": "C03-S11",
+          "text": "The historical patch removed the unsupported assignment and retained the marker creation call with its label and frame."
+        },
+        {
+          "id": "C03-S11-N04",
+          "scene_id": "C03-S11",
+          "text": "The rig then reran successfully. Being a Blender RNA structure does not mean that every type accepts arbitrary custom properties."
+        }
+      ]
+    }
+  ]
+}

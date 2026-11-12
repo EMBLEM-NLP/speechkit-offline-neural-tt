@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "title": "Chapter 3 technical pronunciation audition",
+  "chapter": "03",
+  "scope": "glossary",
+  "cue_count": 5,
+  "voice_approval": "PENDING",
+  "authored_chapter_content": false,
+  "scenes": [
+    {
+      "id": "C03-G01",
+      "title": "Technical pronunciation audition",
+      "target": 45,
+      "cues": [
+        {
+          "id": "C03-G01-N01",
+          "scene_id": "C03-G01",
+          "text": "This audition names grandMA3, MA Lighting, SketchUp and Blender."
+        },
+        {
+          "id": "C03-G01-N02",
+          "scene_id": "C03-G01",
+          "text": "An object, mesh datablock, collection and parent describe different relationships."
+        },
+        {
+          "id": "C03-G01-N03",
+          "scene_id": "C03-G01",
+          "text": "A reflected world matrix moves the monitor arm across a chosen datum."
+        },
+        {
+          "id": "C03-G01-N04",
+          "scene_id": "C03-G01",
+          "text": "Lower and upper hinge pivots define a two-stage hierarchy, with keyframes and timeline markers."
+        },
+        {
+          "id": "C03-G01-N05",
+          "scene_id": "C03-G01",
+          "text": "The RNA type rejected arbitrary custom properties. A visual rig is not a dynamics simulation."
+        }
+      ]
+    }
+  ]
+}
