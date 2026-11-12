@@ -266,6 +266,36 @@ def verify_audit(project, mapping, watches):
             "note": "Coverage confirms that the recognizers ran; it does not approve the voice or pronunciation."}
 
 
+def verify_generic_export(project, audit_summary=None):
+    """Require the assembled export to contain the current inputs and audit evidence."""
+    from speechkit_narrate import audio
+    from speechkit_narrate.project import Project
+    project = Project(project)
+    problems = audio.manifest_issues(project)
+    if problems:
+        raise ValueError("Generic narration export validation failed: " + "; ".join(problems))
+    path = project.p("out_narration") / "manifest.json"
+    manifest = json.loads(path.read_text(encoding="utf-8"))
+    current = audio.audit_provenance(project)
+    if manifest.get("pronunciationAudit") != current:
+        raise ValueError("Generic narration export pronunciation provenance is stale")
+    if manifest.get("voiceApproval") != "PENDING" or current and current.get("approval") != "PENDING":
+        raise ValueError("Generated narration must retain PENDING listening approval")
+    if audit_summary is not None:
+        measurement = (current or {}).get("measurement")
+        if not measurement or any((
+                measurement.get("path") != audit_summary["measurement"],
+                measurement.get("sha256") != audit_summary["measurement_sha256"],
+                measurement.get("asr", {}).get("path") != audit_summary["asr"],
+                measurement.get("asr", {}).get("sha256") != audit_summary["asr_sha256"],
+                measurement.get("metrics") != audit_summary["metrics"])):
+            raise ValueError("Generic narration export does not bind the verified pronunciation measurement")
+    return {"status": "current_export_validated", "manifest": str(path.relative_to(project.root)),
+            "manifest_sha256": sha(path), "voice_approval": "PENDING",
+            "pronunciation_approval": (current or {}).get("approval"),
+            "measurement": (current or {}).get("measurement")}
+
+
 def command(args, log_root, name):
     started = time.time()
     process = subprocess.run([sys.executable, "-m", "speechkit_narrate", "--json", *args],
@@ -359,6 +389,7 @@ def main(argv=None):
             write_json(out / "raw_audio_manifest.json", audio)
             state.update(status="native_audio_validated", cue_count=audio["cue_count"],
                          human_listening_review="PENDING", alignment_review="PENDING")
+            summary = None
             if args.audit or args.autofix:
                 watches = watch_plan(watchlist, project, mapping)
                 summary = verify_audit(project, mapping, watches)
@@ -366,6 +397,10 @@ def main(argv=None):
                 write_json(out / "pronunciation_audit_summary.json", summary)
                 state["audit_summary_sha256"] = sha(out / "pronunciation_audit_summary.json")
                 state["audit_coverage"] = summary["status"]
+            exported = verify_generic_export(project, summary)
+            write_json(out / "generic_export_validation.json", exported)
+            state["generic_export_validation_sha256"] = sha(out / "generic_export_validation.json")
+            state["generic_export_status"] = exported["status"]
         write_json(out / "run_status.json", state)
         print(json.dumps({"status": state["status"], "cue_count": state["cue_count"], "root": str(out)}))
         return 0

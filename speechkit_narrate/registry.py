@@ -1019,10 +1019,21 @@ def run(project, reg: Registry, targets=None, force=(), only=None, skip=(), from
         raise RegistryError("cannot run here: " + "; ".join(f"{s['stage']}: {s['reasons'][-1]}" for s in blocked))
     state = read_state(project)  # current state, updated as stages finish
     stopped = None  # set when a stage asks the pipeline to halt
+    completed_work = False
     # the plan as events see it: each stage with its planned action, so a status page can show what is still to come
     log_event(project, "run-start", steps=[{"stage": s["stage"], "action": s["action"]} for s in steps])
     for step in steps:  # walk the plan in dependency order
         st = reg.stages[step["stage"]]  # the Stage behind this step
+        if completed_work and step["action"] in ("skip", "adopt"):
+            # Earlier work can change shared inputs without being a declared prerequisite
+            # (e.g. an audit adds export provenance). Keep the original stage selection and
+            # execution controls, but decide against the current files and saved state.
+            current = plan(project, reg, force=force, only=[st.name], skip=skip,
+                           from_stage=from_stage, adopt=adopt, options=options)[0]
+            step.update(current)
+            if step["action"] == "blocked":
+                log_event(project, "run-end", ok=False, blocked=st.name)
+                raise RegistryError(f"cannot run here: {st.name}: {step['reasons'][-1]}")
         if step["action"] == "adopt":  # existing outputs from before tracking are recorded instead of rebuilt
             record(project, st, state, options=options, adopted=True)  # recorded as current without running
             write_state(project, state)  # persist the adoption immediately so a later failure cannot lose it
@@ -1075,6 +1086,7 @@ def run(project, reg: Registry, targets=None, force=(), only=None, skip=(), from
             raise  # the CLI and MCP turn it into an error result
         state.get("_running", {}).pop(st.name, None)  # finished: the interruption marker goes
         project.__init__(project.root)                       # a stage may have changed project.json
+        completed_work = True
         step["seconds"] = round(time.time() - t0, 1)  # wall-clock seconds, 0.1 s resolution
         step["result"] = _jsonable(res)  # results are trimmed and made JSON-safe
         state.get("_errors", {}).pop(st.name, None)  # a success clears an earlier error
