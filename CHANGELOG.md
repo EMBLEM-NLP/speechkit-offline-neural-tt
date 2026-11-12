@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.1 — upgrade verification correction
+- Run baseline synthesis from the pinned previous-version checkout, using absolute input and output paths,
+  so its child CLI processes import the legacy package. Record both package source paths and commits.
+- Verify that the current checkout reuses the legacy pilot's native WAV bytes and timestamps unchanged.
+  The 1.3.0 workflow ran both sides from the current checkout and did not establish cross-version reuse.
+- Keep the published 1.3.0 artifacts and the pinned 1.1.0 voice runtime unchanged.
+
 ## 1.3.0 — SpeechKit Voice TTS Offline Pipeline
 - Canonical repository, distribution, command, plugin and MCP identity: `speechkit-voice-tts-offline-pipeline`.
 - `speechkit-narrate` and `speechkit_narrate` remain supported; existing state paths, environment variables,
