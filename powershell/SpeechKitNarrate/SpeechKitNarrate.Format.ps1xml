@@ -1,0 +1,335 @@
+<?xml version="1.0" encoding="utf-8"?>  <!-- SpeechKitNarrate display formats, loaded through FormatsToProcess in SpeechKitNarrate.psd1 -->
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!-- Copyright (C) 2026 EMBLEM-NLP -->
+<!-- Formatting rules for the objects the SpeechKitNarrate commands return. Each View is chosen by the PSTypeName that -->
+<!-- New-NarrationObject puts first on an object (for example SpeechKitNarrate.Stage), and decides which columns or lines -->
+<!-- appear when the object reaches the console. The objects keep all their properties; Select-Object or Format-List -->
+<!-- * -->
+<!-- shows the rest. Types without a view here (Backend, ToolResult, Settings ...) use PowerShell's default display. -->
+<Configuration>
+  <ViewDefinitions>  <!-- the list of views, one per object type -->
+    <!-- Table for Get-NarrationStage: one row per stage in run order. -->
+    <View>
+      <Name>SpeechKitNarrate.Stage</Name>  <!-- internal name of the stage table view -->
+      <!-- applies to objects whose first type name is SpeechKitNarrate.Stage -->
+      <ViewSelectedBy><TypeName>SpeechKitNarrate.Stage</TypeName></ViewSelectedBy>
+      <TableControl>  <!-- a table layout for stages -->
+        <TableHeaders>  <!-- column titles and widths for the stage table -->
+          <!-- stage name; 10 characters fit names such as prevoice and autofix -->
+          <TableColumnHeader><Label>Name</Label><Width>10</Width></TableColumnHeader>
+          <!-- prerequisite stages, joined into one cell -->
+          <TableColumnHeader><Label>Needs</Label><Width>26</Width></TableColumnHeader>
+          <!-- here, delegate or blocked -->
+          <TableColumnHeader><Label>Where</Label><Width>8</Width></TableColumnHeader>
+          <!-- built-in or the plug-in that supplied the stage -->
+          <TableColumnHeader><Label>Source</Label><Width>18</Width></TableColumnHeader>
+          <!-- no width given, so the summary takes the rest of the line -->
+          <TableColumnHeader><Label>Description</Label></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>  <!-- what goes in each stage column -->
+          <TableRowEntry>  <!-- a single row definition serves every stage -->
+            <TableColumnItems>  <!-- one item per header above, in the same order -->
+              <TableColumnItem><PropertyName>Name</PropertyName></TableColumnItem>  <!-- the stage's name as stored -->
+              <!-- the Needs array shown as a comma-separated list -->
+              <TableColumnItem><ScriptBlock>$_.Needs -join ', '</ScriptBlock></TableColumnItem>
+              <TableColumnItem><PropertyName>Where</PropertyName></TableColumnItem>  <!-- where the stage would run -->
+              <!-- built-in stages say speechkit-narrate; for a plug-in only the last part of its path or module name is -->
+              <!-- shown so it fits the column -->
+              <TableColumnItem><ScriptBlock>if ($_.Source -eq 'speechkit-narrate') { 'speechkit-narrate' } else { Split-Path -Leaf $_.Source }</ScriptBlock></TableColumnItem>
+              <!-- the stage's one-line summary -->
+              <TableColumnItem><PropertyName>Description</PropertyName></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+    <!-- Table for Get-NarrationTool: one row per standalone tool. -->
+    <View>
+      <Name>SpeechKitNarrate.Tool</Name>  <!-- view name for tools -->
+      <ViewSelectedBy><TypeName>SpeechKitNarrate.Tool</TypeName></ViewSelectedBy>  <!-- picks objects tagged SpeechKitNarrate.Tool -->
+      <TableControl>  <!-- tools are shown as a table -->
+        <TableHeaders>  <!-- headings of the tool table -->
+          <!-- tool name as the CLI spells it -->
+          <TableColumnHeader><Label>Name</Label><Width>14</Width></TableColumnHeader>
+          <!-- the generated PowerShell command, such as Invoke-NarrationSpeak -->
+          <TableColumnHeader><Label>Command</Label><Width>28</Width></TableColumnHeader>
+          <!-- platforms the tool can run on natively -->
+          <TableColumnHeader><Label>Platforms</Label><Width>9</Width></TableColumnHeader>
+          <!-- tool summary in the remaining width -->
+          <TableColumnHeader><Label>Description</Label></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>  <!-- cell contents for each tool -->
+          <TableRowEntry>  <!-- the one row layout used for every tool -->
+            <TableColumnItems>  <!-- cells for the tool row -->
+              <!-- the tool's registry name, e.g. speak, as given to speechkit-narrate tool NAME -->
+              <TableColumnItem><PropertyName>Name</PropertyName></TableColumnItem>
+              <!-- the generated PowerShell function for it, e.g. Invoke-NarrationSpeak -->
+              <TableColumnItem><PropertyName>Command</PropertyName></TableColumnItem>
+              <!-- platform list joined with commas -->
+              <TableColumnItem><ScriptBlock>$_.Platforms -join ', '</ScriptBlock></TableColumnItem>
+              <TableColumnItem><PropertyName>Description</PropertyName></TableColumnItem>  <!-- what the tool does -->
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+    <!-- Table for Get-NarrationPlan: what the next pipeline run would do, stage by stage. -->
+    <View>
+      <Name>SpeechKitNarrate.PlanStep</Name>  <!-- view name for plan steps -->
+      <!-- used for objects typed SpeechKitNarrate.PlanStep -->
+      <ViewSelectedBy><TypeName>SpeechKitNarrate.PlanStep</TypeName></ViewSelectedBy>
+      <TableControl>  <!-- plans are shown as a table -->
+        <TableHeaders>  <!-- four plan columns: Stage, Action, Where, and Reasons in the remaining width -->
+          <!-- which stage the plan row is about -->
+          <TableColumnHeader><Label>Stage</Label><Width>10</Width></TableColumnHeader>
+          <!-- run, skip, adopt or blocked -->
+          <TableColumnHeader><Label>Action</Label><Width>8</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Where</Label><Width>8</Width></TableColumnHeader>  <!-- here or delegate (WSL) -->
+          <!-- the planner's explanation fills the rest -->
+          <TableColumnHeader><Label>Reasons</Label></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>  <!-- rows of the plan table -->
+          <TableRowEntry>  <!-- one layout for each plan step -->
+            <TableColumnItems>  <!-- the cell values for one plan step, matching the four headers in order -->
+              <!-- the stage name for this step -->
+              <TableColumnItem><PropertyName>Stage</PropertyName></TableColumnItem>
+              <!-- what the planner intends: run it, skip it, adopt existing outputs, or blocked -->
+              <TableColumnItem><PropertyName>Action</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Where</PropertyName></TableColumnItem>  <!-- where the step would run -->
+              <!-- reasons joined with semicolons because a single reason may contain commas -->
+              <TableColumnItem><ScriptBlock>$_.Reasons -join '; '</ScriptBlock></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+    <!-- Table for the per-stage rows inside a run result (the Steps property of Invoke-NarrationPipeline's output). -->
+    <View>
+      <Name>SpeechKitNarrate.RunStep</Name>  <!-- view name for run steps -->
+      <!-- used for the step objects ConvertTo-NarrationRunStep builds from each run report step -->
+      <ViewSelectedBy><TypeName>SpeechKitNarrate.RunStep</TypeName></ViewSelectedBy>
+      <TableControl>  <!-- run steps appear as a table -->
+        <TableHeaders>  <!-- four run step columns: Stage, Action, Seconds, and Reasons taking the rest -->
+          <!-- the stage that was handled -->
+          <TableColumnHeader><Label>Stage</Label><Width>10</Width></TableColumnHeader>
+          <!-- ran, skip, adopt or failed -->
+          <TableColumnHeader><Label>Action</Label><Width>8</Width></TableColumnHeader>
+          <!-- duration in seconds, right-aligned so the decimals line up -->
+          <TableColumnHeader><Label>Seconds</Label><Width>8</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>Reasons</Label></TableColumnHeader>  <!-- why it ran, or the error -->
+        </TableHeaders>
+        <TableRowEntries>  <!-- run step row definitions -->
+          <TableRowEntry>  <!-- the row used for each executed step -->
+            <TableColumnItems>  <!-- columns of a run step row -->
+              <!-- the stage this run step is about, as named in the registry -->
+              <TableColumnItem><PropertyName>Stage</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Action</PropertyName></TableColumnItem>  <!-- what happened to it -->
+              <!-- elapsed time, empty when it did not run -->
+              <TableColumnItem><PropertyName>Seconds</PropertyName></TableColumnItem>
+              <!-- a failed stage shows its error; otherwise the planner's reasons are listed -->
+              <TableColumnItem><ScriptBlock>if ($_.Error) { $_.Error } else { $_.Reasons -join '; ' }</ScriptBlock></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+    <!-- List for Invoke-NarrationPipeline's result: one block per run. -->
+    <View>
+      <Name>SpeechKitNarrate.RunResult</Name>  <!-- view name for whole run results -->
+      <!-- chosen for SpeechKitNarrate.RunResult objects -->
+      <ViewSelectedBy><TypeName>SpeechKitNarrate.RunResult</TypeName></ViewSelectedBy>
+      <ListControl>  <!-- a list layout (one property per line) suits a single summary object -->
+        <ListEntries>  <!-- the entries of the run list -->
+          <ListEntry>  <!-- one entry covers every run result -->
+            <ListItems>  <!-- the lines shown for a run -->
+              <!-- the full path of the project folder that was run -->
+              <ListItem><PropertyName>Project</PropertyName></ListItem>
+              <!-- stages that actually ran, comma-separated -->
+              <ListItem><Label>Ran</Label><ScriptBlock>$_.Ran -join ', '</ScriptBlock></ListItem>
+              <!-- if the run stopped early, which stage and why; blank otherwise -->
+              <ListItem><Label>Stopped</Label><ScriptBlock>if ($_.Stopped) { "after $($_.Stopped.stage): $($_.Stopped.why)" }</ScriptBlock></ListItem>
+              <!-- every step as "stage action" in one line, e.g. "extract ran, check ran" -->
+              <ListItem><Label>Steps</Label><ScriptBlock>($_.Steps | ForEach-Object { "$($_.Stage) $($_.Action)" }) -join ', '</ScriptBlock></ListItem>
+            </ListItems>
+          </ListEntry>
+        </ListEntries>
+      </ListControl>
+    </View>
+    <!-- List for Invoke-NarrationStage's result: what happened to the one stage that was run. -->
+    <View>
+      <Name>SpeechKitNarrate.StageResult</Name>  <!-- view name for single-stage results -->
+      <!-- selected by the SpeechKitNarrate.StageResult type name -->
+      <ViewSelectedBy><TypeName>SpeechKitNarrate.StageResult</TypeName></ViewSelectedBy>
+      <ListControl>  <!-- shown as a list -->
+        <ListEntries>  <!-- the list entries for a stage result -->
+          <ListEntry>  <!-- a single entry for all stage results -->
+            <ListItems>  <!-- lines of a stage result -->
+              <ListItem><PropertyName>Project</PropertyName></ListItem>  <!-- project folder the stage belongs to -->
+              <ListItem><PropertyName>Stage</PropertyName></ListItem>  <!-- the stage that was requested -->
+              <ListItem><PropertyName>Action</PropertyName></ListItem>  <!-- ran, skip, adopt or failed -->
+              <ListItem><PropertyName>Seconds</PropertyName></ListItem>  <!-- how many seconds it took -->
+              <!-- all stages that ran, including the stale needs run first -->
+              <ListItem><Label>Ran</Label><ScriptBlock>$_.Ran -join ', '</ScriptBlock></ListItem>
+              <!-- the early stop, if any, as "after stage: reason" -->
+              <ListItem><Label>Stopped</Label><ScriptBlock>if ($_.Stopped) { "after $($_.Stopped.stage): $($_.Stopped.why)" }</ScriptBlock></ListItem>
+              <!-- whatever the stage returned (files, counts) -->
+              <ListItem><PropertyName>Result</PropertyName></ListItem>
+            </ListItems>
+          </ListEntry>
+        </ListEntries>
+      </ListControl>
+    </View>
+    <!-- Table for the Stages property of Get-NarrationProject: the recorded state of each stage. -->
+    <View>
+      <Name>SpeechKitNarrate.StageStatus</Name>  <!-- view name for stage states -->
+      <!-- used for the rows ConvertTo-NarrationStageStatus makes from the speechkit-narrate status output -->
+      <ViewSelectedBy><TypeName>SpeechKitNarrate.StageStatus</TypeName></ViewSelectedBy>
+      <TableControl>  <!-- a table, one stage per row -->
+        <TableHeaders>  <!-- five columns: Stage, Done, Finished, Adopted, and Missing / Error -->
+          <!-- first column, 10 characters wide, holding the stage name -->
+          <TableColumnHeader><Label>Stage</Label><Width>10</Width></TableColumnHeader>
+          <!-- True when the stage has a complete recorded run -->
+          <TableColumnHeader><Label>Done</Label><Width>5</Width></TableColumnHeader>
+          <!-- time stamp of the last finished run (yyyy-mm-ddThh:mm:ss is 19 characters) -->
+          <TableColumnHeader><Label>Finished</Label><Width>20</Width></TableColumnHeader>
+          <!-- True for outputs adopted from before tracking began -->
+          <TableColumnHeader><Label>Adopted</Label><Width>7</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Missing / Error</Label></TableColumnHeader>  <!-- the last column shows problems -->
+        </TableHeaders>
+        <TableRowEntries>  <!-- rows of the stage state table -->
+          <TableRowEntry>  <!-- the row layout for every stage state -->
+            <TableColumnItems>  <!-- the cell values of one stage status row, in header order -->
+              <!-- name of the stage in this row -->
+              <TableColumnItem><PropertyName>Stage</PropertyName></TableColumnItem>
+              <!-- True when the run state records a completed fingerprint for the stage -->
+              <TableColumnItem><PropertyName>Done</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Finished</PropertyName></TableColumnItem>  <!-- when it last finished -->
+              <!-- True when outputs made before tracking began were accepted without a rerun -->
+              <TableColumnItem><PropertyName>Adopted</PropertyName></TableColumnItem>
+              <!-- an error wins; otherwise the outputs that are missing on disk -->
+              <TableColumnItem><ScriptBlock>if ($_.Error) { $_.Error } else { $_.Missing -join ', ' }</ScriptBlock></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+    <!-- List for Get-NarrationProject: a summary of one project. -->
+    <View>
+      <Name>SpeechKitNarrate.Project</Name>  <!-- view name for project summaries -->
+      <!-- applies to SpeechKitNarrate.Project objects -->
+      <ViewSelectedBy><TypeName>SpeechKitNarrate.Project</TypeName></ViewSelectedBy>
+      <ListControl>  <!-- a list layout for the summary -->
+        <ListEntries>  <!-- the project list entries -->
+          <ListEntry>  <!-- one entry for every project -->
+            <ListItems>  <!-- lines of the project summary -->
+              <!-- the book title from project.json, as reported by speechkit-narrate status -->
+              <ListItem><PropertyName>Title</PropertyName></ListItem>
+              <!-- the resolved full path of the project folder -->
+              <ListItem><PropertyName>Project</PropertyName></ListItem>
+              <!-- names of the stages that are done, joined into one comma-separated line -->
+              <ListItem><Label>Done</Label><ScriptBlock>$_.Done -join ', '</ScriptBlock></ListItem>
+              <!-- stages not done yet, computed from the per-stage rows -->
+              <ListItem><Label>Pending</Label><ScriptBlock>($_.Stages | Where-Object { -not $_.Done } | ForEach-Object { $_.Stage }) -join ', '</ScriptBlock></ListItem>
+              <!-- recorded errors, one per stage, separated by semicolons -->
+              <ListItem><Label>Errors</Label><ScriptBlock>$_.Errors -join '; '</ScriptBlock></ListItem>
+              <!-- narration progress reported by the voice module -->
+              <ListItem><PropertyName>Narration</PropertyName></ListItem>
+              <!-- files the export stage wrote to out/narration so far -->
+              <ListItem><Label>Exported</Label><ScriptBlock>$_.Exported -join ', '</ScriptBlock></ListItem>
+            </ListItems>
+          </ListEntry>
+        </ListEntries>
+      </ListControl>
+    </View>
+    <!-- Table for Test-NarrationEnvironment: one row per dependency check. -->
+    <View>
+      <Name>SpeechKitNarrate.Check</Name>  <!-- view name for checks -->
+      <!-- matches objects whose first type name is SpeechKitNarrate.Check, made by Test-NarrationEnvironment -->
+      <ViewSelectedBy><TypeName>SpeechKitNarrate.Check</TypeName></ViewSelectedBy>
+      <TableControl>  <!-- shown as a table so missing items stand out in a single column -->
+        <TableHeaders>  <!-- four columns: Ok, Where, Name, and Detail in the remaining width -->
+          <!-- 5 characters wide, enough for the words True and False -->
+          <TableColumnHeader><Label>Ok</Label><Width>5</Width></TableColumnHeader>
+          <!-- native or wsl: the side the check ran on -->
+          <TableColumnHeader><Label>Where</Label><Width>6</Width></TableColumnHeader>
+          <!-- what was checked; wide enough for the doctor's check names -->
+          <TableColumnHeader><Label>Name</Label><Width>44</Width></TableColumnHeader>
+          <!-- the found version or path, or why it is missing -->
+          <TableColumnHeader><Label>Detail</Label></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>  <!-- rows of the check table -->
+          <TableRowEntry>  <!-- the row used for every check -->
+            <TableColumnItems>  <!-- the values of one check row, in the order of the headers -->
+              <!-- True when the dependency was found, False when it is missing or the check failed -->
+              <TableColumnItem><PropertyName>Ok</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Where</PropertyName></TableColumnItem>  <!-- native or wsl label -->
+              <!-- what was checked, such as ffmpeg, python or a voice model -->
+              <TableColumnItem><PropertyName>Name</PropertyName></TableColumnItem>
+              <!-- where it was found or its version; for a failure, the error text -->
+              <TableColumnItem><PropertyName>Detail</PropertyName></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+    <!-- Table for Install-NarrationDependency: one row per install step that was attempted. -->
+    <View>
+      <Name>SpeechKitNarrate.InstallStep</Name>  <!-- view name for install steps -->
+      <!-- used for the objects Install-NarrationDependency emits after each step -->
+      <ViewSelectedBy><TypeName>SpeechKitNarrate.InstallStep</TypeName></ViewSelectedBy>
+      <TableControl>  <!-- install steps as a table -->
+        <TableHeaders>  <!-- four columns: Step, Status, ExitCode, and Command in the remaining width -->
+          <!-- step label, such as winget Gyan.FFmpeg -->
+          <TableColumnHeader><Label>Step</Label><Width>34</Width></TableColumnHeader>
+          <!-- ok, present, failed or skipped -->
+          <TableColumnHeader><Label>Status</Label><Width>8</Width></TableColumnHeader>
+          <!-- the program's exit code; 11 characters fit the negative winget codes -->
+          <TableColumnHeader><Label>ExitCode</Label><Width>11</Width></TableColumnHeader>
+          <!-- the command line that ran fills the remaining width -->
+          <TableColumnHeader><Label>Command</Label></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>  <!-- row definitions for the install step table -->
+          <TableRowEntry>  <!-- one layout for each install step -->
+            <TableColumnItems>  <!-- the values of one install step row, in header order -->
+              <!-- the step's name, such as the winget package it installs -->
+              <TableColumnItem><PropertyName>Step</PropertyName></TableColumnItem>
+              <!-- the result of the step; a failed step also writes a PowerShell error -->
+              <TableColumnItem><PropertyName>Status</PropertyName></TableColumnItem>
+              <!-- exit code, empty for script steps -->
+              <TableColumnItem><PropertyName>ExitCode</PropertyName></TableColumnItem>
+              <!-- the command line that ran, so it can be repeated by hand -->
+              <TableColumnItem><PropertyName>Command</PropertyName></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+    <!-- Table for Update-NarrationCommand -PassThru: one row per generated tool command. -->
+    <View>
+      <Name>SpeechKitNarrate.GeneratedCommand</Name>  <!-- view name for generated commands -->
+      <!-- used for what Update-NarrationCommand -PassThru outputs, one object per tool command -->
+      <ViewSelectedBy><TypeName>SpeechKitNarrate.GeneratedCommand</TypeName></ViewSelectedBy>
+      <TableControl>  <!-- generated commands as a table -->
+        <TableHeaders>  <!-- headings for the generated command table -->
+          <!-- the command name, such as Invoke-NarrationSpeak -->
+          <TableColumnHeader><Label>Name</Label><Width>30</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Tool</Label><Width>14</Width></TableColumnHeader>  <!-- the tool it runs -->
+          <!-- its parameters in the remaining width -->
+          <TableColumnHeader><Label>Parameters</Label></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>  <!-- row definitions for the generated command table -->
+          <TableRowEntry>  <!-- a row layout shared by every generated command -->
+            <TableColumnItems>  <!-- cells of a generated command row -->
+              <!-- the new PowerShell function name the user can now call -->
+              <TableColumnItem><PropertyName>Name</PropertyName></TableColumnItem>
+              <!-- the speechkit-narrate tool that the function runs through the command line -->
+              <TableColumnItem><PropertyName>Tool</PropertyName></TableColumnItem>
+              <!-- parameter names written with a leading dash, as they are typed -->
+              <TableColumnItem><ScriptBlock>($_.Parameters | ForEach-Object { "-$_" }) -join ' '</ScriptBlock></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+  </ViewDefinitions>
+</Configuration>

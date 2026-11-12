@@ -1,0 +1,25 @@
+{
+  "schema": "emblem-rsi.rubric/1",
+  "name": "code-comments",
+  "about": "Every required line of code is explained by a comment (on the line or directly above it), in detail, while the code itself stays exactly as it was: per file, the code with comments removed must equal the sealed baseline according to the language's own tokenizer or syntax tree, every file must parse, and every test suite must pass. A round is promoted only if nothing regressed and coverage rose.",
+  "min_gain": 0.0001,
+  "metrics": {
+    "identity_ratio": {"op": "min", "value": 1.0, "gate": true, "weight": 3},
+    "parse_ratio": {"op": "min", "value": 1.0, "gate": true, "weight": 2},
+    "tests_pass": {"op": "min", "value": 1.0, "gate": true, "weight": 3},
+    "forbidden_count": {"op": "max", "value": 0.5, "gate": true, "weight": 1},
+    "coverage": {"op": "min", "value": 1.0, "gate": false, "weight": 8},
+    "files_complete_ratio": {"op": "min", "value": 1.0, "gate": false, "weight": 2},
+    "detail_words": {"op": "min", "value": 7, "gate": false, "weight": 1},
+    "echo_ratio": {"op": "max", "value": 0.08, "gate": false, "weight": 1},
+    "duplicate_ratio": {"op": "max", "value": 0.03, "gate": false, "weight": 1},
+    "placeholder_count": {"op": "max", "value": 0.5, "gate": false, "weight": 1},
+    "long_lines": {"op": "max", "value": 0.5, "gate": false, "weight": 1}
+  },
+  "guards": ["identity_ratio", "parse_ratio", "tests_pass", "coverage"],
+  "guard_slack": 0.0,
+  "notes": {
+    "coverage": "A required line is a line of code with something to explain. Exempt: blank lines, comment lines, lines inside multi-line strings or tags, lines that only close brackets, lines holding only a string literal, and continuation lines that cannot hold a comment.",
+    "count_thresholds": "Counts use 0.5 so they pass only at zero while the score still rises as they fall."
+  }
+}

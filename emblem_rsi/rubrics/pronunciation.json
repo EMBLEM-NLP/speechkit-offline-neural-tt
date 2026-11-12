@@ -1,0 +1,59 @@
+{
+  "schema": "emblem-rsi.rubric/1",
+  "name": "narration-pronunciation",
+  "about": "Audits a speechkit narration word by word: every spoken word is tracked, the narration is heard back by an offline recognizer, and the voice's phonemes are checked against the CMU reference dictionary. A fix is promoted only if it lowers confirmed mispronunciations without making recognition worse.",
+  "min_gain": 0.002,
+  "metrics": {
+    "words_tracked_ratio": {
+      "op": "min",
+      "value": 1.0,
+      "gate": true,
+      "weight": 2
+    },
+    "asr_segments_coverage": {
+      "op": "min",
+      "value": 1.0,
+      "gate": true,
+      "weight": 2
+    },
+    "asr_wer": {
+      "op": "max",
+      "value": 0.06,
+      "gate": false,
+      "weight": 2
+    },
+    "asr_confirmed_words": {
+      "op": "max",
+      "value": 0.5,
+      "gate": false,
+      "weight": 4
+    },
+    "asr_confirmed_occurrences": {
+      "op": "max",
+      "value": 0.5,
+      "gate": false,
+      "weight": 2
+    },
+    "lexicon_flagged_words": {
+      "op": "max",
+      "value": 0.5,
+      "gate": false,
+      "weight": 1
+    },
+    "lexicon_mean_distance": {
+      "op": "max",
+      "value": 0.05,
+      "gate": false,
+      "weight": 1
+    }
+  },
+  "guards": [
+    "words_tracked_ratio",
+    "asr_segments_coverage",
+    "asr_wer"
+  ],
+  "guard_slack": 0.003,
+  "notes": {
+    "count_thresholds": "Counts use a threshold of 0.5 so they pass only at zero while the score still rises with every word fixed (credit = 0.5 / count)."
+  }
+}

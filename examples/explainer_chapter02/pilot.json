@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "title": "How tool requests reached Blender",
+  "chapter": "02",
+  "scope": "pilot",
+  "fps": 30,
+  "cue_count": 15,
+  "voice_approval": "PENDING",
+  "scenes": [
+    {
+      "id": "C02-S04",
+      "title": "Trace a live request",
+      "target": 35,
+      "cues": [
+        {
+          "id": "C02-S04-N01",
+          "scene_id": "C02-S04",
+          "text": "On the live route, the execution tool calls the connection helper with the submitted Python code."
+        },
+        {
+          "id": "C02-S04-N02",
+          "scene_id": "C02-S04",
+          "text": "The helper packages the code and serialization setting into a JSON request, followed by a message delimiter."
+        },
+        {
+          "id": "C02-S04-N03",
+          "scene_id": "C02-S04",
+          "text": "It sends that request through the local socket to the Blender add-on."
+        },
+        {
+          "id": "C02-S04-N04",
+          "scene_id": "C02-S04",
+          "text": "The response travels back with a status and either a result or an error message."
+        },
+        {
+          "id": "C02-S04-N05",
+          "scene_id": "C02-S04",
+          "text": "The code reads the scene available in that connected Blender process. Its identity and state matter to the result."
+        }
+      ]
+    },
+    {
+      "id": "C02-S09",
+      "title": "Respect the result contract",
+      "target": 35,
+      "cues": [
+        {
+          "id": "C02-S09-N01",
+          "scene_id": "C02-S09",
+          "text": "The CLI wrapper expects the executed code to assign a dictionary to a variable called result."
+        },
+        {
+          "id": "C02-S09-N02",
+          "scene_id": "C02-S09",
+          "text": "It serializes that dictionary and prints a recognizable result marker into standard output."
+        },
+        {
+          "id": "C02-S09-N03",
+          "scene_id": "C02-S09",
+          "text": "The caller scans for a result marker or an error marker and reconstructs the response."
+        },
+        {
+          "id": "C02-S09-N04",
+          "scene_id": "C02-S09",
+          "text": "A historical diagnostic assigned a list instead. The recorded correction wrapped that list under a bounds key."
+        },
+        {
+          "id": "C02-S09-N05",
+          "scene_id": "C02-S09",
+          "text": "The retry returned structured bounds. This repaired the response format; the geometric meaning still depended on the diagnostic itself."
+        }
+      ]
+    },
+    {
+      "id": "C02-S11",
+      "title": "A success marker can contradict the process",
+      "target": 35,
+      "cues": [
+        {
+          "id": "C02-S11-N01",
+          "scene_id": "C02-S11",
+          "text": "The later audit found that the inspected helper accepts a result marker without first requiring a successful process return code."
+        },
+        {
+          "id": "C02-S11-N02",
+          "scene_id": "C02-S11",
+          "text": "The isolated test supplied a simulated completed process with return code one hundred and thirty-nine and a payload claiming a pass."
+        },
+        {
+          "id": "C02-S11-N03",
+          "scene_id": "C02-S11",
+          "text": "The unchanged helper returned that dictionary. The animation shows the same contradiction in its two inputs."
+        },
+        {
+          "id": "C02-S11-N04",
+          "scene_id": "C02-S11",
+          "text": "No Blender process was deliberately crashed for this test. It reproduced a result-handling gap using a mocked process result."
+        },
+        {
+          "id": "C02-S11-N05",
+          "scene_id": "C02-S11",
+          "text": "The correction plan therefore requires process status and payload status to be checked separately."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+ "about": "Synthetic sentences (written for these tests, from no book) with the role each rule set gives the heteronym at word index 'at'. null means the rules have no opinion.",
+ "cases": [
+  {"text": "Use the tools before you begin.", "word": "use", "at": 0, "v1": "verb", "v2": "verb", "why": "v1 imperative"},
+  {"text": "Use pencils for the first draft.", "word": "use", "at": 0, "v1": null, "v2": "verb", "why": "v2-A"},
+  {"text": "Rising costs increase the pressure on families.", "word": "increase", "at": 2, "v1": null, "v2": "verb", "why": "v2-B"},
+  {"text": "The record shows a steady climb.", "word": "record", "at": 1, "v1": "noun-adj", "v2": "noun-adj", "why": "v1 determiner"},
+  {"text": "We record every step.", "word": "record", "at": 1, "v1": "verb", "v2": "verb", "why": "v1 pronoun"},
+  {"text": "Keep the jar close to the window.", "word": "close", "at": 3, "v1": "noun-adj", "v2": "noun-adj", "why": "v1 close to"},
+  {"text": "Record of meetings is kept upstairs.", "word": "record", "at": 0, "v1": null, "v2": null, "why": "v2-A blocked by of"},
+  {"text": "Progress takes time.", "word": "progress", "at": 0, "v1": null, "v2": "verb", "why": "v2-A misfires on a noun subject"},
+  {"text": "Plan the week, then record the results.", "word": "record", "at": 4, "v1": "verb", "v2": "verb", "why": "v1 after then"},
+  {"text": "Sales figures, record breaking, came in.", "word": "record", "at": 2, "v1": null, "v2": "verb", "why": "v2-A after a comma"}
+ ]
+}

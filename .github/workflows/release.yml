@@ -4,14 +4,24 @@ on:
     tags: ['v*']
   workflow_dispatch:
     inputs:
-      tag: {description: 'Release tag', default: 'v1.1.0'}
+      tag: {description: 'Release tag matching the narration package version', default: 'v1.2.0'}
 permissions:
   contents: write
 jobs:
   runtime-release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13'}
+      - name: Verify source and build narration packages
+        env:
+          TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          python scripts/source_ledger.py
+          python -c 'import os,tomllib; from pathlib import Path; version=tomllib.loads(Path("pyproject.toml").read_text())["project"]["version"]; assert os.environ["TAG"] == "v"+version, "release tag must match package version"'
+          python -m pip install build
+          python -m build
       - uses: actions/checkout@v4
         with: {ref: runtime-assets, path: assets}
       - name: Reassemble and verify the runtime archive
@@ -24,7 +34,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ inputs.tag || github.ref_name }}
         run: |
-          gh release view "$TAG" >/dev/null 2>&1 && gh release upload "$TAG" EMBLEM-NLP_Offline_Neural_Runtime_Linux_Py313.zip --clobber || \
-          gh release create "$TAG" EMBLEM-NLP_Offline_Neural_Runtime_Linux_Py313.zip \
+          gh release view "$TAG" >/dev/null 2>&1 && gh release upload "$TAG" EMBLEM-NLP_Offline_Neural_Runtime_Linux_Py313.zip dist/* --clobber || \
+          gh release create "$TAG" EMBLEM-NLP_Offline_Neural_Runtime_Linux_Py313.zip dist/* \
             --target "${{ github.sha }}" --title "SpeechKit ${TAG#v}" \
-            --notes "Standalone offline neural TTS, GPL-3.0-or-later. Runtime archive is hash-pinned; install with python3.13 bootstrap.py fetch."
+            --notes "Offline neural narration pipeline and pinned SpeechKit runtime, GPL-3.0-or-later. Includes the narration wheel and source package; the Linux runtime archive retains its existing pinned identity."

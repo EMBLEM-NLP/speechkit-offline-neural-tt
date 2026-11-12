@@ -1,0 +1,572 @@
+{
+  "schema_version": 1,
+  "title": "How tool requests reached Blender",
+  "chapter": "02",
+  "scope": "full",
+  "fps": 30,
+  "cue_count": 87,
+  "voice_approval": "PENDING",
+  "scenes": [
+    {
+      "id": "C02-S01",
+      "title": "Which Blender did the code reach?",
+      "target": 28,
+      "cues": [
+        {
+          "id": "C02-S01-N01",
+          "scene_id": "C02-S01",
+          "text": "A Blender tool call begins outside Blender, so its route is part of the explanation."
+        },
+        {
+          "id": "C02-S01-N02",
+          "scene_id": "C02-S01",
+          "text": "In this project, code reached Blender through a live connection, a background helper, or a direct command."
+        },
+        {
+          "id": "C02-S01-N03",
+          "scene_id": "C02-S01",
+          "text": "Each route could read a different scene state, even when the Python operation looked similar."
+        },
+        {
+          "id": "C02-S01-N04",
+          "scene_id": "C02-S01",
+          "text": "We will follow the request, identify its inputs, and separate the returned message from the evidence it contains."
+        }
+      ]
+    },
+    {
+      "id": "C02-S02",
+      "title": "Application, bridge and project tools",
+      "target": 28,
+      "cues": [
+        {
+          "id": "C02-S02-N01",
+          "scene_id": "C02-S02",
+          "text": "Start with three layers: the Blender application, the supplied MCP bridge, and the project scripts."
+        },
+        {
+          "id": "C02-S02-N02",
+          "scene_id": "C02-S02",
+          "text": "MCP, the Model Context Protocol, exposes named tools to the client making the request."
+        },
+        {
+          "id": "C02-S02-N03",
+          "scene_id": "C02-S02",
+          "text": "The project launcher locates the add-on code and starts its local server on port nine eight seven six."
+        },
+        {
+          "id": "C02-S02-N04",
+          "scene_id": "C02-S02",
+          "text": "The project smoke test initializes a client session, lists the available tools, and submits a small scene query."
+        },
+        {
+          "id": "C02-S02-N05",
+          "scene_id": "C02-S02",
+          "text": "The bridge supplies communication; each project script defines the operation to perform."
+        }
+      ]
+    },
+    {
+      "id": "C02-S03",
+      "title": "A path repair unlocked execution",
+      "target": 32,
+      "cues": [
+        {
+          "id": "C02-S03-N01",
+          "scene_id": "C02-S03",
+          "text": "The historical import used Blender four point five; the later MCP setup used Blender five point two point three."
+        },
+        {
+          "id": "C02-S03-N02",
+          "scene_id": "C02-S03",
+          "text": "An early background request failed because its process could not find an executable named Blender."
+        },
+        {
+          "id": "C02-S03-N03",
+          "scene_id": "C02-S03",
+          "text": "The helper first reads the Blender path override and otherwise falls back to that executable name."
+        },
+        {
+          "id": "C02-S03-N04",
+          "scene_id": "C02-S03",
+          "text": "Setting the override to the installed application path allowed later summary tools to return file information."
+        },
+        {
+          "id": "C02-S03-N05",
+          "scene_id": "C02-S03",
+          "text": "That retry supports a specific executable-lookup repair. A separate child-process workaround did not establish the same repair everywhere."
+        }
+      ]
+    },
+    {
+      "id": "C02-S04",
+      "title": "Trace a live request",
+      "target": 35,
+      "cues": [
+        {
+          "id": "C02-S04-N01",
+          "scene_id": "C02-S04",
+          "text": "On the live route, the execution tool calls the connection helper with the submitted Python code."
+        },
+        {
+          "id": "C02-S04-N02",
+          "scene_id": "C02-S04",
+          "text": "The helper packages the code and serialization setting into a JSON request, followed by a message delimiter."
+        },
+        {
+          "id": "C02-S04-N03",
+          "scene_id": "C02-S04",
+          "text": "It sends that request through the local socket to the Blender add-on."
+        },
+        {
+          "id": "C02-S04-N04",
+          "scene_id": "C02-S04",
+          "text": "The response travels back with a status and either a result or an error message."
+        },
+        {
+          "id": "C02-S04-N05",
+          "scene_id": "C02-S04",
+          "text": "The code reads the scene available in that connected Blender process. Its identity and state matter to the result."
+        }
+      ]
+    },
+    {
+      "id": "C02-S05",
+      "title": "A smoke test has a narrow job",
+      "target": 35,
+      "cues": [
+        {
+          "id": "C02-S05-N01",
+          "scene_id": "C02-S05",
+          "text": "The smoke test asks for the open file path and counts the objects whose type is mesh."
+        },
+        {
+          "id": "C02-S05-N02",
+          "scene_id": "C02-S05",
+          "text": "One recorded call completed at the tool level while its returned payload contained an error."
+        },
+        {
+          "id": "C02-S05-N03",
+          "scene_id": "C02-S05",
+          "text": "A later call returned the saved model path and twenty-four thousand, three hundred and fifty mesh objects."
+        },
+        {
+          "id": "C02-S05-N04",
+          "scene_id": "C02-S05",
+          "text": "These records establish communication and a scene inventory at those moments."
+        },
+        {
+          "id": "C02-S05-N05",
+          "scene_id": "C02-S05",
+          "text": "They do not check every surface or dimension. Object counts and unique mesh data-block counts also describe different things."
+        }
+      ]
+    },
+    {
+      "id": "C02-S06",
+      "title": "Launch a fresh background process",
+      "target": 30,
+      "cues": [
+        {
+          "id": "C02-S06-N01",
+          "scene_id": "C02-S06",
+          "text": "A direct command starts a separate Blender process and selects a saved file as its input."
+        },
+        {
+          "id": "C02-S06-N02",
+          "scene_id": "C02-S06",
+          "text": "The background option runs without the normal interface. A Python option then executes a script file or an expression."
+        },
+        {
+          "id": "C02-S06-N03",
+          "scene_id": "C02-S06",
+          "text": "The MCP background helper uses the expression route to run its result-handling wrapper."
+        },
+        {
+          "id": "C02-S06-N04",
+          "scene_id": "C02-S06",
+          "text": "Argument order matters: loading a file can replace settings applied earlier in the command."
+        },
+        {
+          "id": "C02-S06-N05",
+          "scene_id": "C02-S06",
+          "text": "The executable, file, script, logs and process exit code together identify this run."
+        }
+      ]
+    },
+    {
+      "id": "C02-S07",
+      "title": "Choose the file that represents the state",
+      "target": 35,
+      "cues": [
+        {
+          "id": "C02-S07-N01",
+          "scene_id": "C02-S07",
+          "text": "Before the background helper launches Blender, it checks whether a connected instance has unsaved changes to the same file."
+        },
+        {
+          "id": "C02-S07-N02",
+          "scene_id": "C02-S07",
+          "text": "It compares normalized paths and reads the dirty-state flag from the live instance."
+        },
+        {
+          "id": "C02-S07-N03",
+          "scene_id": "C02-S07",
+          "text": "A matching dirty file takes a special branch: save a numbered temporary copy, then open that copy in the new process."
+        },
+        {
+          "id": "C02-S07-N04",
+          "scene_id": "C02-S07",
+          "text": "A clean file or a different open file leaves the supplied disk path as the input."
+        },
+        {
+          "id": "C02-S07-N05",
+          "scene_id": "C02-S07",
+          "text": "If the connection helper raises a connection error, this implementation also falls back to the supplied file on disk."
+        }
+      ]
+    },
+    {
+      "id": "C02-S08",
+      "title": "Make temporary state visible",
+      "target": 26,
+      "cues": [
+        {
+          "id": "C02-S08-N01",
+          "scene_id": "C02-S08",
+          "text": "The temporary-copy branch uses the save operator with the copy option enabled."
+        },
+        {
+          "id": "C02-S08-N02",
+          "scene_id": "C02-S08",
+          "text": "It yields that new path to the background execution and attempts to remove the copy when the context exits."
+        },
+        {
+          "id": "C02-S08-N03",
+          "scene_id": "C02-S08",
+          "text": "A returned error status from the live query or save step raises an error instead of quietly selecting a successful result."
+        },
+        {
+          "id": "C02-S08-N04",
+          "scene_id": "C02-S08",
+          "text": "For review, record which branch was taken and which file the process actually opened."
+        }
+      ]
+    },
+    {
+      "id": "C02-S09",
+      "title": "Respect the result contract",
+      "target": 35,
+      "cues": [
+        {
+          "id": "C02-S09-N01",
+          "scene_id": "C02-S09",
+          "text": "The CLI wrapper expects the executed code to assign a dictionary to a variable called result."
+        },
+        {
+          "id": "C02-S09-N02",
+          "scene_id": "C02-S09",
+          "text": "It serializes that dictionary and prints a recognizable result marker into standard output."
+        },
+        {
+          "id": "C02-S09-N03",
+          "scene_id": "C02-S09",
+          "text": "The caller scans for a result marker or an error marker and reconstructs the response."
+        },
+        {
+          "id": "C02-S09-N04",
+          "scene_id": "C02-S09",
+          "text": "A historical diagnostic assigned a list instead. The recorded correction wrapped that list under a bounds key."
+        },
+        {
+          "id": "C02-S09-N05",
+          "scene_id": "C02-S09",
+          "text": "The retry returned structured bounds. This repaired the response format; the geometric meaning still depended on the diagnostic itself."
+        }
+      ]
+    },
+    {
+      "id": "C02-S10",
+      "title": "Read four different outcomes",
+      "target": 32,
+      "cues": [
+        {
+          "id": "C02-S10-N01",
+          "scene_id": "C02-S10",
+          "text": "Keep four outcomes visible: request delivery, process completion, the script payload, and validation coverage."
+        },
+        {
+          "id": "C02-S10-N02",
+          "scene_id": "C02-S10",
+          "text": "A connection failure can prevent the submitted code from running at all."
+        },
+        {
+          "id": "C02-S10-N03",
+          "scene_id": "C02-S10",
+          "text": "A completed tool call can still contain an application error, as the early smoke test showed."
+        },
+        {
+          "id": "C02-S10-N04",
+          "scene_id": "C02-S10",
+          "text": "A returned pass field describes what the script claims; it does not reveal whether every required check ran."
+        },
+        {
+          "id": "C02-S10-N05",
+          "scene_id": "C02-S10",
+          "text": "The next examples show why combining these outcomes into one green badge would lose essential information."
+        }
+      ]
+    },
+    {
+      "id": "C02-S11",
+      "title": "A success marker can contradict the process",
+      "target": 35,
+      "cues": [
+        {
+          "id": "C02-S11-N01",
+          "scene_id": "C02-S11",
+          "text": "The later audit found that the inspected helper accepts a result marker without first requiring a successful process return code."
+        },
+        {
+          "id": "C02-S11-N02",
+          "scene_id": "C02-S11",
+          "text": "The isolated test supplied a simulated completed process with return code one hundred and thirty-nine and a payload claiming a pass."
+        },
+        {
+          "id": "C02-S11-N03",
+          "scene_id": "C02-S11",
+          "text": "The unchanged helper returned that dictionary. The animation shows the same contradiction in its two inputs."
+        },
+        {
+          "id": "C02-S11-N04",
+          "scene_id": "C02-S11",
+          "text": "No Blender process was deliberately crashed for this test. It reproduced a result-handling gap using a mocked process result."
+        },
+        {
+          "id": "C02-S11-N05",
+          "scene_id": "C02-S11",
+          "text": "The correction plan therefore requires process status and payload status to be checked separately."
+        }
+      ]
+    },
+    {
+      "id": "C02-S12",
+      "title": "Compare an existing supervisor gate",
+      "target": 30,
+      "cues": [
+        {
+          "id": "C02-S12-N01",
+          "scene_id": "C02-S12",
+          "text": "A separate project helper already uses a stronger execution gate when it supervises the vent checks."
+        },
+        {
+          "id": "C02-S12-N02",
+          "scene_id": "C02-S12",
+          "text": "It runs each step, reads the evidence file, and requires both a zero return code and a true passed field."
+        },
+        {
+          "id": "C02-S12-N03",
+          "scene_id": "C02-S12",
+          "text": "It records progress and stops the sequence when that condition fails."
+        },
+        {
+          "id": "C02-S12-N04",
+          "scene_id": "C02-S12",
+          "text": "That provides a useful code comparison. It does not mean the MCP wrapper was patched."
+        },
+        {
+          "id": "C02-S12-N05",
+          "scene_id": "C02-S12",
+          "text": "The planned wrapper correction also needs valid markers, useful logs and explicit handling of contradictory responses."
+        }
+      ]
+    },
+    {
+      "id": "C02-S13",
+      "title": "Require actual check coverage",
+      "target": 28,
+      "cues": [
+        {
+          "id": "C02-S13-N01",
+          "scene_id": "C02-S13",
+          "text": "Even a completed verifier needs a coverage check."
+        },
+        {
+          "id": "C02-S13-N02",
+          "scene_id": "C02-S13",
+          "text": "The audit ran the screen-check loop with an empty screen register and a valid port root."
+        },
+        {
+          "id": "C02-S13-N03",
+          "scene_id": "C02-S13",
+          "text": "No screens were tested, yet the loop produced six pose rows that each claimed eight screens."
+        },
+        {
+          "id": "C02-S13-N04",
+          "scene_id": "C02-S13",
+          "text": "The proposed correction validates required identities and counts actual successful checks before reporting a pass."
+        },
+        {
+          "id": "C02-S13-N05",
+          "scene_id": "C02-S13",
+          "text": "This example concerns an isolated loop. It does not establish that the delivered model has missing screens."
+        }
+      ]
+    },
+    {
+      "id": "C02-S14",
+      "title": "A deadline is a separate kind of evidence",
+      "target": 34,
+      "cues": [
+        {
+          "id": "C02-S14-N01",
+          "scene_id": "C02-S14",
+          "text": "Long operations introduced another boundary: the calling tool could reach its deadline before a useful result returned."
+        },
+        {
+          "id": "C02-S14-N02",
+          "scene_id": "C02-S14",
+          "text": "The historical trace records several roughly two-minute timeouts, followed by inspections and narrower or direct background retries."
+        },
+        {
+          "id": "C02-S14-N03",
+          "scene_id": "C02-S14",
+          "text": "A transport timeout alone does not establish the final process state or the validity of its output file."
+        },
+        {
+          "id": "C02-S14-N04",
+          "scene_id": "C02-S14",
+          "text": "Inspect the job and artifact evidence before deciding what to retry."
+        },
+        {
+          "id": "C02-S14-N05",
+          "scene_id": "C02-S14",
+          "text": "Likewise, a successful background workaround does not prove that the repeatedly disconnected live connection was permanently repaired."
+        }
+      ]
+    },
+    {
+      "id": "C02-S15",
+      "title": "A resource check needs the right context",
+      "target": 30,
+      "cues": [
+        {
+          "id": "C02-S15-N01",
+          "scene_id": "C02-S15",
+          "text": "Summary tools have contracts too. Consider a checker that reports missing external files."
+        },
+        {
+          "id": "C02-S15-N02",
+          "scene_id": "C02-S15",
+          "text": "The inspected code resolves paths without passing the linked data-block’s library context."
+        },
+        {
+          "id": "C02-S15-N03",
+          "scene_id": "C02-S15",
+          "text": "In an audit fixture, a texture beside its linked library was reported missing beside the main file."
+        },
+        {
+          "id": "C02-S15-N04",
+          "scene_id": "C02-S15",
+          "text": "A separate tiled-image fixture also exposed an unreported missing secondary tile."
+        },
+        {
+          "id": "C02-S15-N05",
+          "scene_id": "C02-S15",
+          "text": "The planned correction resolves paths in their owning library and enumerates the resources that are actually required."
+        }
+      ]
+    },
+    {
+      "id": "C02-S16",
+      "title": "Separate preparation from scene execution",
+      "target": 30,
+      "cues": [
+        {
+          "id": "C02-S16-N01",
+          "scene_id": "C02-S16",
+          "text": "Many supporting tools ran outside Blender: numerical fitting, image preparation, CAD conversion and report packaging."
+        },
+        {
+          "id": "C02-S16-N02",
+          "scene_id": "C02-S16",
+          "text": "Their outputs became files or manifests consumed by a later Blender operation."
+        },
+        {
+          "id": "C02-S16-N03",
+          "scene_id": "C02-S16",
+          "text": "The vent supervisor makes this split concrete: its contour step uses the host Python interpreter, while other steps launch Blender."
+        },
+        {
+          "id": "C02-S16-N04",
+          "scene_id": "C02-S16",
+          "text": "Inside Blender, scripts can inspect or change scene data through its Python API."
+        },
+        {
+          "id": "C02-S16-N05",
+          "scene_id": "C02-S16",
+          "text": "Recording the producer, input file and consumer keeps these dependencies visible across process boundaries."
+        }
+      ]
+    },
+    {
+      "id": "C02-S17",
+      "title": "Parallel evidence, coordinated editing",
+      "target": 30,
+      "cues": [
+        {
+          "id": "C02-S17-N01",
+          "scene_id": "C02-S17",
+          "text": "The historical plan split official references, supplementary references and scene auditing into parallel assignments."
+        },
+        {
+          "id": "C02-S17-N02",
+          "scene_id": "C02-S17",
+          "text": "A coordinator used their evidence to guide an editor working on the model."
+        },
+        {
+          "id": "C02-S17-N03",
+          "scene_id": "C02-S17",
+          "text": "The early audit produced multiple views, including this archived three-quarter render and top view."
+        },
+        {
+          "id": "C02-S17-N04",
+          "scene_id": "C02-S17",
+          "text": "Those views supported inspection of the visible geometry; controlled lighting was later added for materials and small surface details."
+        },
+        {
+          "id": "C02-S17-N05",
+          "scene_id": "C02-S17",
+          "text": "Parallel research expands the evidence, while coordinated editing keeps the intended model state understandable."
+        }
+      ]
+    },
+    {
+      "id": "C02-S18",
+      "title": "Carry the execution record forward",
+      "target": 25,
+      "cues": [
+        {
+          "id": "C02-S18-N01",
+          "scene_id": "C02-S18",
+          "text": "For each operation, carry forward its runtime, file or scene, inputs, read or write scope, outputs and validation coverage."
+        },
+        {
+          "id": "C02-S18-N02",
+          "scene_id": "C02-S18",
+          "text": "Keep the exact attempt and its result attached to the script that produced it."
+        },
+        {
+          "id": "C02-S18-N03",
+          "scene_id": "C02-S18",
+          "text": "The history tells us what happened; the current source explains the inspected implementation; the audit identifies remaining gaps."
+        },
+        {
+          "id": "C02-S18-N04",
+          "scene_id": "C02-S18",
+          "text": "With those distinctions in place, we can now examine the model hierarchy and understand what the geometry tools actually changed."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "title": "Blender technical pronunciation audition",
+  "chapter": "02",
+  "scope": "glossary",
+  "cue_count": 8,
+  "voice_approval": "PENDING",
+  "authored_chapter_content": false,
+  "scenes": [
+    {
+      "id": "C02-G01",
+      "title": "Technical glossary audition",
+      "target": 60,
+      "cues": [
+        {
+          "id": "C02-G01-N01",
+          "scene_id": "C02-G01",
+          "text": "This is a pronunciation audition for the grandMA3 full-size console by MA Lighting."
+        },
+        {
+          "id": "C02-G01-N02",
+          "scene_id": "C02-G01",
+          "text": "Blender and Python exchange data through MCP and the CLI."
+        },
+        {
+          "id": "C02-G01-N03",
+          "scene_id": "C02-G01",
+          "text": "API and JSON identify an interface and a request format."
+        },
+        {
+          "id": "C02-G01-N04",
+          "scene_id": "C02-G01",
+          "text": "The bpy module exposes Blender operations to Python scripts."
+        },
+        {
+          "id": "C02-G01-N05",
+          "scene_id": "C02-G01",
+          "text": "BLENDER_PATH selects the executable, while save_as_mainfile writes a file."
+        },
+        {
+          "id": "C02-G01-N06",
+          "scene_id": "C02-G01",
+          "text": "Blender 4.5 and 5.2.3 are different versions; SIGSEGV names a process signal."
+        },
+        {
+          "id": "C02-G01-N07",
+          "scene_id": "C02-G01",
+          "text": "UV coordinates, UDIM tiles, NaN values, and a BVH are separate technical terms."
+        },
+        {
+          "id": "C02-G01-N08",
+          "scene_id": "C02-G01",
+          "text": "Record the Cycles result, then inspect the record before testing Eevee."
+        }
+      ]
+    }
+  ]
+}

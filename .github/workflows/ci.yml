@@ -1,16 +1,138 @@
 name: ci
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: speechkit-ci-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
-  test:
-    runs-on: ubuntu-latest
+  core:
+    env:
+      SPEECHKIT_SKIP_BROWSER: '1'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {os: ubuntu-24.04, python: '3.11'}
+          - {os: ubuntu-24.04, python: '3.13'}
+          - {os: macos-15, python: '3.12'}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - run: python scripts/source_ledger.py
+      - run: python -m unittest discover -s tests -t . -v
+      - run: python -m unittest discover -s speechkit/tests -v
+      - name: Check the authored cue contract without synthesis
+        run: python scripts/explainer_narration.py --input-package examples/explainer_chapter02/pilot.json --output-root artifacts/script-pilot --stage script
+  package:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.13'}
-      - run: python -m unittest discover -s tests -v
-      - run: python -m unittest discover -s speechkit/tests -v
-      - name: Fetch, verify and install the pinned runtime, then synthesize
+      - run: python -m pip install build
+      - run: python -m build
+      - name: Verify an installed wheel outside the checkout
+        env:
+          SPEECHKIT_CHECKOUT: ${{ github.workspace }}
+        run: |
+          python -m venv "$RUNNER_TEMP/wheel-env"
+          "$RUNNER_TEMP/wheel-env/bin/python" -m pip install dist/*.whl
+          cd "$RUNNER_TEMP"
+          "$RUNNER_TEMP/wheel-env/bin/python" "$GITHUB_WORKSPACE/scripts/check_installed_package.py"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: speechkit-package-${{ github.run_id }}
+          path: dist/
+          if-no-files-found: error
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13'}
+      - run: python -m pip install -r requirements.txt playwright==1.64.1
+      - run: python -m playwright install --with-deps chromium
+      - name: Verify the audit page with and without JavaScript
+        run: python -m unittest tests.narration.test_audit_report.PageInBrowser -v
+  voice:
+    needs: [core, package]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      SPEECHKIT_CHECKOUT: ${{ github.workspace }}
+      SPEECHKIT_HOME: ${{ github.workspace }}/.speechkit-home
+      SPEECHKIT_RUNTIME: ${{ github.workspace }}/installed/runtime
+      SPEECHKIT_ASR_MODELS: ${{ github.workspace }}/.speechkit-home/models
+      SPEECHKIT_CACHE: ${{ github.workspace }}/.speechkit-home/cache
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+      - run: python -m pip install -r requirements-voice.txt -c constraints-voice.txt --report install-report.json
+      - name: Fetch and verify the pinned neural runtime
         run: |
           python bootstrap.py fetch
           python bootstrap.py verify
-          python bootstrap.py install --out "$RUNNER_TEMP/installed"
+          python bootstrap.py install --out installed
+          python -m unittest tests.test_bundle -v
+      - name: Record the execution environment
+        run: |
+          mkdir -p artifacts/environment
+          cp install-report.json artifacts/environment/
+          python -m pip freeze --all > artifacts/environment/coordinator-packages.txt
+          installed/runtime/.venv/bin/python -m pip freeze --all > artifacts/environment/voice-packages.txt
+          python scripts/record_runtime.py artifacts/environment/runtime.json
+      - name: Synthesize and validate the 15 cue pilot
+        run: python scripts/explainer_narration.py --input-package examples/explainer_chapter02/pilot.json --output-root artifacts/explainer_pilot --profile ljspeech-high --workers 1
+      - name: Check the unchanged pilot resume
+        run: python scripts/explainer_narration.py --input-package examples/explainer_chapter02/pilot.json --output-root artifacts/explainer_pilot --profile ljspeech-high --workers 1
+      - name: Install and verify the pronunciation recognizers
+        run: |
+          python -m speechkit_narrate setup
+          python -m speechkit_narrate --json doctor > artifacts/environment/doctor.json
+      - name: Measure pilot pronunciation and watched technical terms
+        run: python scripts/explainer_narration.py --input-package examples/explainer_chapter02/pilot.json --output-root artifacts/explainer_pilot --profile ljspeech-high --workers 1 --audit
+      - name: Generate the separate technical glossary audition
+        run: python scripts/explainer_narration.py --input-package examples/explainer_chapter02/glossary.json --output-root artifacts/explainer_glossary --profile ljspeech-high --workers 1 --audit
+      - name: Generate the full chapter review voice after the pilot passes
+        run: python scripts/explainer_narration.py --input-package examples/explainer_chapter02/full.json --output-root artifacts/explainer_full --profile ljspeech-high --workers 1 --audit
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: speechkit-narration-${{ github.run_id }}
+          path: |
+            artifacts/
+            !artifacts/**/writer.json
+            !artifacts/**/writer.lock
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 30
+  powershell:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13'}
+      - run: python -m pip install -r requirements.txt
+      - name: Pester tests of the SpeechKitNarrate module
+        shell: pwsh
+        run: |
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module Pester -MinimumVersion 5.5.0 -Scope CurrentUser -Force
+          Invoke-Pester -Path ./powershell/Tests -Output Detailed -CI

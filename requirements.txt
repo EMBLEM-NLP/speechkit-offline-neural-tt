@@ -1,0 +1,11 @@
+# speechkit-narrate core (every platform): pip install -r requirements.txt
+# audio arithmetic for the export and the speak tool
+numpy
+# CMU pronouncing dictionary for word checks and the pronunciation audit
+cmudict
+# spells out numbers the way the voice should say them
+num2words
+# optional: word frequency lists for the glued-word checks of the text reader
+wordfreq
+# optional: the MCP server (python -m speechkit_narrate mcp)
+mcp>=2.3

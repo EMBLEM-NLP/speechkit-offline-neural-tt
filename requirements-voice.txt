@@ -1,0 +1,11 @@
+# voice timing + pronunciation audit (Linux, or inside WSL on Windows): pip install -r requirements-voice.txt
+-r requirements.txt
+# edits the voice model once to expose phoneme durations (the aligned model)
+onnx
+# offline speech recognizers (NeMo CTC and Parakeet TDT) that hear the narration back
+sherpa-onnx
+# Praat in Python: third-formant tracking that detects an r the spelling does not have
+praat-parselmouth
+
+# Mandatory 22.05 kHz to 16 kHz anti-aliased resampling for the audit.
+scipy
