@@ -3,87 +3,102 @@
   "title": "Scene structure, transforms and the missing monitor arm",
   "chapter": "03",
   "scope": "pilot",
-  "cue_count": 12,
+  "cue_count": 15,
   "voice_approval": "PENDING",
   "scenes": [
     {
       "id": "C03-S04",
-      "title": "A symmetric copy can still be misplaced",
-      "target": 35,
+      "title": "Mirror the world transform around a datum",
+      "target": 45,
       "cues": [
         {
           "id": "C03-S04-N01",
           "scene_id": "C03-S04",
-          "text": "The user later reported that the new right arm was not correctly placed."
+          "text": "The V06 builder selects three named left-arm mesh objects: the support volume, outer arm and inner inset."
         },
         {
           "id": "C03-S04-N02",
           "scene_id": "C03-S04",
-          "text": "The retained V06 source combines outer X edges; the V08 correction instead uses the centres of the two monitor-side world ranges."
+          "text": "It builds a reflection matrix that negates the world X coordinate and adds a translation called mirror sum."
         },
         {
           "id": "C03-S04-N03",
           "scene_id": "C03-S04",
-          "text": "It subtracts the old mirror sum from the new one, then shifts the right-arm copies by that difference."
+          "text": "In one dimension, the mapping is X prime equals mirror sum minus X. The mirror plane is halfway along that sum."
         },
         {
           "id": "C03-S04-N04",
           "scene_id": "C03-S04",
-          "text": "The saved V08 report records a movement of about twenty-six point seven millimetres. A plausible mirror was not enough to establish the correct placement."
+          "text": "Applying the matrix to each source world matrix reflects both placement and orientation, so the chosen datum directly controls the result."
+        },
+        {
+          "id": "C03-S04-N05",
+          "scene_id": "C03-S04",
+          "text": "The matrix reference documents this coordinate operation. Placement still depends on choosing a justified datum; a reflection alone does not supply that evidence."
         }
       ]
     },
     {
       "id": "C03-S06",
-      "title": "Change a parent while preserving the current pose",
-      "target": 33,
+      "title": "Bake the reflected copy without claiming closed geometry",
+      "target": 50,
       "cues": [
         {
           "id": "C03-S06-N01",
           "scene_id": "C03-S06",
-          "text": "Parenting changes the transform relationship, so assigning a parent can change an object’s visible placement."
+          "text": "Before baking the corrected arm, the script makes another mesh copy if the data has multiple users."
         },
         {
           "id": "C03-S06-N02",
           "scene_id": "C03-S06",
-          "text": "The parent-keep-world helper updates the view layer and copies the object’s current world matrix."
+          "text": "It applies the captured world matrix to the mesh data and resets the object matrix to identity."
         },
         {
           "id": "C03-S06-N03",
           "scene_id": "C03-S06",
-          "text": "It assigns the new parent, restores that captured world matrix, and updates evaluation again."
+          "text": "It then updates the data and flips polygon winding for the reflected copy."
         },
         {
           "id": "C03-S06-N04",
           "scene_id": "C03-S06",
-          "text": "The goal is to preserve the current pose while establishing the hierarchy that future parent motion will drive."
+          "text": "Those operations address the transformed copy and its surface orientation. They do not fill the open arm surfaces or establish fabrication-ready geometry."
+        },
+        {
+          "id": "C03-S06-N05",
+          "scene_id": "C03-S06",
+          "text": "The isolated negative-determinant fixture preserves all three world-space vertex positions after baking, and records the reversed polygon order."
+        },
+        {
+          "id": "C03-S06-N06",
+          "scene_id": "C03-S06",
+          "text": "That check covers position and winding. It does not certify custom normals, closed surfaces or fabrication suitability."
         }
       ]
     },
     {
       "id": "C03-S11",
-      "title": "Trace the TimelineMarker failure and repair",
-      "target": 34,
+      "title": "Key poses describe prescribed motion",
+      "target": 45,
       "cues": [
         {
           "id": "C03-S11-N01",
           "scene_id": "C03-S11",
-          "text": "One recorded V08 attempt tried to store a custom angle property on a timeline marker."
+          "text": "The script names four poses: open, intermediate, folded and locked, at frames one, forty, eighty and one hundred."
         },
         {
           "id": "C03-S11-N02",
           "scene_id": "C03-S11",
-          "text": "Blender rejected the assignment because that type did not support the attempted ID properties."
+          "text": "It sets lower and upper X rotations in radians, then inserts rotation keyframes for both controls."
         },
         {
           "id": "C03-S11-N03",
           "scene_id": "C03-S11",
-          "text": "The historical patch removed the unsupported assignment and retained the marker creation call with its label and frame."
+          "text": "Illustrative lock objects are shown at the final pose by keying their viewport and render visibility."
         },
         {
           "id": "C03-S11-N04",
           "scene_id": "C03-S11",
-          "text": "The rig then reran successfully. Being a Blender RNA structure does not mean that every type accepts arbitrary custom properties."
+          "text": "A pose named locked and a visible wire loop do not demonstrate a functioning latch, bearing forces or a dynamic simulation."
         }
       ]
     }

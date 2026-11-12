@@ -136,7 +136,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: speechkit-chapter03-v131-${{ github.run_id }}
+          name: speechkit-chapter03-r2-v131-${{ github.run_id }}
           path: |
             artifacts/
             !artifacts/**/writer.json
@@ -144,6 +144,7 @@ jobs:
           include-hidden-files: true
           if-no-files-found: error
           retention-days: 30
+
   powershell:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
