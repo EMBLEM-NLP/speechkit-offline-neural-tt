@@ -1,0 +1,271 @@
+<!-- Head material of the page: title, font links and styles. The standalone page built by report.py moves -->
+<!-- everything above the main container into head; the fragment file keeps it as is for hosting. -->
+<title>__TITLE__ Pronunciation Audit</title>  <!-- page title; report.py substitutes the escaped book title -->
+<!-- claude.ai hint: the page may extend under the screen's safe-area edges -->
+<meta name="claude:viewport-fit-sides" content="cover">
+<!-- open the connection to the Google Fonts stylesheet host early -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<!-- font files come from this host; crossorigin is required for web fonts -->
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Gentium Book Plus for IPA symbols, Source Sans 3 for text, Source Serif 4 for headings -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@400;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,650&display=swap">
+<!-- Page styles follow: light colours by default, dark ones further down. -->
+<style>
+/* Colour tokens of the light theme and the font stacks, as CSS custom properties on the root element. */
+/* Each status colour has a strong form and a soft background form: ok, warn, bad and kept for the badges. */
+:root{
+  /* page background, card surface, text, muted text, hairlines, soft fills */
+  --bg:#f7f4ee; --surface:#fffdf9; --ink:#24211c; --muted:#6c6457; --line:#e3dccf; --soft:#efe9de;
+  /* accent brown, green for fixed, amber for improved */
+  --accent:#8a5a1f; --accent-soft:#f3e6d2; --ok:#2f6b46; --ok-soft:#e1efe5; --warn:#9a6a12; --warn-soft:#f6ecd4;
+  --bad:#a2412f; --bad-soft:#f6e1dc; --kept:#5b6270; --kept-soft:#e8eaee;  /* red for listen, slate grey for kept */
+  /* serif for headings and sans for text, each with system fallbacks */
+  --serif:"Source Serif 4",Georgia,"Times New Roman",serif; --sans:"Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif;
+  /* fonts that contain the IPA symbols, Gentium first */
+  --ipa:"Gentium Book Plus","Charis SIL","Doulos SIL","Lucida Sans Unicode","Noto Sans",serif;
+}
+/* Dark palette when the system prefers dark, unless the page is forced light with data-theme="light". */
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  /* dark background and surfaces with light ink */
+  --bg:#191714; --surface:#221f1b; --ink:#ede7dc; --muted:#a59b8b; --line:#38332c; --soft:#2a2621;
+  /* lighter accent and status colours for contrast on dark */
+  --accent:#e0a75c; --accent-soft:#3a2c1a; --ok:#7cc496; --ok-soft:#1f3227; --warn:#e3b65a; --warn-soft:#3a2f17;
+  /* status colours; color-scheme: dark also darkens form controls and scrollbars */
+  --bad:#ec8e7c; --bad-soft:#3c231e; --kept:#aab1bf; --kept-soft:#2b2e34; color-scheme:dark}}
+/* The same dark palette when the page is forced dark with data-theme="dark". */
+:root[data-theme="dark"]{
+  /* dark surfaces and ink, as in the media query above */
+  --bg:#191714; --surface:#221f1b; --ink:#ede7dc; --muted:#a59b8b; --line:#38332c; --soft:#2a2621;
+  /* accent and status colours for dark mode */
+  --accent:#e0a75c; --accent-soft:#3a2c1a; --ok:#7cc496; --ok-soft:#1f3227; --warn:#e3b65a; --warn-soft:#3a2f17;
+  /* remaining status colours and dark form controls */
+  --bad:#ec8e7c; --bad-soft:#3c231e; --kept:#aab1bf; --kept-soft:#2b2e34; color-scheme:dark}
+*{box-sizing:border-box}  /* widths include padding and borders everywhere */
+/* page background, ink and the 16 px sans base font on a relaxed 1.55 line height */
+body{background:var(--bg);color:var(--ink);font:16px/1.55 var(--sans);margin:0}
+/* centred column up to 1120 px; side padding of at least 16 px, more on devices with a notch (safe area) */
+.wrap{max-width:1120px;margin:0 auto;padding-block:40px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+/* headings in the serif at weight 650 with balanced line breaks */
+h1,h2,h3{font-family:var(--serif);font-weight:650;text-wrap:balance;margin:0}
+/* main title scales with the viewport between 30 and 44 px */
+h1{font-size:clamp(30px,5vw,44px);line-height:1.1;letter-spacing:-.01em}
+h2{font-size:24px;line-height:1.2;margin-bottom:12px}  /* section titles at 24 px with space below */
+/* small accent label above the title (book title and page kind) */
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:10px}
+/* intro paragraph limited to about 68 characters per line */
+.lede{max-width:68ch;color:var(--muted);font-size:18px;margin:14px 0 0}
+section{margin-top:44px}  /* vertical space between page sections */
+/* summary tiles in a responsive grid, at least 160 px each */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-top:28px}
+/* one tile: card surface, hairline border, rounded corners */
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-width:0}
+.stat b{display:block;font:650 26px/1.15 var(--serif)}  /* the big number of a summary tile */
+.stat span{color:var(--muted);font-size:14px}  /* the tile's caption in muted ink */
+/* callout box with an accent bar on the left (not used by the current markup) */
+.callout{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:12px;padding:20px 22px;display:grid;gap:12px}
+.callout p{margin:0;max-width:72ch}  /* paragraphs inside a callout box, line length capped */
+/* meter layout of label, bar and value (not used by the current markup) */
+.meter{display:grid;grid-template-columns:auto 1fr auto;gap:8px 12px;align-items:center;font-size:14px;max-width:560px}
+/* meter track: a rounded soft bar */
+.meter i{display:block;height:8px;border-radius:4px;background:var(--soft);position:relative;overflow:hidden}
+/* meter fill; its width and colour come from custom properties set inline */
+.meter i::after{content:"";position:absolute;inset:0 auto 0 0;width:var(--w);background:var(--c,var(--accent));border-radius:4px}
+/* IPA text in a font that has every phonetic symbol, never broken across lines */
+.ipa{font-family:var(--ipa);font-size:1.05em;white-space:nowrap}
+/* filter toolbar holding the chips and the search box, wrapping on small screens */
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0 16px}
+/* filter button: a rounded pill in semibold 14 px type with a thin border and a pointer cursor */
+.chip{font:600 14px var(--sans);border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;cursor:pointer}
+/* the active filter is shown inverted */
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip small{font-weight:400;opacity:.75;margin-left:4px}  /* the row count inside a filter chip */
+/* search box styled like the chips; it grows and shrinks between 180 and 280 px */
+input[type=search]{font:15px var(--sans);padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);min-width:0;flex:1 1 180px;max-width:280px}
+/* the word list: one card holding all rows */
+.list{display:grid;gap:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+/* six columns: word, what was wrong, cause, fix, result, status */
+.row{display:grid;grid-template-columns:150px 1.25fr 1.25fr 1fr 1fr 92px;gap:14px;padding:14px 16px;border-top:1px solid var(--line);align-items:start}
+.row>div{min-width:0}  /* long content may shrink inside grid cells instead of overflowing */
+/* header row: small upper-case labels on a soft background */
+.row.head{border-top:0;background:var(--soft);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;padding-block:10px}
+.word{font:650 18px/1.2 var(--serif)}  /* the word itself, set large in each row */
+.sub{color:var(--muted);font-size:13px;margin-top:3px}  /* occurrence count and chapters under the word */
+/* the category label under the word */
+.cat{display:inline-block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;color:var(--muted);margin-top:6px}
+.row p{margin:0;font-size:15px}  /* paragraph text in the grid cells, no margins */
+.ba{font-size:14px;display:grid;gap:4px}  /* before/after cell: two stacked lines */
+.ba .b{color:var(--muted)}  /* the before line in muted ink */
+/* small "before" label in front of the earlier value */
+.ba .b::before{content:"before ";font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+/* small "after" label in front of the later value */
+.ba .a::before{content:"after ";font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+/* status badge shape: small rounded pill */
+.badge{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;white-space:nowrap}
+/* fixed is green, improved is amber */
+.s-fixed{background:var(--ok-soft);color:var(--ok)} .s-better{background:var(--warn-soft);color:var(--warn)}
+/* listen is red, kept is slate */
+.s-listen{background:var(--bad-soft);color:var(--bad)} .s-kept{background:var(--kept-soft);color:var(--kept)}
+.note{color:var(--muted);font-size:13px;margin-top:6px}  /* small muted note text */
+.empty{padding:24px 16px;color:var(--muted)}  /* message shown when the filter matches nothing */
+.loops{display:grid;gap:12px}  /* loop history cards, stacked */
+/* one loop card: a number column and the details */
+.loop{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;grid-template-columns:70px 1fr;gap:14px}
+.loop .n{font:650 22px/1 var(--serif)}  /* the loop number in large serif digits */
+/* promote or veto under the number */
+.loop .n small{display:block;font:600 11px var(--sans);letter-spacing:.08em;text-transform:uppercase;margin-top:6px}
+.promote{color:var(--ok)} .veto{color:var(--bad)}  /* promoted loops in green, vetoed ones in red */
+.loop ul{margin:6px 0 0;padding-left:18px;color:var(--muted);font-size:14px}  /* list of veto reasons in muted text */
+/* metric name and value pairs in a wrapping row */
+.kv{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted);margin-top:6px}
+.kv b{color:var(--ink);font-weight:600}  /* the metric values stand out */
+/* method cards, as many columns as fit at 280 px or more */
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+/* one explanation card with border and padding */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.card h3{font-size:17px;margin-bottom:6px}  /* card title size and spacing */
+.card p,.card li{font-size:15px;color:var(--muted);margin:0}  /* card text in muted ink */
+.card ul{margin:0;padding-left:18px;display:grid;gap:6px}  /* card bullet list with small gaps */
+footer{margin-top:48px;color:var(--muted);font-size:13px}  /* credits line at the bottom in small muted text */
+/* Narrow screens (820 px or less): each row becomes a single column, the header row is hidden and every cell shows */
+/* its own label from its data-l attribute; the status badge moves to the top. */
+@media (max-width:820px){
+  .row.head{display:none}  /* no header row on phones; cells carry labels */
+  .row{grid-template-columns:1fr;gap:8px}  /* one column per row on narrow screens */
+  /* cell label generated from data-l, above the cell content */
+  .row>div[data-l]::before{content:attr(data-l);display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:2px}
+  .row .st{order:-1}  /* the status cell comes first */
+}
+</style>
+
+<!-- The visible page. report.py splits the template at this container: everything above goes into head and this -->
+<!-- part into body of the standalone page. -->
+<!-- Every container the script fills (intro, tiles, word list, loop cards, credits) holds a mark of the form -->
+<!-- STATIC followed by the container's name, written as a comment. report.py replaces each mark with the same -->
+<!-- content as plain HTML, so a viewer that runs no scripts (the iPhone Files preview, for one) still shows the -->
+<!-- whole page. When the script runs it writes its own version over that content, which comes out the same. -->
+<div class="wrap">
+  <header>  <!-- page header: eyebrow, title, intro and tiles -->
+    <!-- book title (filled in by report.py) and the page kind -->
+    <div class="eyebrow">__TITLE_HTML__ &middot; narration audit</div>
+    <h1>Pronunciation audit</h1>  <!-- main heading of the audit page -->
+    <p class="lede" id="lede"><!--__STATIC_LEDE__--></p>  <!-- intro paragraph: plain copy, then the script's -->
+    <div class="stats" id="stats"><!--__STATIC_STATS__--></div>  <!-- summary tiles: plain copy, then the script's -->
+  </header>
+
+  <section aria-labelledby="ls">  <!-- section with the word list, labelled by its heading -->
+    <h2 id="ls">Mispronounced words</h2>  <!-- heading of the mispronounced word list -->
+    <!-- filter chips and search box, drawn by chips() -->
+    <div class="controls" id="chips" role="toolbar" aria-label="Filter by kind of problem"></div>
+    <!-- the rows: plain copy from report.py, then drawn again by list(); role table helps screen readers -->
+    <div class="list" id="list" role="table" aria-label="Mispronounced words"><!--__STATIC_LIST__--></div>
+  </section>
+
+  <section aria-labelledby="lp">  <!-- section holding the loop history cards -->
+    <h2 id="lp">Audit loop</h2>  <!-- heading of the audit loop history -->
+    <!-- how decisions are made, in one muted paragraph -->
+    <p class="note" style="margin:0 0 12px;max-width:72ch">The scoring rules were sealed before anything was measured. Each loop re-measures the whole narration. A change is promoted only if its score rises and the recognizer error rate does not get worse.</p>
+    <div class="loops" id="loops"><!--__STATIC_LOOPS__--></div>  <!-- loop cards: plain copy, then the script's -->
+  </section>
+
+  <section aria-labelledby="hw">  <!-- section explaining the checking method -->
+    <h2 id="hw">How it was checked</h2>  <!-- heading text of the method explanation section -->
+    <div class="cols">  <!-- grid holding the explanation cards -->
+      <!-- card: every spoken word has a time span and is scored -->
+      <div class="card"><h3>Every word tracked</h3><p>Every spoken word has a time span in the narration and is scored against the book text, chapter by chapter.</p></div>
+      <!-- card: the two offline recognizers and the rule that both must fail -->
+      <div class="card"><h3>Heard back by two listeners</h3><p>Two offline speech recognizers transcribe the narration: NeMo CTC on everything, and Parakeet TDT to confirm. A word counts as mispronounced only if both get it wrong in most of its occurrences.</p></div>
+      <!-- card: CMU dictionary comparison and heteronym roles -->
+      <div class="card"><h3>Dictionary and context</h3><p>The voice's phonemes are compared with the CMU pronouncing dictionary for stress and sounds. Words like &ldquo;close&rdquo;, &ldquo;use&rdquo; and &ldquo;record&rdquo; are checked against the role they play in their sentence.</p></div>
+      <!-- card: the third-formant check for an added r -->
+      <div class="card"><h3>Acoustic checks</h3><p>An r lowers the third formant (F3) of the voice from about 2,800 Hz to under 2,100 Hz, which catches an r that isn't in the spelling. Fixes are tried in their real sentences before they are used.</p></div>
+      <!-- card: fixes are tried in their real sentences before use -->
+      <div class="card"><h3>Fixes tried before use</h3><p>Each fix was voiced several times in its real sentences and heard back, alongside fresh takes of the old reading. Only fixes that did better were used.</p></div>
+      <!-- card: what the method cannot catch -->
+      <div class="card"><h3>Limits</h3><ul><li>Recognizers forgive stress and accent, so those come from the dictionary and acoustic checks.</li><li>Names often have more than one acceptable reading.</li><li>A human listen is still the final check.</li></ul></div>
+    </div>
+  </section>
+  <footer id="foot"><!--__STATIC_FOOT__--></footer>  <!-- credits line: plain copy, then the script's -->
+</div>
+
+<!-- Page script: renders everything from the embedded data. -->
+<script>
+// The report data. report.py replaces the placeholder comment and the null after it with the JSON from build():
+// rows, loops, first and last metrics, word and segment totals, heteronym counts.
+const D = /*__DATA__*/null;
+// category key -> chip and row label
+const CAT = {heard:"Heard wrong", r:"Added r", context:"Wrong reading in context", dictionary:"Stress / dictionary", kept:"Checked, kept"};
+const ST = {fixed:"Fixed", better:"Improved", listen:"Listen", kept:"Kept"};  // status key -> badge text
+const $ = s => document.querySelector(s);  // tiny querySelector helper returning the first match
+// fraction as a percentage with up to two decimals, trailing zeros removed (0.0258 gives 2.58%)
+const pct = x => (100 * x).toFixed(2).replace(/\.?0+$/, "") + "%";
+const fmt = n => n == null ? "-" : n.toLocaleString("en-US");  // thousands separators; null or undefined shows "-"
+
+// occurrences of every word that was actually wrong (kept rows excluded)
+const occ = D.rows.filter(r => r.status !== "kept").reduce((a, r) => a + r.n, 0);
+// occurrences in rows marked fixed or improved
+const fixedOcc = D.rows.filter(r => r.status === "fixed" || r.status === "better").reduce((a, r) => a + r.n, 0);
+// Intro paragraph: totals of words, distinct words and segments, then how many words or readings were wrong and where.
+$("#lede").innerHTML = "All " + fmt(D.words) + " spoken words (" + fmt(D.unique) + " different words, " + fmt(D.segments) +
+  // number of problem rows, kept rows excluded
+  " narration segments) were heard back and checked. " + D.rows.filter(r => r.status !== "kept").length +
+  // occurrence total, then a closing sentence on how fixes were tried
+  " words or readings were wrong in " + occ + " places. The fixes were tried, adopted when they did better, re-voiced and measured again.";
+// Summary tiles as [big value, caption] pairs; an arrow shows first measurement to last measurement.
+const stats = [
+  [fmt(D.words), "spoken words tracked"],  // total spoken words tracked in the narration
+  [occ, "mispronounced occurrences found"],  // wrong occurrences found across all rows
+  [fixedOcc, "occurrences fixed"],  // occurrences fixed or improved by the loop
+  // confirmed misheard words, before and after
+  [D.first.asr_confirmed_words + " → " + D.last.asr_confirmed_words, "words both recognizers misheard"],
+  // heteronym suspects, before and after
+  [D.het_first + " → " + D.het_last, "wrong readings in context (auto-detected)"],
+  // recognizer word error rate, before and after
+  [pct(D.first.asr_wer) + " → " + pct(D.last.asr_wer), "recognizer word error rate"],
+];
+// each tile is a bold value over a muted caption
+$("#stats").innerHTML = stats.map(([b, s]) => `<div class="stat"><b>${b}</b><span>${s}</span></div>`).join("");
+
+let cat = "all", q = "";  // current category filter ("all" or a key of CAT) and the search text
+// chips(): draw the filter buttons with their counts and the search box, then wire their events. It runs again after
+// every filter click so the pressed state updates; it reads and writes the cat and q globals.
+function chips() {
+  const counts = {all: D.rows.length};  // row counts per category, starting with the total
+  D.rows.forEach(r => counts[r.cat] = (counts[r.cat] || 0) + 1);  // count rows per category
+  // "all" plus every category that has rows, as toggle buttons
+  $("#chips").innerHTML = ["all", ...Object.keys(CAT)].filter(k => counts[k]).map(k =>
+    // aria-pressed marks the active filter; the small element shows the count
+    `<button class="chip" data-c="${k}" aria-pressed="${k === cat}">${k === "all" ? "All" : CAT[k]}<small>${counts[k]}</small></button>`).join("") +
+    // search box restoring the query (q goes in unescaped, so a double quote would end the attribute)
+    `<input type="search" id="q" placeholder="Find a word" aria-label="Find a word" value="${q}">`;
+  // clicking a chip selects its category, redraws the chips and refilters the list
+  $("#chips").querySelectorAll(".chip").forEach(b => b.onclick = () => { cat = b.dataset.c; chips(); list(); });
+  const qi = $("#q"); qi.oninput = () => { q = qi.value; list(); };  // typing filters the list live
+}
+// list(): draw the rows matching the category filter and the search text, as a six-column grid with a header row.
+// On narrow screens the CSS hides that header and labels each cell from its data-l attribute instead.
+function list() {
+  // rows of the chosen category whose word contains the query, ignoring case
+  const rows = D.rows.filter(r => (cat === "all" || r.cat === cat) && (!q || r.word.toLowerCase().includes(q.toLowerCase())));
+  // header row with the six column titles
+  const head = `<div class="row head" role="row"><div>Word</div><div>What was wrong</div><div>Cause</div><div>Fix</div><div>Result</div><div>Status</div></div>`;
+  // One grid row per problem word: word with count, chapters and category; what was wrong; cause and optional note; the
+  // fix with its phonemes; before and after; and the status badge. Values are inserted as HTML exactly as given.
+  $("#list").innerHTML = head + (rows.length ? rows.map(r => `<div class="row" role="row">
+    <div><div class="word">${r.word}</div><div class="sub">${r.n} time${r.n === 1 ? "" : "s"}${r.where.length ? " &middot; " + r.where.slice(0, 2).join("; ") : ""}</div><span class="cat">${CAT[r.cat]}</span></div>
+    <div data-l="What was wrong"><p>${r.problem}</p></div>
+    <div data-l="Cause"><p>${r.cause}</p>${r.note ? `<div class="note">${r.note}</div>` : ""}</div>
+    <div data-l="Fix"><p>${r.fix}${r.fix_ipa ? ` <span class="ipa">/${r.fix_ipa}/</span>` : ""}</p></div>
+    <div data-l="Result" class="ba"><span class="b">${r.before}</span><span class="a">${r.after}</span></div>
+    <div class="st"><span class="badge s-${r.status}">${ST[r.status]}</span></div></div>`).join("") : `<div class="empty">No words match.</div>`);  // badge coloured by status class; a "No words match." line when nothing is left
+}
+chips(); list();  // first render of the filters and the list
+
+// Loop history: one card per decision with its number, promote or veto, the change made, key metrics (score, word error
+// rate, misheard words, dictionary and context flags) and any veto reasons.
+$("#loops").innerHTML = D.loops.map(l => `<div class="loop"><div class="n">${l.loop}<small class="${l.decision}">${l.decision}</small></div>
+  <div><div><b>${l.change || ""}</b></div>
+  <div class="kv"><span>score <b>${l.score}</b></span><span>WER <b>${pct(l.rows.asr_wer)}</b></span><span>misheard words <b>${l.rows.asr_confirmed_words}</b></span><span>dictionary + context flags <b>${l.rows.lexicon_flagged_words}</b></span></div>
+  ${l.reasons.length ? `<ul>${l.reasons.map(x => `<li>${x}</li>`).join("")}</ul>` : ""}</div></div>`).join("");  // veto reasons as a bullet list, nothing for a promoted loop
+// credits: the voice, both recognizers, the dictionary and the formant tool
+$("#foot").textContent = "Voice: Piper en_US-ljspeech-high via speechkit-offline-neural-tt. Recognizers: sherpa-onnx NeMo CTC conformer (small) and Parakeet TDT 0.6B v2, both offline. Dictionary: CMUdict. Formants: Praat (parselmouth).";
+</script>

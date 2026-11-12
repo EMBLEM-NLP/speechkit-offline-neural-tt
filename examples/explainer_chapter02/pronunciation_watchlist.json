@@ -1,0 +1,32 @@
+{
+  "status": "REVIEW_PENDING",
+  "profile": "ljspeech-high",
+  "terms": [
+    "Blender",
+    "grandMA3",
+    "MA Lighting",
+    "Python",
+    "MCP",
+    "CLI",
+    "API",
+    "JSON",
+    "bpy",
+    "BLENDER_PATH",
+    "result",
+    "bounds",
+    "return code 139",
+    "linked data-block",
+    "BVH",
+    "UDIM",
+    "UV",
+    "NaN",
+    "SIGSEGV",
+    "Eevee",
+    "Cycles"
+  ],
+  "initial_explicit_rule": {
+    "display": "JSON",
+    "spoken": "Jason"
+  },
+  "note": "Native code_names readings plus one explicit JSON respelling. These are audition settings, not human approval."
+}

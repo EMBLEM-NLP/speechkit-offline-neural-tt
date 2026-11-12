@@ -23,3 +23,12 @@ RUNTIME/.venv/bin/python speechkit/src/voice.py synthesize --runtime RUNTIME \
 Exit code is nonzero on any failure. There is no fallback voice: a failed synthesis produces no audio rather than robotic audio.
 
 EMBLEM-NLP's separate Video Factory and OBC Study Orchestrator use exactly this contract; nothing else ties them to this repository.
+
+## The narration pipeline's export
+
+[`speechkit_narrate`](NARRATION.md) (in this repository) adds a second, chapter-level format in `out/narration/`:
+one audio file per chapter, `<slug>_ch-NN.words.json` (`word`, `start`, `end` in seconds, `sentence`) and a
+`manifest.json` with every file's SHA-256 and the same `NEURAL_AUDIO_GENERATED_REVIEW_PENDING` / `voiceApproval:
+PENDING` status. Consumers should verify the hashes and treat the narration as unapproved until a person has
+listened to it, exactly as for `speech.json`.
+

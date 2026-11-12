@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 EMBLEM-NLP
+# Build system (PEP 517 and 518): pip installs these tools in an isolated environment, then asks the backend to build
+# the package.
+[build-system]
+requires = ["setuptools>=68"]  # setuptools 68 or newer understands all of the pyproject-only metadata below
+build-backend = "setuptools.build_meta"
+
+# The narration pipeline that ships with SpeechKit. The voice itself (bootstrap.py, speechkit/) is not a Python
+# package: the pipeline finds it through the checkout this package sits in, or SPEECHKIT_CHECKOUT.
+[project]
+name = "speechkit-narrate"
+version = "1.2.0"  # follows SpeechKit 1.1.0: the narration pipeline is new in 1.2.0
+description = "Offline neural narration with word timings, a pronunciation audit and per-chapter export"
+readme = "docs/NARRATION.md"
+license = {text = "GPL-3.0-or-later"}
+authors = [{name = "EMBLEM-NLP"}]
+requires-python = ">=3.11"  # the pipeline; the voice runtime itself is CPython 3.13 on Linux x86-64
+# Libraries installed on every platform; requirements.txt lists the same set for a plain pip install -r.
+dependencies = [
+  "numpy",      # audio arithmetic for the export and the speak tool
+  "cmudict",    # CMU pronouncing dictionary for word checks and the pronunciation audit
+  "num2words",  # spells out numbers the way the voice should say them
+]
+
+[project.optional-dependencies]
+# the voice timing and the pronunciation audit: Linux side (native, or inside WSL on Windows)
+voice = ["onnx", "sherpa-onnx", "praat-parselmouth", "scipy"]
+# the MCP server (python -m speechkit_narrate mcp)
+mcp = ["mcp>=2.3"]
+# better glued-word checks when reading plain text
+text = ["wordfreq"]
+
+[project.urls]
+Homepage = "https://github.com/EMBLEM-NLP/speechkit-offline-neural-tt"
+
+# Console command created on install; typing speechkit-narrate runs speechkit_narrate.cli.main.
+[project.scripts]
+speechkit-narrate = "speechkit_narrate.cli:main"
+
+# Plug-in packages register here, e.g. in their own pyproject.toml:
+#   [project.entry-points."speechkit_narrate.plugins"]
+#   my_stages = "my_package.narration_stages"
+
+[tool.setuptools.packages.find]
+# ship speechkit_narrate and emblem_rsi with all their subpackages; tests stay out of the wheel
+include = ["speechkit_narrate*", "emblem_rsi*"]
+
+[tool.setuptools.package-data]
+speechkit_narrate = ["*/template/*", "asr-models.lock.json"]  # audit/template/report.html
+# measure.mjs, the rubric files, the vendored acorn parser with its licence and the code audit's tokenizer helpers
+emblem_rsi = ["js/*.mjs", "js/*", "js/vendor/*", "rubrics/*", "code/*.mjs", "code/*.ps1"]

@@ -1,0 +1,20 @@
+{
+  "schema": "emblem-rsi.rubric/1",
+  "name": "viscous-letters",
+  "about": "Measures the viscous-letters page: letters hold at rest, stay legible while shaken, ripples appear, and the page follows a sound signature.",
+  "min_gain": 0.005,
+  "metrics": {
+    "console_errors":        { "op": "max", "value": 0,    "gate": true,  "weight": 2 },
+    "layout_overflow_px":    { "op": "max", "value": 0,    "gate": true,  "weight": 1 },
+    "reduced_motion_ok":     { "op": "min", "value": 1,    "gate": true,  "weight": 1 },
+    "rest_iou_min":          { "op": "min", "value": 0.85, "gate": true,  "weight": 3 },
+    "vib_iou_min":           { "op": "min", "value": 0.55, "gate": false, "weight": 2 },
+    "vib_disp_ratio_min":    { "op": "min", "value": 1.4,  "gate": false, "weight": 2 },
+    "ripples_all_on":        { "op": "min", "value": 1,    "gate": false, "weight": 1 },
+    "signature_f0_err_hz":   { "op": "max", "value": 3,    "gate": true,  "weight": 2 },
+    "signature_amp_corr":    { "op": "min", "value": 0.5,  "gate": true,  "weight": 2 },
+    "frame_ms":              { "op": "max", "value": 40,   "gate": false, "weight": 1 }
+  },
+  "guards": ["console_errors", "rest_iou_min", "signature_f0_err_hz", "signature_amp_corr"],
+  "guard_slack": 0.02
+}
