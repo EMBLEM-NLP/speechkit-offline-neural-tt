@@ -216,6 +216,26 @@ class ExportIntegrity(_Scratch):
                 path.write_bytes(original)
         self.assertEqual(audio.manifest_issues(self.p), [])
 
+    def test_same_run_audit_refreshes_cached_export_without_revoicing(self):
+        reg = R.load(self.p)
+        reg.stages["audit"].run = lambda project, ctx: {"measurement": str(self.measurement()[0])}
+        reg.stages["audit"].platforms = ("any",)
+        state = {}
+        for name in ("script", "narrate", "export"):
+            R.record(self.p, reg.stages[name], state)
+        R.write_state(self.p, state)
+        planned = {step["stage"]: step for step in R.plan(self.p, reg, targets=["audit", "export"])}
+        self.assertEqual(planned["export"]["action"], "skip")
+        before = {path.name: sha256(path) for path in self.p.p("speech").glob("*.wav")}
+        with mock.patch.object(nar, "narrate", side_effect=AssertionError("unchanged narration reran")):
+            result = R.run(self.p, reg, targets=["audit", "export"], log=quiet)
+        self.assertEqual(result["ran"], ["audit", "export"])
+        self.assertEqual(before, {path.name: sha256(path) for path in self.p.p("speech").glob("*.wav")})
+        manifest = json.loads((self.out / "manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual(manifest["pronunciationAudit"], audio.audit_provenance(self.p))
+        self.assertEqual(manifest["pronunciationAudit"]["mode"], "measurement")
+        self.assertEqual(audio.manifest_issues(self.p), [])
+
     def test_stale_newer_measurement_cannot_replace_current_evidence(self):
         current, _, _ = self.measurement()
         newer, _, _ = self.measurement(2)
@@ -321,6 +341,88 @@ class PlannerIntegrity(_Scratch):
         with self.changed_source("audit/template/report.html"):
             changed = {name for name, st in stages.items() if st.impl != before[name]}
         self.assertEqual(changed, {"report"})
+
+    def test_runtime_recheck_preserves_execution_controls(self):
+        cases = [
+            ("changed", {}, False, True, True),
+            ("unchanged", {}, False, False, False),
+            ("explicit_skip", {"skip": ["consumer"]}, False, True, False),
+            ("satisfied", {}, True, True, False),
+            ("force_satisfied", {"force": ["producer", "consumer"]}, True, False, True),
+            ("force_all_with_skip", {"force": ["all"], "skip": ["consumer"]}, False, True, False),
+            ("only_producer", {"only": ["producer"]}, False, True, False),
+            ("from_consumer", {"from_stage": "consumer"}, False, False, True),
+        ]
+        for label, controls, satisfied, change, should_run in cases:
+            with self.subTest(case=label):
+                p = self.project("Hello.", name=label + ".txt")
+                source = p.root / "work" / "shared.txt"
+                output = p.root / "out" / "result.txt"
+                source.parent.mkdir(parents=True, exist_ok=True)
+                output.parent.mkdir(parents=True, exist_ok=True)
+                source.write_text("before", encoding="utf-8")
+                output.write_text("before", encoding="utf-8")
+                calls = []
+                def produce(project, ctx):
+                    source.write_text("after" if change else "before", encoding="utf-8")
+                def consume(project, ctx):
+                    calls.append(ctx.opt("marker"))
+                    output.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+                reg = R.Registry()
+                reg.add_stage(R.Stage("producer", run=produce, outputs=("work/shared.txt",)))
+                reg.add_stage(R.Stage("consumer", run=consume, inputs=("work/shared.txt",),
+                                      outputs=("out/result.txt",), options={"marker": {"default": "default"}},
+                                      satisfied=(lambda project: "externally satisfied") if satisfied else None))
+                options = {"consumer": {"marker": "preserved"}}
+                state = {}
+                R.record(p, reg.stages["consumer"], state, options=options)
+                R.write_state(p, state)
+                kwargs = {"force": ["producer"], **controls}
+                result = R.run(p, reg, options=options, log=quiet, **kwargs)
+                self.assertEqual("consumer" in result["ran"], should_run)
+                self.assertEqual(calls, ["preserved"] if should_run else [])
+                if label == "only_producer":
+                    self.assertEqual([s["stage"] for s in result["steps"]], ["producer"])
+
+    def test_runtime_recheck_updates_satisfied_hook_and_missing_outputs(self):
+        for label in ("satisfaction_removed", "output_deleted"):
+            with self.subTest(case=label):
+                p = self.project("Hello.", name=label + ".txt")
+                flag = p.root / "accepted"
+                output = p.root / "result.txt"
+                flag.write_text("accepted", encoding="utf-8")
+                output.write_text("old", encoding="utf-8")
+                def produce(project, ctx):
+                    (flag if label == "satisfaction_removed" else output).unlink()
+                def consume(project, ctx):
+                    output.write_text("new", encoding="utf-8")
+                reg = R.Registry()
+                reg.add_stage(R.Stage("producer", run=produce))
+                reg.add_stage(R.Stage("consumer", run=consume, outputs=(str(output),), inputs=(str(flag),),
+                                      satisfied=(lambda project: "accepted" if flag.exists() else None)
+                                      if label == "satisfaction_removed" else None))
+                state = {}
+                R.record(p, reg.stages["consumer"], state)
+                R.write_state(p, state)
+                result = R.run(p, reg, log=quiet)
+                self.assertEqual(result["ran"], ["producer", "consumer"])
+                self.assertEqual(output.read_text(encoding="utf-8"), "new")
+
+    def test_runtime_recheck_reports_newly_blocked_stage(self):
+        p = self.project("Hello.")
+        source = p.root / "source.txt"
+        source.write_text("before", encoding="utf-8")
+        reg = R.Registry()
+        reg.add_stage(R.Stage("producer", run=lambda project, ctx: source.write_text("after", encoding="utf-8")))
+        reg.add_stage(R.Stage("consumer", run=lambda project, ctx: self.fail("unsupported stage ran"),
+                              inputs=(str(source),), platforms=("unsupported-test-platform",)))
+        state = {}
+        R.record(p, reg.stages["consumer"], state)
+        R.write_state(p, state)
+        with mock.patch.dict(os.environ):
+            os.environ.pop("SPEECHKIT_DELEGATE", None)
+            with self.assertRaisesRegex(R.RegistryError, "cannot run here: consumer"):
+                R.run(p, reg, log=quiet)
 
     def test_missing_postcondition_is_failure_not_success(self):
         p = self.project("Hello.")
