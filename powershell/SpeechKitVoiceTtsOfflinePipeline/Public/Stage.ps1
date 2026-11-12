@@ -3,7 +3,7 @@
 # Public command: lists the pipeline stages from the registry (`python -m speechkit_narrate stages`): what each needs, reads and
 # writes, its platforms, whether it runs here, is delegated or is blocked, and its options. -Name filters by name
 # (wildcards allowed), -Project includes a project's own plug-ins, -Plugin loads extra plug-ins for this call.
-# Returns SpeechKitNarrate.Stage objects in run order. Read-only.
+# Returns SpeechKitVoiceTtsOfflinePipeline.Stage objects in run order. Read-only.
 function Get-NarrationStage {
     <#
     .SYNOPSIS
@@ -39,10 +39,10 @@ function Get-NarrationStage {
     The options the narrate stage takes (they are also parameters of Invoke-NarrationStage -Name narrate).
 
     .OUTPUTS
-    SpeechKitNarrate.Stage
+    SpeechKitVoiceTtsOfflinePipeline.Stage
     #>
     [CmdletBinding()]
-    [OutputType('SpeechKitNarrate.Stage')]  # declares the output type, so Get-Help and property completion know what comes back
+    [OutputType('SpeechKitVoiceTtsOfflinePipeline.Stage')]  # declares the output type, so Get-Help and property completion know what comes back
     param(  # the command's parameters: -Name, -Project and -Plugin
         [Parameter(Position = 0)]  # -Name may be given first without its name
         [SupportsWildcards()]  # tells Get-Help and tab completion that wildcards work here
@@ -68,7 +68,7 @@ function Get-NarrationStage {
                     foreach ($n in $Name) { if ([string]$s.name -like $n) { $hit = $true } }
                     if (-not $hit) { continue }  # no pattern matched: leave it out
                 }
-                # typed SpeechKitNarrate.Stage with Where computed from the registry's delegate
+                # typed SpeechKitVoiceTtsOfflinePipeline.Stage with Where computed from the registry's delegate
                 ConvertTo-NarrationStage -Stage $s -Registry $reg -Project $proj
             }
         }
@@ -79,7 +79,7 @@ function Get-NarrationStage {
 # Public command: runs one stage of a project now, even if it is up to date, after anything stale it needs (like
 # make); -Only runs it alone. -Path is the project, -Name the stage (tab-completes), -Option the stage's options as a
 # hashtable, -AcceptDraft skips the review stop. Once -Name is known, each stage option also becomes a parameter of
-# its own (dynamic parameters such as -Workers or -Format). Supports -WhatIf. Returns a SpeechKitNarrate.StageResult.
+# its own (dynamic parameters such as -Workers or -Format). Supports -WhatIf. Returns a SpeechKitVoiceTtsOfflinePipeline.StageResult.
 function Invoke-NarrationStage {
     <#
     .SYNOPSIS
@@ -124,11 +124,11 @@ function Invoke-NarrationStage {
     Invoke-NarrationStage .\projects\my-book narrate -Option @{ workers = 4 }
 
     .OUTPUTS
-    SpeechKitNarrate.StageResult
+    SpeechKitVoiceTtsOfflinePipeline.StageResult
     #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Low')]
-    # declares SpeechKitNarrate.StageResult as the output type for help and property completion
-    [OutputType('SpeechKitNarrate.StageResult')]
+    # declares SpeechKitVoiceTtsOfflinePipeline.StageResult as the output type for help and property completion
+    [OutputType('SpeechKitVoiceTtsOfflinePipeline.StageResult')]
     param(  # the static parameters; the stage's own options are added by dynamicparam below
         # required project folder, first position, bindable from piped objects
         [Parameter(Mandatory = $true, Position = 0, ValueFromPipelineByPropertyName = $true)]
@@ -173,7 +173,7 @@ function Invoke-NarrationStage {
             $dict  # hand the parameters to PowerShell
         }
         # no dynamic parameters this time; explain why under -Debug
-        catch { Write-Debug "speechkit-narrate: no dynamic parameters for stage $($PSBoundParameters['Name']): $_" }
+        catch { Write-Debug "speechkit-voice-tts-offline-pipeline: no dynamic parameters for stage $($PSBoundParameters['Name']): $_" }
     }
     process {  # once per piped project
         try {  # any failure becomes this command's terminating error
@@ -211,9 +211,9 @@ function Invoke-NarrationStage {
             # options as JSON keyed by this stage's name
             if ($opts.Count) { $cliArgs += "--options=$(ConvertTo-NarrationJson @{ $Name = $opts })" }
             # run, with the progress bar named after the stage
-            $r = Invoke-NarrationCli -Arguments $cliArgs -Activity "speechkit-narrate $Name" -Target $proj
+            $r = Invoke-NarrationCli -Arguments $cliArgs -Activity "speechkit-voice-tts-offline-pipeline $Name" -Target $proj
             # warn when the run stopped early (for example at the review stop before this stage)
-            if ($r.stopped) { Write-Warning "speechkit-narrate stopped after $($r.stopped.stage): $($r.stopped.why)" }
+            if ($r.stopped) { Write-Warning "speechkit-voice-tts-offline-pipeline stopped after $($r.stopped.stage): $($r.stopped.why)" }
             # the step for the requested stage
             $step = @($r.steps | Where-Object { $_.stage -eq $Name }) | Select-Object -First 1
             $props = [ordered]@{  # the result properties, filled in below
@@ -232,8 +232,8 @@ function Invoke-NarrationStage {
                 $props.Seconds = $step.seconds  # how many seconds the stage took, or $null when it did not run
                 $props.Result = $step.result  # the stage's own result data
             }
-            # emit the result as a typed SpeechKitNarrate.StageResult object
-            New-NarrationObject -TypeName 'SpeechKitNarrate.StageResult' -Property $props
+            # emit the result as a typed SpeechKitVoiceTtsOfflinePipeline.StageResult object
+            New-NarrationObject -TypeName 'SpeechKitVoiceTtsOfflinePipeline.StageResult' -Property $props
         }
         catch { $PSCmdlet.ThrowTerminatingError($_) }  # rethrow as this command's error
     }

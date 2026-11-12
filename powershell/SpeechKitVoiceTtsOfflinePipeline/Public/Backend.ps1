@@ -2,12 +2,12 @@
 # Copyright (C) 2026 EMBLEM-NLP
 # Public command: reports how the module will run the toolkit (configured and effective backend, platform, mode,
 # toolkit folder, Python path and version, WSL distribution, launcher, WSL python and the delegation command).
-# -NoProbe skips starting Python and WSL, leaving the resolved fields empty. Returns one SpeechKitNarrate.Backend
+# -NoProbe skips starting Python and WSL, leaving the resolved fields empty. Returns one SpeechKitVoiceTtsOfflinePipeline.Backend
 # object. Read-only apart from filling the module's caches.
 function Get-NarrationBackend {
     <#
     .SYNOPSIS
-    Shows how the module runs speechkit-narrate: backend, Python, WSL distribution and delegation.
+    Shows how the module runs speechkit-voice-tts-offline-pipeline: backend, Python, WSL distribution and delegation.
 
     .DESCRIPTION
     Backends:
@@ -19,9 +19,9 @@ function Get-NarrationBackend {
               tool are delegated to WSL: the module sets SPEECHKIT_DELEGATE for the Python side.
 
     Modes (where the speechkit_narrate Python package comes from):
-      Source     the module sits in the speechkit-offline-neural-tt checkout, which is put on PYTHONPATH
+      Source     the module sits in the speechkit-voice-tts-offline-pipeline checkout, which is put on PYTHONPATH
                  (Mode = Source, ToolkitRoot set).
-      Installed  no checkout is configured; the chosen Python must have the speechkit-narrate package installed.
+      Installed  no checkout is configured; the chosen Python must have the speechkit-voice-tts-offline-pipeline package installed.
 
     .PARAMETER NoProbe
     Do not start Python or WSL to fill in the resolved paths (quick; those fields stay empty).
@@ -37,11 +37,11 @@ function Get-NarrationBackend {
     The full path of the Python that runs the toolkit.
 
     .OUTPUTS
-    SpeechKitNarrate.Backend
+    SpeechKitVoiceTtsOfflinePipeline.Backend
     #>
     [CmdletBinding()]  # advanced function: gains -Verbose, -Debug and the other common parameters
     # declares the object type for Get-Help and tab completion of the result's properties
-    [OutputType('SpeechKitNarrate.Backend')]
+    [OutputType('SpeechKitVoiceTtsOfflinePipeline.Backend')]
     param([switch]$NoProbe)  # -NoProbe reports the settings without starting Python or WSL to look things up
 
     $py = $null; $pyVersion = $null; $pyError = $null  # resolved Python path, its version and any error from finding it
@@ -66,7 +66,7 @@ function Get-NarrationBackend {
     $platform = 'Linux'  # assume Linux unless the checks on the next line say Windows or macOS
     # Windows from the module's own check; $IsMacOS exists only in PowerShell 6 and later
     if ($script:OnWindows) { $platform = 'Windows' } elseif ($PSVersionTable.PSVersion.Major -ge 6 -and $IsMacOS) { $platform = 'MacOS' }
-    New-NarrationObject -TypeName 'SpeechKitNarrate.Backend' -Property ([ordered]@{  # build the Backend object
+    New-NarrationObject -TypeName 'SpeechKitVoiceTtsOfflinePipeline.Backend' -Property ([ordered]@{  # build the Backend object
             Backend        = $script:Config.Backend  # the configured choice: Auto, Native or Wsl
             Effective      = $effective  # how Python is actually launched
             Platform       = $platform  # Windows, Linux or MacOS
@@ -90,12 +90,12 @@ function Get-NarrationBackend {
 # one setting: -Backend (Auto, Native, Wsl), -Distribution, -Python, -WslPython, -ToolkitRoot (checked to contain
 # the speechkit_narrate package) and -WslEnvironment (hashtable). Every value is validated before any setting changes,
 # so a refused call leaves the session exactly as it was; any accepted call, even one with no settings, then clears
-# the caches. Supports -WhatIf and -Confirm. -PassThru returns the resulting SpeechKitNarrate.Backend; otherwise
+# the caches. Supports -WhatIf and -Confirm. -PassThru returns the resulting SpeechKitVoiceTtsOfflinePipeline.Backend; otherwise
 # nothing is returned.
 function Set-NarrationBackend {
     <#
     .SYNOPSIS
-    Chooses how the module runs speechkit-narrate (for this PowerShell session).
+    Chooses how the module runs speechkit-voice-tts-offline-pipeline (for this PowerShell session).
 
     .DESCRIPTION
     Auto (the default) runs Python natively and, on Windows, sends the Linux-only stages to WSL. Native never
@@ -121,15 +121,15 @@ function Set-NarrationBackend {
     it, else python3).
 
     .PARAMETER ToolkitRoot
-    The speechkit-offline-neural-tt checkout, the folder that contains the 'speechkit_narrate' Python package
+    The speechkit-voice-tts-offline-pipeline checkout, the folder that contains the 'speechkit_narrate' Python package
     (default: two folders above the module). An empty value ('') switches to Installed mode: the chosen Python must
-    then have the speechkit-narrate package installed, and no folder is put on PYTHONPATH.
+    then have the speechkit-voice-tts-offline-pipeline package installed, and no folder is put on PYTHONPATH.
 
     .PARAMETER WslEnvironment
     Extra environment variables for commands run inside WSL, e.g. @{ SPEECHKIT_ASR_MODELS = '/home/me/models' }.
 
     .PARAMETER PassThru
-    Return the resulting SpeechKitNarrate.Backend object.
+    Return the resulting SpeechKitVoiceTtsOfflinePipeline.Backend object.
 
     .EXAMPLE
     Set-NarrationBackend -Backend Auto -Distribution Ubuntu-24.04
@@ -142,11 +142,11 @@ function Set-NarrationBackend {
     Runs the whole toolkit inside WSL and shows the resulting configuration.
 
     .EXAMPLE
-    Set-NarrationBackend -Python 'C:\Python313\python.exe' -ToolkitRoot 'D:\src\speechkit-offline-neural-tt'
+    Set-NarrationBackend -Python 'C:\Python313\python.exe' -ToolkitRoot 'D:\src\speechkit-voice-tts-offline-pipeline'
     #>
     # SupportsShouldProcess adds -WhatIf and -Confirm; Low impact means no prompt unless -Confirm is given
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Low')]
-    [OutputType('SpeechKitNarrate.Backend')]  # type returned with -PassThru
+    [OutputType('SpeechKitVoiceTtsOfflinePipeline.Backend')]  # type returned with -PassThru
     param(  # the parameters (each one optional)
         [Parameter(Position = 0)]  # the backend can be given without its name, as the first argument
         [ValidateSet('Auto', 'Native', 'Wsl')]  # only the three known backends are accepted, with tab completion
@@ -184,7 +184,7 @@ function Set-NarrationBackend {
     }
     if (-not $changes) { $changes = @('(caches only)') }  # a bare call still clears the caches, so say that
     # -WhatIf prints the message and stops here; -Confirm asks first
-    if (-not $PSCmdlet.ShouldProcess('speechkit-narrate backend', "Set $($changes -join ', ')")) { return }
+    if (-not $PSCmdlet.ShouldProcess('speechkit-voice-tts-offline-pipeline backend', "Set $($changes -join ', ')")) { return }
     # 2. Apply: nothing below can fail, so the settings change together.
     if ($PSBoundParameters.ContainsKey('Backend')) {  # a backend was given
         # stored with standard casing (ValidateSet already accepted any casing)

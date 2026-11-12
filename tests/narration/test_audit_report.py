@@ -20,7 +20,7 @@ import tempfile  # a scratch folder for the built page
 import unittest  # the built-in test framework: TestCase classes and assertions
 from pathlib import Path  # builds the repository root path and the page's file path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))  # the repository root, so `speechkit-narrate` can be imported
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))  # the repository root, so `speechkit-voice-tts-offline-pipeline` can be imported
 from speechkit_narrate.audit import report  # noqa: E402  the module under test
 
 # Playwright checks run unless SPEECHKIT_SKIP_BROWSER is set to 1

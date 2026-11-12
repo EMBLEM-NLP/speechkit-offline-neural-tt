@@ -55,6 +55,8 @@ FIX = {
     "ssh": "S S H", "tls": "T L S", "ca": "C A", "cdn": "C D N", "dns": "D N S", "smb": "S M B", "nfs": "N F S",
     "vm": "V M", "vms": "V Ms", "lts": "L T S", "ram": "ram", "ssd": "S S D", "hdd": "H D D", "raid": "raid",
     "speechkit": "speech kit", "speechkit-narrate": "speech kit narrate", "speechkit_narrate": "speech kit narrate", "bookcast": "book cast", "ch": "C H",
+    "speechkit-voice-tts-offline-pipeline": "speech kit voice T T S offline pipeline",
+    "speechkit_voice_tts_offline_pipeline": "speech kit voice T T S offline pipeline",
     "cmd": "command", "bg": "background", "th": "T H", "impl": "imple", "src": "source", "dst": "destination",
     "og": "O G", "ctx": "context", "getattr": "get atter", "setattr": "set atter", "getitem": "get item",
     "setitem": "set item", "h1": "H 1", "h2": "H 2", "h3": "H 3", "pyproject": "pie project",

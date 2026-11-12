@@ -1,7 +1,7 @@
 """Stands in for wsl.exe in tests: `fake_wsl.py wslpath -a PATH` maps the path (adds FAKE_WSL_PREFIX), `wslpath -w`
 maps it back, anything else is run as-is."""
 # Test stand-in for wsl.exe. Both test suites put "python fake_wsl.py" where a WSL launcher goes: test_registry.py
-# through SPEECHKIT_DELEGATE (the Python side's delegate prefix) and SpeechKit Narrate.Tests.ps1 through $env:SPEECHKIT_WSL.
+# through SPEECHKIT_DELEGATE (the Python side's delegate prefix) and SpeechKit Voice TTS Offline Pipeline.Tests.ps1 through $env:SPEECHKIT_WSL.
 # It behaves like `wsl.exe --exec`: whatever follows the script name is a Linux program and its arguments, run
 # directly with no shell, so the toolkit's delegation command lines can be exercised on Linux without WSL.
 import os  # reads FAKE_WSL_PREFIX and FAKE_WSL_LOG from the environment

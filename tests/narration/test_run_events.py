@@ -14,7 +14,7 @@ import tempfile  # a scratch folder per test
 import unittest  # the built-in test framework: TestCase classes and assertions
 from pathlib import Path  # paths of the scratch project and its outputs
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))  # the repository root, so `speechkit-narrate` can be imported
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))  # the repository root, so `speechkit-voice-tts-offline-pipeline` can be imported
 from speechkit_narrate import registry as R  # noqa: E402  the module under test
 from speechkit_narrate.project import create  # noqa: E402  makes a minimal project folder
 
@@ -49,7 +49,7 @@ class FailedStageAndEvents(unittest.TestCase):
 
     # A scratch project for each test: create() needs an input file, so a two-line text file is written first.
     def setUp(self):
-        self.tmp = Path(tempfile.mkdtemp(prefix="speechkit-narrate-events-"))  # removed in tearDown
+        self.tmp = Path(tempfile.mkdtemp(prefix="speechkit-voice-tts-offline-pipeline-events-"))  # removed in tearDown
         src = self.tmp / "book.txt"  # a tiny input; the stub stages never read it
         src.write_text("Title\n\nOne line of text.\n", encoding="utf-8")  # UTF-8, as everywhere in the toolkit
         self.p = create(self.tmp / "project", src, title="Events")  # a real project folder with project.json

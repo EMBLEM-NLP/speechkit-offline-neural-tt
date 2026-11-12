@@ -25,7 +25,7 @@ from pathlib import Path  # paths for fixtures, project folders and log files
 
 # The repository root (this file is tests/narration/test_mcp.py); it becomes the server's working folder and PYTHONPATH.
 REPO = Path(__file__).resolve().parents[2]  # resolve() makes it absolute whatever the current folder is
-sys.path.insert(0, str(REPO))  # import this checkout's speechkit-narrate package, not an installed copy
+sys.path.insert(0, str(REPO))  # import this checkout's speechkit-voice-tts-offline-pipeline package, not an installed copy
 
 # The MCP SDK is optional for the toolkit. Without it (or with an SDK older than 2.3) every server test is
 # skipped instead of failing at import.
@@ -210,7 +210,7 @@ class _ServerCase(unittest.TestCase):  # has no test methods itself, so unittest
     # Makes the class's temporary folder, lets the subclass prepare it, then starts the server.
     def setUpClass(cls):
         # a unique folder per class under the system temp directory
-        cls.tmp = Path(tempfile.mkdtemp(prefix="speechkit-narrate-mcp-"))
+        cls.tmp = Path(tempfile.mkdtemp(prefix="speechkit-voice-tts-offline-pipeline-mcp-"))
         cls.prepare(cls.tmp)  # hook: PluginServer writes its live plug-in here
         cls.server = McpServer(cls.tmp, cls.plugins, cls.modern)  # the subclass's plugins and protocol choice apply
 
@@ -283,7 +283,7 @@ class ServerBasics(_ServerCase):
     def test_initialize(self):
         info = self.server.info
         self.assertIn(info.protocol_version, HANDSHAKE_PROTOCOL_VERSIONS)
-        self.assertEqual(info.server_info.name, "speechkit-narrate")
+        self.assertEqual(info.server_info.name, "speechkit-voice-tts-offline-pipeline")
         self.assertIsNotNone(info.capabilities.tools)
         self.assertIn("narrate_describe", info.instructions)
         self.assertIn("job_status", info.instructions)
@@ -445,7 +445,7 @@ class ServerBasics(_ServerCase):
     # unknown tool name.
     def test_errors(self):
         d = self.call("project_status", {"project": str(self.tmp / "no-such-project")}, error=True)
-        self.assertIn("not a speechkit-narrate project", d["error"])
+        self.assertIn("not a speechkit-voice-tts-offline-pipeline project", d["error"])
         self.call("project_plan", {"project": str(self.tmp)}, error=True)          # a folder, but no project.json
         self.call("stage_script", {"project": str(self.tmp), "no_such_option": 1}, error=True)
         d = self.call("project_new", {"project": str(self.tmp / "x")}, error=True)      # input missing
@@ -560,7 +560,7 @@ class ModernProtocol(_ServerCase):
         d = self.call("narrate_describe")
         self.assertIn("export", [s["name"] for s in d["stages"]])
         d = self.call("project_status", {"project": str(self.tmp / "missing")}, error=True)
-        self.assertIn("not a speechkit-narrate project", d["error"])
+        self.assertIn("not a speechkit-voice-tts-offline-pipeline project", d["error"])
 
 
 # Shutdown: jobs must not outlive the server. A separate test class because it stops its own server mid-test.
@@ -568,7 +568,7 @@ class ModernProtocol(_ServerCase):
 class Shutdown(unittest.TestCase):
     # Proves that closing the server stops a job it started: a running nap job's process is gone within 10 s.
     def test_jobs_stop_with_the_server(self):
-        with tempfile.TemporaryDirectory(prefix="speechkit-narrate-mcp-") as td:
+        with tempfile.TemporaryDirectory(prefix="speechkit-voice-tts-offline-pipeline-mcp-") as td:
             tmp = Path(td)
             server = McpServer(tmp, plugins=(str(NAP_PLUGIN),))
             try:

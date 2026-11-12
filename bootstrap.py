@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 EMBLEM-NLP
-"""speechkit-offline-neural-tt: standalone offline neural TTS. Commands: fetch, verify, install."""
+"""speechkit-voice-tts-offline-pipeline: standalone offline neural TTS. Commands: fetch, verify, install."""
 from __future__ import annotations  # Keep type annotations independent of declaration order.
 import argparse  # Parse explicit verify/install operations.
 import hashlib  # Identify every immutable input and generated WAV.
@@ -18,7 +18,7 @@ from pathlib import Path, PurePosixPath  # Resolve paths relative to this distri
 
 ROOT = Path(__file__).resolve().parent  # Allow execution from any working directory.
 RUNTIME = 'EMBLEM-NLP_Offline_Neural_Runtime_Linux_Py313.zip'  # Include the actual heavy payload.
-REPO = 'EMBLEM-NLP/speechkit-offline-neural-tt'  # GitHub home of this distribution.
+REPO = 'EMBLEM-NLP/speechkit-voice-tts-offline-pipeline'  # GitHub home of this distribution.
 DIST_VERSION = '1.1.0'  # Repository packaging version; inner component versions are unchanged.
 RELEASE_URL = f'https://github.com/{REPO}/releases/download/v{DIST_VERSION}/{RUNTIME}'  # Runtime exceeds git's 100 MB file limit.
 PINS = {  # Independent expected identity prevents accepting an accidental replacement.

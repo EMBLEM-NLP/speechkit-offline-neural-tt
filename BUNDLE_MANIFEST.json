@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "distributionVersion": "1.1.0",
-  "repository": "EMBLEM-NLP/speechkit-offline-neural-tt",
+  "repository": "EMBLEM-NLP/speechkit-voice-tts-offline-pipeline",
   "distributionKind": "STANDALONE_OFFLINE_NEURAL_TTS",
   "license": "GPL-3.0-or-later",
   "components": {

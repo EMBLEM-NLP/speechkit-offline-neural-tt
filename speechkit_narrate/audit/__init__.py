@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 EMBLEM-NLP
-"""Pronunciation audit for a speechkit-narrate project: the emblem-rsi sealed-rubric loop, pointed at this project.
+"""Pronunciation audit for a speechkit-voice-tts-offline-pipeline project: the emblem-rsi sealed-rubric loop, pointed at this project.
 
     configure(project)   point emblem_rsi.pron at the project (env vars), return the modules
     run_dir(project)     work/rsi/<name>, sealed on first use
@@ -68,7 +68,7 @@ def configure(project):
         # exactly one stage each (no prerequisites): the loop itself decides what is rebuilt and when
         "EMBLEM_REBUILD_CMD": json.dumps([*trusted_prefix, sys.executable, "-m", "speechkit_narrate", "run", root, "--only", "script",
                                           "--force", "script"]),
-        # re-voice command: `speechkit-narrate run <root> --only narrate --force narrate`, which re-voices segments whose text
+        # re-voice command: `speechkit-voice-tts-offline-pipeline run <root> --only narrate --force narrate`, which re-voices segments whose text
         # changed
         "EMBLEM_REVOICE_CMD": json.dumps([*trusted_prefix, sys.executable, "-m", "speechkit_narrate", "run", root, "--only", "narrate",
                                           "--force", "narrate"]),
@@ -152,7 +152,7 @@ def latest(project, name: str = "pron") -> dict:
     ms = sorted(d.glob("measure-*.json"))  # measurement files in order (measure-001.json, measure-002.json ...)
     if not ms:  # no measurement files exist in the run folder yet
         # the message names the command that makes a first measurement
-        raise RuntimeError("no measurement yet: run `speechkit-narrate audit` first")
+        raise RuntimeError("no measurement yet: run `speechkit-voice-tts-offline-pipeline audit` first")
     m = json.loads(ms[-1].read_text(encoding="utf-8"))  # parsed newest measurement JSON (metrics, inputs, hashes)
     md = d / ms[-1].stem  # the folder with that measurement's probe outputs (measure-NNN beside measure-NNN.json)
     out = {"measurement": m, "path": ms[-1]}  # start the result with the measurement and its file path

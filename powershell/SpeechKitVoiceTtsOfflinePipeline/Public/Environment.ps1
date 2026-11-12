@@ -2,7 +2,7 @@
 # Copyright (C) 2026 EMBLEM-NLP
 # Public command: checks everything the narration needs by running `python -m speechkit_narrate doctor` on the native
 # side and, in Auto mode on Windows, inside WSL as well. -Quiet returns a single $true/$false; -SkipWsl leaves out the
-# WSL side. Returns one SpeechKitNarrate.Check object per check (Ok, Where, Name, Detail). Starts Python and possibly
+# WSL side. Returns one SpeechKitVoiceTtsOfflinePipeline.Check object per check (Ok, Where, Name, Detail). Starts Python and possibly
 # WSL; changes nothing.
 function Test-NarrationEnvironment {
     <#
@@ -28,14 +28,14 @@ function Test-NarrationEnvironment {
     if (-not (Test-NarrationEnvironment -Quiet)) { Install-NarrationDependency -WhatIf }
 
     .OUTPUTS
-    SpeechKitNarrate.Check
+    SpeechKitVoiceTtsOfflinePipeline.Check
     #>
     [CmdletBinding()]  # advanced function with the common parameters
-    [OutputType('SpeechKitNarrate.Check', [bool])]  # normally SpeechKitNarrate.Check rows, a boolean with -Quiet
+    [OutputType('SpeechKitVoiceTtsOfflinePipeline.Check', [bool])]  # normally SpeechKitVoiceTtsOfflinePipeline.Check rows, a boolean with -Quiet
     # -Quiet collapses the rows into one boolean; -SkipWsl leaves out the WSL-side doctor run
     param([switch]$Quiet, [switch]$SkipWsl)
     try {  # any unexpected failure is rethrown once at the bottom
-        # growable list of SpeechKitNarrate.Check rows from every side that is checked
+        # growable list of SpeechKitVoiceTtsOfflinePipeline.Check rows from every side that is checked
         $rows = New-Object System.Collections.Generic.List[object]
         $effective = Get-NarrationEffectiveBackend  # Native or Wsl for the current setting
         $here = 'native'  # label for the side the main checks run on
@@ -44,11 +44,11 @@ function Test-NarrationEnvironment {
             try {  # finding Python throws when there is none
                 $py = Resolve-NarrationPython  # locate the native Python
                 # a passing row with its path and version
-                $rows.Add((New-NarrationObject -TypeName 'SpeechKitNarrate.Check' -Property ([ordered]@{ Ok = $true; Where = $here; Name = 'python'; Detail = "$($py.Executable) ($($py.Version))" })))
+                $rows.Add((New-NarrationObject -TypeName 'SpeechKitVoiceTtsOfflinePipeline.Check' -Property ([ordered]@{ Ok = $true; Where = $here; Name = 'python'; Detail = "$($py.Executable) ($($py.Version))" })))
             }
             catch {  # no Python: record the failure instead of stopping
                 # a failing row carrying the reason
-                $rows.Add((New-NarrationObject -TypeName 'SpeechKitNarrate.Check' -Property ([ordered]@{ Ok = $false; Where = $here; Name = 'python'; Detail = $_.Exception.Message })))
+                $rows.Add((New-NarrationObject -TypeName 'SpeechKitVoiceTtsOfflinePipeline.Check' -Property ([ordered]@{ Ok = $false; Where = $here; Name = 'python'; Detail = $_.Exception.Message })))
             }
         }
         # pairs of (row label, backend to run doctor with); the leading comma keeps the pair as one element
@@ -58,7 +58,7 @@ function Test-NarrationEnvironment {
             if (Test-NarrationWslAvailable) { $sets += , @('wsl', 'Wsl') }  # WSL exists: run doctor there as well
             else {  # no WSL at all
                 # one failing row explains that the Linux-only stages cannot run
-                $rows.Add((New-NarrationObject -TypeName 'SpeechKitNarrate.Check' -Property ([ordered]@{ Ok = $false; Where = 'wsl'; Name = 'wsl.exe'; Detail = 'WSL is not installed (Install-NarrationDependency -Wsl); narration and the audit cannot run' })))
+                $rows.Add((New-NarrationObject -TypeName 'SpeechKitVoiceTtsOfflinePipeline.Check' -Property ([ordered]@{ Ok = $false; Where = 'wsl'; Name = 'wsl.exe'; Detail = 'WSL is not installed (Install-NarrationDependency -Wsl); narration and the audit cannot run' })))
             }
         }
         foreach ($set in $sets) {  # run doctor for each side
@@ -67,17 +67,17 @@ function Test-NarrationEnvironment {
             try {  # a broken side must not hide the other side's rows
                 # -AllowFailure because doctor reports ok = false whenever anything is missing, and those rows are the
                 # point
-                $r = Invoke-NarrationCli -Arguments @('doctor') -Backend $set[1] -AllowFailure -Activity 'speechkit-narrate doctor'
+                $r = Invoke-NarrationCli -Arguments @('doctor') -Backend $set[1] -AllowFailure -Activity 'speechkit-voice-tts-offline-pipeline doctor'
                 foreach ($c in @($r.checks)) {  # each check Python reported
                     # @() turns a missing checks list into one $null element, which must not become a row
                     if ($null -eq $c) { continue }
                     # one row per check, labelled with the side it ran on
-                    $rows.Add((New-NarrationObject -TypeName 'SpeechKitNarrate.Check' -Property ([ordered]@{ Ok = [bool]$c.ok; Where = $set[0]; Name = [string]$c.name; Detail = [string]$c.detail })))
+                    $rows.Add((New-NarrationObject -TypeName 'SpeechKitVoiceTtsOfflinePipeline.Check' -Property ([ordered]@{ Ok = [bool]$c.ok; Where = $set[0]; Name = [string]$c.name; Detail = [string]$c.detail })))
                 }
             }
             catch {  # doctor itself could not run (for example WSL failed to start)
                 # one failing row with the reason
-                $rows.Add((New-NarrationObject -TypeName 'SpeechKitNarrate.Check' -Property ([ordered]@{ Ok = $false; Where = $set[0]; Name = 'speechkit-narrate doctor'; Detail = $_.Exception.Message })))
+                $rows.Add((New-NarrationObject -TypeName 'SpeechKitVoiceTtsOfflinePipeline.Check' -Property ([ordered]@{ Ok = $false; Where = $set[0]; Name = 'speechkit-voice-tts-offline-pipeline doctor'; Detail = $_.Exception.Message })))
             }
         }
         if ($Quiet) { return (-not ($rows | Where-Object { -not $_.Ok })) }  # -Quiet: true only when no row failed
@@ -86,16 +86,16 @@ function Test-NarrationEnvironment {
     catch { $PSCmdlet.ThrowTerminatingError($_) }  # rethrow as this command's terminating error
 }
 
-# Public command: installs what speechkit-narrate needs, one step at a time, each step asking ShouldProcess so -WhatIf
+# Public command: installs what speechkit-voice-tts-offline-pipeline needs, one step at a time, each step asking ShouldProcess so -WhatIf
 # lists every command without running it. -Component limits the groups, -Wsl adds the WSL groups, -Distribution names
 # the WSL distribution (default Ubuntu-24.04). Programs run attached to this console (winget, pip, wsl.exe).
-# Outputs one SpeechKitNarrate.InstallStep per planned step (Step, Status, ExitCode, Command). Status is ok, present
+# Outputs one SpeechKitVoiceTtsOfflinePipeline.InstallStep per planned step (Step, Status, ExitCode, Command). Status is ok, present
 # (already installed), failed, or skipped (declined under -Confirm, or not run because of -WhatIf). A failed step
 # writes a non-terminating error and the remaining steps still run.
 function Install-NarrationDependency {
     <#
     .SYNOPSIS
-    Installs what speechkit-narrate needs: Python, ffmpeg, the Python packages, and optionally WSL with the voice runtime.
+    Installs what speechkit-voice-tts-offline-pipeline needs: Python, ffmpeg, the Python packages, and optionally WSL with the voice runtime.
 
     .DESCRIPTION
     Never runs on import; every step asks ShouldProcess, so -WhatIf lists the exact commands and runs nothing (each
@@ -145,11 +145,11 @@ function Install-NarrationDependency {
     Only the Python packages, confirming each step.
 
     .OUTPUTS
-    SpeechKitNarrate.InstallStep
+    SpeechKitVoiceTtsOfflinePipeline.InstallStep
     #>
     # -WhatIf and -Confirm; Medium impact, so -Confirm is needed to be asked
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
-    [OutputType('SpeechKitNarrate.InstallStep')]  # type of the per-step result objects
+    [OutputType('SpeechKitVoiceTtsOfflinePipeline.InstallStep')]  # type of the per-step result objects
     param(  # Component, Wsl and Distribution, all optional; ShouldProcess adds -WhatIf and -Confirm
         # only known component names, with tab completion
         [ValidateSet('Winget', 'Pip', 'Setup', 'WslInstall', 'WslPackages', 'WslSetup')]
@@ -164,7 +164,7 @@ function Install-NarrationDependency {
     # show the real Python when there already is one (no Python yet is normal here, so the reason is only verbose
     # output)
     try { $pyDisplay = (Resolve-NarrationPython).Executable }  # the Python a real run would use, if there is one
-    catch { Write-Verbose "speechkit-narrate: no Python found yet: $($_.Exception.Message)" }  # none yet is normal here
+    catch { Write-Verbose "speechkit-voice-tts-offline-pipeline: no Python found yet: $($_.Exception.Message)" }  # none yet is normal here
     # the steps to run, in order
     $steps = Get-NarrationInstallStep -Component $Component -Wsl:$Wsl -Distribution $Distribution -PythonCommand $pyDisplay
     $wslPaths = @{}  # placeholder -> path as WSL sees it, filled by Expand-NarrationWslToken when first needed
@@ -193,7 +193,7 @@ function Install-NarrationDependency {
                         # the distribution is in the list
                         if ($have.ExitCode -eq 0 -and (@($have.StdOut -split "`r?`n" | ForEach-Object { $_.Trim() }) -contains $step.Distribution)) {
                             # say why nothing runs
-                            Write-Verbose "speechkit-narrate: WSL distribution $($step.Distribution) is already installed"
+                            Write-Verbose "speechkit-voice-tts-offline-pipeline: WSL distribution $($step.Distribution) is already installed"
                             $status = 'present'  # record that it was already there
                             $file = $null  # no program to run
                         }
@@ -215,11 +215,11 @@ function Install-NarrationDependency {
             catch {  # any failure of this step
                 $status = 'failed'  # record the failure in this step's result object
                 # non-terminating error, so the remaining steps still run
-                Write-Error -Message "speechkit-narrate install step '$($step.Name)' failed: $($_.Exception.Message)" -Category InvalidResult -TargetObject $step
+                Write-Error -Message "speechkit-voice-tts-offline-pipeline install step '$($step.Name)' failed: $($_.Exception.Message)" -Category InvalidResult -TargetObject $step
             }
         }
         # one result per planned step, including the skipped ones
-        New-NarrationObject -TypeName 'SpeechKitNarrate.InstallStep' -Property ([ordered]@{
+        New-NarrationObject -TypeName 'SpeechKitVoiceTtsOfflinePipeline.InstallStep' -Property ([ordered]@{
                 Step     = $step.Name  # the step's short name, such as 'winget Gyan.FFmpeg' or 'pip packages'
                 Status   = $status  # ok, present, failed or skipped
                 ExitCode = $exit  # program exit code, if any
@@ -230,6 +230,6 @@ function Install-NarrationDependency {
     if (-not $WhatIfPreference) {
         Reset-NarrationCache  # a new Python or environment may now exist, so earlier answers about it are stale
         # remind the user how to pick up the changes
-        Write-Verbose 'speechkit-narrate: open a new PowerShell window so PATH changes take effect, then run Test-NarrationEnvironment.'
+        Write-Verbose 'speechkit-voice-tts-offline-pipeline: open a new PowerShell window so PATH changes take effect, then run Test-NarrationEnvironment.'
     }
 }

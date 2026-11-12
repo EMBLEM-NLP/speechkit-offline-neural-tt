@@ -4,12 +4,12 @@
 # Everything here is module-scoped ($script:); nothing is written to the global scope.
 #
 # Source mode and Installed mode: where the speechkit_narrate Python package comes from.
-#   Source     the module sits in the speechkit-offline-neural-tt checkout (or Set-NarrationBackend -ToolkitRoot /
+#   Source     the module sits in the speechkit-voice-tts-offline-pipeline checkout (or Set-NarrationBackend -ToolkitRoot /
 #              $env:SPEECHKIT_ROOT names one). Python finds the package through PYTHONPATH.
-#   Installed  no checkout is configured. The Python that runs the toolkit must have the speechkit-narrate package
+#   Installed  no checkout is configured. The Python that runs the toolkit must have the speechkit-voice-tts-offline-pipeline package
 #              installed (pip install <checkout>); nothing is put on PYTHONPATH.
 
-# Sets up the module-wide state once, when SpeechKitNarrate.psm1 is imported. Takes no parameters and returns nothing.
+# Sets up the module-wide state once, when SpeechKitVoiceTtsOfflinePipeline.psm1 is imported. Takes no parameters and returns nothing.
 # It records platform facts ($script:OnWindows, $script:HasArgumentList, $script:Utf8), builds $script:Config from
 # the SPEECHKIT_BACKEND, SPEECHKIT_WSL_DISTRO and SPEECHKIT_ROOT environment variables, and creates empty caches.
 # Set-NarrationBackend later edits the same $script:Config for the rest of the session.
@@ -34,7 +34,7 @@ function Initialize-NarrationConfig {
     # an explicit toolkit location, needed only when the module folder was moved out of the checkout
     $root = $env:SPEECHKIT_ROOT
     if (-not $root) {  # no override, so derive the location from where the module lives
-        # <checkout>\powershell\SpeechKitNarrate -> <checkout>: two Split-Path -Parent calls climb to the checkout
+        # <checkout>\powershell\SpeechKitVoiceTtsOfflinePipeline -> <checkout>: two Split-Path -Parent calls climb to the checkout
         $guess = Split-Path -Parent (Split-Path -Parent $script:ModuleRoot)
         # The module is part of a checkout when that folder holds the speechkit_narrate package. Otherwise it was
         # copied somewhere on its own: the root stays empty and Installed mode expects a pip-installed package.
@@ -90,8 +90,8 @@ function Get-NarrationToolkitRoot {
     if (-not $root) { return $null }  # Installed mode: nothing to check, and nothing to put on PYTHONPATH
     if (-not (Test-NarrationToolkitFolder $root)) {  # python -m speechkit_narrate needs <root>\speechkit_narrate\__main__.py
         # stop with a message that says where it looked and how to fix it (continued on the next line)
-        throw "The speechkit-narrate toolkit was not found at '$root' (expected a 'speechkit_narrate' package folder there). " +
-              "Point the module at the checkout with: Set-NarrationBackend -ToolkitRoot 'C:\path\to\speechkit-offline-neural-tt'"
+        throw "The speechkit-voice-tts-offline-pipeline toolkit was not found at '$root' (expected a 'speechkit_narrate' package folder there). " +
+              "Point the module at the checkout with: Set-NarrationBackend -ToolkitRoot 'C:\path\to\speechkit-voice-tts-offline-pipeline'"
     }
     $root  # return the verified folder
 }
@@ -110,9 +110,9 @@ function Get-NarrationMissingPackageHint {
     if ((Get-NarrationMode) -ne 'Installed') { return '' }  # Source mode has its own message
     if ($Text -notmatch "No module named '?speechkit_narrate'?") { return '' }  # some other failure
     # the two fixes: install the package into this Python, or point the module at a checkout
-    ' The speechkit-narrate Python package is not installed for this Python. Install it with ' +
-        "python -m pip install 'C:\path\to\speechkit-offline-neural-tt', or point the module at the checkout: " +
-        "Set-NarrationBackend -ToolkitRoot 'C:\path\to\speechkit-offline-neural-tt'"
+    ' The speechkit-voice-tts-offline-pipeline Python package is not installed for this Python. Install it with ' +
+        "python -m pip install 'C:\path\to\speechkit-voice-tts-offline-pipeline', or point the module at the checkout: " +
+        "Set-NarrationBackend -ToolkitRoot 'C:\path\to\speechkit-voice-tts-offline-pipeline'"
 }
 
 # Tells whether the Python this module would run can import the speechkit_narrate package. Takes no parameters.
@@ -315,7 +315,7 @@ function Stop-NarrationProcess {
     }
     # swallowed on purpose: the process may exit between the check and the kill (the reason is only visible with
     # -Verbose)
-    catch { Write-Verbose "speechkit-narrate: the process was already gone: $($_.Exception.Message)" }
+    catch { Write-Verbose "speechkit-voice-tts-offline-pipeline: the process was already gone: $($_.Exception.Message)" }
 }
 
 # Runs a program to completion and returns its exit code and full output as a [pscustomobject] with ExitCode,
@@ -468,7 +468,7 @@ function Resolve-NarrationPython {
         }
         $script:Cache.Python = $found  # kept for the session
         # visible with -Verbose: which Python was chosen and why
-        Write-Verbose "speechkit-narrate: Python $($found.Version) at $resolved (from '$($found.Command)')"
+        Write-Verbose "speechkit-voice-tts-offline-pipeline: Python $($found.Version) at $resolved (from '$($found.Command)')"
         return $found  # stop at the first working candidate
     }
     # nothing worked: list what was tried and how to fix it (the message continues on the next line)

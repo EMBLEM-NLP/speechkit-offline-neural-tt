@@ -20,9 +20,17 @@ def main():
             resource = importlib.resources.files(package).joinpath(name)
             assert resource.is_file() and len(resource.read_bytes()) > 0, (package, name)
     subprocess.run([sys.executable, '-m', 'speechkit_narrate', '--json', 'stages'], check=True)
-    print(json.dumps({'status': 'passed', 'version': importlib.metadata.version('speechkit-narrate'),
+    # Verify real installed entry points outside the checkout, including the compatibility command.
+    suffix = '.exe' if sys.platform == 'win32' else ''
+    commands = ['speechkit-voice-tts-offline-pipeline', 'speechkit-narrate']
+    catalogs = []
+    for name in commands:
+        command = Path(sys.executable).parent / (name + suffix)
+        catalogs.append(json.loads(subprocess.check_output([str(command), '--json', 'stages'], text=True)))
+    assert catalogs[0] == catalogs[1], 'canonical and compatibility commands must expose the same registry'
+    print(json.dumps({'status': 'passed', 'version': importlib.metadata.version('speechkit-voice-tts-offline-pipeline'),
                       'package': str(Path(speechkit_narrate.__file__).resolve()),
-                      'resources': sum(len(names) for names in resources.values())}))
+                      'resources': sum(len(names) for names in resources.values()), 'commands': commands}))
 
 
 if __name__ == '__main__':

@@ -1,4 +1,4 @@
-"""A pip-installed copy of speechkit-narrate sends no toolkit folder to other Pythons: delegation, the audit, MCP children."""
+"""A pip-installed copy of speechkit-voice-tts-offline-pipeline sends no toolkit folder to other Pythons: delegation, the audit, MCP children."""
 from __future__ import annotations  # annotations stay strings, so hints cost nothing at import
 
 # Standard-library imports only; the toolkit itself is imported below, after its folder is on sys.path.
@@ -13,7 +13,7 @@ from unittest import mock  # patch.object / patch.dict swap env.REPO, os.environ
 # The repository root: this file is tests/narration/test_installed.py, so parents[2] is the folder holding the
 # speechkit_narrate package.
 REPO = Path(__file__).resolve().parents[2]  # resolve() first so a relative __file__ still gives an absolute root
-sys.path.insert(0, str(REPO))  # put the checkout first on the import path, ahead of any installed speechkit-narrate
+sys.path.insert(0, str(REPO))  # put the checkout first on the import path, ahead of any installed speechkit-voice-tts-offline-pipeline
 
 # env decides "installed or not", registry builds the delegated command, mcp_server and audit act on the answer.
 from speechkit_narrate import audit, env, mcp_server, registry as R  # noqa: E402
@@ -23,7 +23,7 @@ DELEGATE_VARS = ("SPEECHKIT_DELEGATE", "SPEECHKIT_DELEGATE_ROOT", "SPEECHKIT_DEL
 
 
 # Base class: a scratch folder that plays the part of env.REPO, either as a toolkit folder or as a site-packages
-# folder that holds a speechkit-narrate-<version>.dist-info next to the package, as pip leaves it.
+# folder that holds a speechkit-voice-tts-offline-pipeline-<version>.dist-info next to the package, as pip leaves it.
 class _Layout(unittest.TestCase):
     # Before each test: clean delegation variables, a fresh scratch folder, and env.REPO pointed at it.
     def setUp(self):
@@ -39,9 +39,9 @@ class _Layout(unittest.TestCase):
         repo.start()  # from here on the code under test looks at the scratch folder
         self.addCleanup(repo.stop)  # the real REPO comes back after the test
 
-    # Makes the scratch folder look like site-packages after `pip install speechkit-narrate`.
+    # Makes the scratch folder look like site-packages after `pip install speechkit-voice-tts-offline-pipeline`.
     def install(self):
-        (self.dir / "speechkit-narrate-9.9.9.dist-info").mkdir()  # the folder pip writes beside the package
+        (self.dir / "speechkit-voice-tts-offline-pipeline-9.9.9.dist-info").mkdir()  # the folder pip writes beside the package
 
 
 # env.installed(): the one question every other change depends on.
@@ -50,16 +50,16 @@ class Detect(_Layout):
     def test_toolkit_folder_is_not_installed(self):
         self.assertFalse(env.installed())  # a folder with no package metadata in it is not an installed copy
 
-    # A speechkit-narrate-<version>.dist-info beside the package is what pip leaves, and it means installed.
+    # A speechkit-voice-tts-offline-pipeline-<version>.dist-info beside the package is what pip leaves, and it means installed.
     def test_dist_info_means_installed(self):
         self.install()  # make the scratch folder look like site-packages after pip
         self.assertTrue(env.installed())  # and now it counts as an installed copy
 
     # pip and setuptools write the metadata folder under the normalized distribution name, in which "-" becomes "_"
-    # (the binary distribution format: speechkit-narrate installs speechkit_narrate-<version>.dist-info), so that
-    # spelling must count as installed too. This is the folder a real `pip install speechkit-narrate` leaves.
+    # (the binary distribution format: speechkit-voice-tts-offline-pipeline installs speechkit_voice_tts_offline_pipeline-<version>.dist-info), so that
+    # spelling must count as installed too. This is the folder a real `pip install speechkit-voice-tts-offline-pipeline` leaves.
     def test_normalized_dist_info_means_installed(self):
-        (self.dir / "speechkit_narrate-9.9.9.dist-info").mkdir()  # the name pip actually writes
+        (self.dir / "speechkit_voice_tts_offline_pipeline-9.9.9.dist-info").mkdir()  # the name pip actually writes
         self.assertTrue(env.installed())
 
     # The metadata of some other package does not count.
@@ -183,7 +183,7 @@ class Delegation(_Layout):
         self.assertNotIn("PYTHONPATH", " ".join(args))  # nothing about a toolkit folder
         # the two words after env: the command itself and the blanked platform variable
         self.assertEqual(args[args.index("env"):args.index("env") + 2], ["env", "SPEECHKIT_PLATFORM="])
-        (self.dir / "speechkit-narrate-9.9.9.dist-info").rmdir()  # back to a toolkit folder
+        (self.dir / "speechkit-voice-tts-offline-pipeline-9.9.9.dist-info").rmdir()  # back to a toolkit folder
         with mock.patch.object(env, "REPO", Path("C:\\tk")):  # the toolkit folder is a Windows-style path
             args, _, _ = self.run_tool([], code=0, res={"ok": True})  # the same tool again, now with a folder to send
         self.assertIn("PYTHONPATH=/mnt/c/tk", args)  # the checkout is sent as before
@@ -259,7 +259,7 @@ class Children(_Layout):
         audit._expose_repo()  # the audit adds the toolkit folder only where it is needed
         self.assertEqual(os.environ["PYTHONPATH"], "/keep/me")  # unchanged
         self.assertNotIn(str(self.dir), sys.path)  # and the folder is not added to sys.path either
-        (self.dir / "speechkit-narrate-9.9.9.dist-info").rmdir()  # a toolkit folder again
+        (self.dir / "speechkit-voice-tts-offline-pipeline-9.9.9.dist-info").rmdir()  # a toolkit folder again
         audit._expose_repo()  # expose again, now as a toolkit folder
         self.assertEqual(os.environ["PYTHONPATH"], os.pathsep.join([str(self.dir), "/keep/me"]))  # folder first
         self.assertEqual(sys.path[0], str(self.dir))  # and importable here

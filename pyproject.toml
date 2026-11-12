@@ -9,9 +9,9 @@ build-backend = "setuptools.build_meta"
 # The narration pipeline that ships with SpeechKit. The voice itself (bootstrap.py, speechkit/) is not a Python
 # package: the pipeline finds it through the checkout this package sits in, or SPEECHKIT_CHECKOUT.
 [project]
-name = "speechkit-narrate"
-version = "1.2.0"  # follows SpeechKit 1.1.0: the narration pipeline is new in 1.2.0
-description = "Offline neural narration with word timings, a pronunciation audit and per-chapter export"
+name = "speechkit-voice-tts-offline-pipeline"
+version = "1.3.0"  # follows SpeechKit 1.1.0: the narration pipeline is new in 1.2.0
+description = "Offline neural text-to-speech and narration pipeline with pronunciation auditing, resumable synthesis, word timings and chapter exports"
 readme = "docs/NARRATION.md"
 license = {text = "GPL-3.0-or-later"}
 authors = [{name = "EMBLEM-NLP"}]
@@ -32,14 +32,15 @@ mcp = ["mcp>=2.3"]
 text = ["wordfreq"]
 
 [project.urls]
-Homepage = "https://github.com/EMBLEM-NLP/speechkit-offline-neural-tt"
+Homepage = "https://github.com/EMBLEM-NLP/speechkit-voice-tts-offline-pipeline"
 
-# Console command created on install; typing speechkit-narrate runs speechkit_narrate.cli.main.
+# Console command created on install; typing speechkit-voice-tts-offline-pipeline runs speechkit_narrate.cli.main.
 [project.scripts]
+speechkit-voice-tts-offline-pipeline = "speechkit_narrate.cli:main"
 speechkit-narrate = "speechkit_narrate.cli:main"
 
 # Plug-in packages register here, e.g. in their own pyproject.toml:
-#   [project.entry-points."speechkit_narrate.plugins"]
+#   [project.entry-points."speechkit_voice_tts_offline_pipeline.plugins"]
 #   my_stages = "my_package.narration_stages"
 
 [tool.setuptools.packages.find]

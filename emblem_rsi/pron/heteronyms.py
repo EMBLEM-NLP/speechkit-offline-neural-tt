@@ -2,7 +2,7 @@
 # Copyright (C) 2026 EMBLEM-NLP
 """Heteronym roles before voicing: the reading espeak will give each occurrence, and the reading its sentence wants.
 
-speechkit-narrate's prevoice stage uses this to fix heteronyms before narration; evaluate() scores the rule sets against the
+speechkit-voice-tts-offline-pipeline's prevoice stage uses this to fix heteronyms before narration; evaluate() scores the rule sets against the
 pronunciation loop's own token fixes.
 
     pieces(tokens, segments)   the script's sentence pieces as the narration voices them (inventory.piece_words)
@@ -283,7 +283,7 @@ def baseline_measurement(root) -> Path | None:
     return found[0] if found else None  # measure-001 normally
 
 
-# evaluate() for one speechkit-narrate project folder: its docmodel.json and request.json (the script), pronunciations.json
+# evaluate() for one speechkit-voice-tts-offline-pipeline project folder: its docmodel.json and request.json (the script), pronunciations.json
 # (the loop's token fixes are the labels) and its baseline lexicon measurement. Reads files only. Returns the
 # evaluation plus "project" and "measurement"; raises FileNotFoundError when a file is missing.
 def evaluate_project(root, modes=MODES, tagger=None) -> dict:
@@ -307,7 +307,7 @@ def evaluate_project(root, modes=MODES, tagger=None) -> dict:
 def main(argv=None) -> int:
     # the command line: project folders, and optionally the rule sets and JSON output
     ap = argparse.ArgumentParser(description="Score heteronym rule sets against the pronunciation loop's token fixes.")
-    ap.add_argument("projects", nargs="+")  # speechkit-narrate project folders
+    ap.add_argument("projects", nargs="+")  # speechkit-voice-tts-offline-pipeline project folders
     ap.add_argument("--modes", default=",".join(MODES))  # comma-separated rule sets, all by default
     ap.add_argument("--json", action="store_true")  # print the full evaluation as JSON instead of a table
     a = ap.parse_args(argv)  # read the options

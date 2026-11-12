@@ -46,13 +46,13 @@ class _Isolated(unittest.TestCase):
         self.addCleanup(restore)  # runs even when the test fails
         for key in KEYS:  # start every test with none of them set
             os.environ.pop(key, None)  # removes the variable if present
-        self.tmp = Path(tempfile.mkdtemp(prefix="speechkit-narrate-winpaths-"))  # this test's scratch folder
+        self.tmp = Path(tempfile.mkdtemp(prefix="speechkit-voice-tts-offline-pipeline-winpaths-"))  # this test's scratch folder
         self.addCleanup(shutil.rmtree, self.tmp, True)  # removed afterwards, errors ignored
         self.banner = self.tmp / "version"  # stands in for /proc/version
         self.banner.write_text("Linux version 6.1.0 (builder@host) #1 SMP", encoding="utf-8")  # an ordinary kernel
         self.conf = self.tmp / "wsl.conf"  # stands in for /etc/wsl.conf; absent until a test writes it
         # the two files the module reads, and the translator it would run: a real WSL's must not answer these tests
-        for name, value in (("PROC_VERSION", self.banner), ("WSL_CONF", self.conf), ("WSLPATH", "speechkit-narrate-no-wslpath")):
+        for name, value in (("PROC_VERSION", self.banner), ("WSL_CONF", self.conf), ("WSLPATH", "speechkit-voice-tts-offline-pipeline-no-wslpath")):
             patcher = mock.patch.object(winpaths, name, value)  # swap the module's constant for the stand-in
             patcher.start()  # in effect from here on
             self.addCleanup(patcher.stop)  # undone after the test
@@ -299,7 +299,7 @@ class ServerHelpers(_Isolated):
         self.assertEqual(mcp_server._path_arg("~"), os.path.expanduser("~"))  # ~ is still expanded
         with self.assertRaises(mcp_server.ToolError) as raised:  # a folder without project.json
             mcp_server.project_dir("C:\\books\\lantern")  # exists, but is no project
-        self.assertIn("C:\\books\\lantern is not a speechkit-narrate project", str(raised.exception))  # named the client's way
+        self.assertIn("C:\\books\\lantern is not a speechkit-voice-tts-offline-pipeline project", str(raised.exception))  # named the client's way
         self.assertIn("no project.json", str(raised.exception))  # and why
 
 
@@ -355,7 +355,7 @@ class WindowsClient(_ServerCase):
         self.assertEqual(d["state"], "done", d)  # finished
         self.assertEqual(d["project"], "C:\\books\\lantern")  # the job record names the project in the Windows form
         miss = self.call("project_status", {"project": "C:\\books\\missing"}, error=True)  # a folder that is not there
-        self.assertIn("C:\\books\\missing is not a speechkit-narrate project", miss["error"])  # named as the client wrote it
+        self.assertIn("C:\\books\\missing is not a speechkit-voice-tts-offline-pipeline project", miss["error"])  # named as the client wrote it
 
     # Proves a standalone tool: its path arguments are translated, and the files it reports come back as Windows paths.
     def test_tool_with_windows_paths(self):
@@ -398,7 +398,7 @@ class TranslationOff(_ServerCase):
     # Proves a Windows path is just a strange relative name when translation is off, and that describe says so.
     def test_off(self):
         miss = self.call("project_status", {"project": "C:\\books\\lantern"}, error=True)  # not translated
-        self.assertIn("not a speechkit-narrate project", miss["error"])  # so the folder is not found
+        self.assertIn("not a speechkit-voice-tts-offline-pipeline project", miss["error"])  # so the folder is not found
         self.assertNotIn("Windows paths", self.server.info.instructions)  # and the instructions do not promise it
         d = self.call("narrate_describe")  # the registry description
         self.assertFalse(d["windows_paths"]["active"])  # translation is inactive

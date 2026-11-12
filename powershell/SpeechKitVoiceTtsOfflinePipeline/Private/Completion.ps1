@@ -16,7 +16,7 @@ function Get-NarrationCompletionProject {
                 if (Test-Path -LiteralPath (Join-Path $p 'project.json')) { return $p }
             }
             # ignore anything that cannot be resolved (the reason is only visible with -Verbose)
-            catch { Write-Verbose "speechkit-narrate: the typed project path could not be resolved: $($_.Exception.Message)" }
+            catch { Write-Verbose "speechkit-voice-tts-offline-pipeline: the typed project path could not be resolved: $($_.Exception.Message)" }
         }
     }
     $null  # no project typed yet, so completion offers stages without project plug-ins
@@ -58,7 +58,7 @@ $script:StageNameCompleter = {
             if ($i[0] -like "$word*") { New-NarrationCompletion -Text $i[0] -Tip $i[1] }
         }
     }
-    catch { Write-Verbose "speechkit-narrate: stage completion failed: $($_.Exception.Message)" }  # never an error at the prompt
+    catch { Write-Verbose "speechkit-voice-tts-offline-pipeline: stage completion failed: $($_.Exception.Message)" }  # never an error at the prompt
 }
 
 # Argument completer for tool names (Get-NarrationTool -Name and Invoke-NarrationTool -Name). Same five parameters
@@ -77,10 +77,10 @@ $script:ToolNameCompleter = {
         }
     }
     # nothing at the prompt when Python is out of reach
-    catch { Write-Verbose "speechkit-narrate: tool completion failed: $($_.Exception.Message)" }
+    catch { Write-Verbose "speechkit-voice-tts-offline-pipeline: tool completion failed: $($_.Exception.Message)" }
 }
 
-# Attaches the completers to the module's commands. Called once by SpeechKitNarrate.psm1 at import; takes no parameters and
+# Attaches the completers to the module's commands. Called once by SpeechKitVoiceTtsOfflinePipeline.psm1 at import; takes no parameters and
 # returns nothing. Registration is by command name, so it works before or after the commands are defined.
 function Register-NarrationCompleter {
     # stage names for the one-stage command

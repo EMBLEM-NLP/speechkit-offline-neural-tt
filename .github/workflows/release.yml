@@ -4,7 +4,7 @@ on:
     tags: ['v*']
   workflow_dispatch:
     inputs:
-      tag: {description: 'Release tag matching the narration package version', default: 'v1.2.0'}
+      tag: {description: 'Release tag matching the narration package version', default: 'v1.3.0'}
 permissions:
   contents: write
 jobs:
@@ -34,7 +34,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ inputs.tag || github.ref_name }}
         run: |
-          gh release view "$TAG" >/dev/null 2>&1 && gh release upload "$TAG" EMBLEM-NLP_Offline_Neural_Runtime_Linux_Py313.zip dist/* --clobber || \
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; refusing to replace published artifacts." >&2
+            exit 1
+          fi
           gh release create "$TAG" EMBLEM-NLP_Offline_Neural_Runtime_Linux_Py313.zip dist/* \
-            --target "${{ github.sha }}" --title "SpeechKit ${TAG#v}" \
-            --notes "Offline neural narration pipeline and pinned SpeechKit runtime, GPL-3.0-or-later. Includes the narration wheel and source package; the Linux runtime archive retains its existing pinned identity."
+            --target "${{ github.sha }}" --title "SpeechKit Voice TTS Offline Pipeline ${TAG#v}" \
+            --notes "SpeechKit Voice TTS Offline Pipeline. Offline neural text-to-speech and narration pipeline with pronunciation auditing, resumable synthesis, word timings and chapter exports. Includes the narration wheel and source package plus the unchanged pinned Linux runtime archive. GPL-3.0-or-later."

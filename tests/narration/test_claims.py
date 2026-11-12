@@ -22,7 +22,7 @@ import unittest  # the built-in test framework: TestCase classes and assertions
 from pathlib import Path  # builds the repository root path and the files in the scratch folders
 from unittest import mock  # replaces the voice settings and the worker script for the duration of one test
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))  # the repository root, so `speechkit-narrate` can be imported
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))  # the repository root, so `speechkit-voice-tts-offline-pipeline` can be imported
 from speechkit_narrate.voice import claims, narrate  # noqa: E402  the modules under test
 
 
@@ -203,7 +203,7 @@ class RunWorkers(unittest.TestCase):
         folders = {r["claims"] for r in recs.values()}  # the marker folder each record's worker was given
         self.assertEqual(len(folders), 1)  # the same one for every worker
         folder = Path(folders.pop())  # its path
-        self.assertIn("speechkit-narrate-claims-", folder.name)  # made by run_workers
+        self.assertIn("speechkit-voice-tts-offline-pipeline-claims-", folder.name)  # made by run_workers
         self.assertFalse(folder.exists())  # and removed when the run ended
 
     # A lone worker has nobody to share with, so it gets no marker folder and the fixed share (all of it).

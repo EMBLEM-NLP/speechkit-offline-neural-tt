@@ -13,7 +13,7 @@ import unittest  # the built-in test framework: TestCase classes and assertions
 from pathlib import Path  # builds the run directory's paths
 from types import SimpleNamespace  # a stand-in for the asr module, with only the attribute release() touches
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))  # the repository root, so `speechkit-narrate` can be imported
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))  # the repository root, so `speechkit-voice-tts-offline-pipeline` can be imported
 from speechkit_narrate.audit import autofix  # noqa: E402  the module under test
 
 
